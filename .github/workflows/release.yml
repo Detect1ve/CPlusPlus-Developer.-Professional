@@ -1,6 +1,9 @@
 name: 'C++ CI'
 
 on:
+  pull_request:
+    branches:
+      - master
   push:
     branches:
       - master
@@ -9,15 +12,26 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' }}
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: true
-      - run: sudo apt-get update && sudo apt-get install libboost-test-dev -y
-      - run: cmake . -DPATCH_VERSION=${{ github.run_number }} -DWITH_BOOST_TEST=ON
-      - run: cmake --build .
-      - run: cmake --build . --target test
-      - run: cmake --build . --target package
+      - name: Install CMake
+        run: |
+          wget -qO- "https://cmake.org/files/v4.1/cmake-4.1.2-linux-x86_64.tar.gz" | sudo tar --strip-components=1 -xz -C /usr/local
+      - name: Install GCC
+        run: |
+          sudo apt-get update && sudo apt-get install g++-14 -y
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 10
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-14 10
+      - run: cmake -G Ninja -B build -D PATCH_VERSION=${{ github.run_number }}
+      - run: cmake --build build
+      - run: cmake --build build --target test
+      - run: cmake --build build --target package
+      - id: get_path
+        name: Get package relative path
+        run: echo "package_path=$(find . -name helloworld-0.0.${{ github.run_number }}-Linux.deb | head -n 1)" >> "$GITHUB_OUTPUT"
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -35,6 +49,26 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./helloworld-0.0.${{ github.run_number }}-Linux.deb
+          asset_path: ${{ steps.get_path.outputs.package_path }}
           asset_name: helloworld-0.0.${{ github.run_number }}-Linux.deb
           asset_content_type: application/vnd.debian.binary-package
+
+  pull_request_ci:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Install CMake
+        run: |
+          wget -qO- "https://cmake.org/files/v4.1/cmake-4.1.2-linux-x86_64.tar.gz" | sudo tar --strip-components=1 -xz -C /usr/local
+      - name: Install GCC
+        run: |
+          sudo apt-get update && sudo apt-get install g++-14 -y
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 10
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-14 10
+      - run: cmake -G Ninja -B build -D PATCH_VERSION=${{ github.run_number }}
+      - run: cmake --build build
+      - run: cmake --build build --target test
+      - run: cmake --build build --target package
