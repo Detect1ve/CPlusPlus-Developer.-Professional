@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.12)
 
 set(PATCH_VERSION "1" CACHE INTERNAL "Patch version")
-set(PROJECT_VESRION 0.0.${PATCH_VERSION})
+set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 
-project(helloworld VERSION ${PROJECT_VESRION})
+project(helloworld VERSION ${PROJECT_VERSION})
 
 option(WITH_BOOST_TEST "Whether to build Boost test" ON)
 
@@ -27,6 +27,9 @@ target_link_libraries(helloworld_cli PRIVATE
 
 if(WITH_BOOST_TEST)
     find_package(Boost COMPONENTS unit_test_framework REQUIRED)
+    if(Boost_FOUND)
+        include_directories(${Boost_INCLUDE_DIRS})
+    endif()
     add_executable(test_version test_version.cpp)
 
     set_target_properties(test_version PROPERTIES
@@ -34,10 +37,10 @@ if(WITH_BOOST_TEST)
         CXX_STANDARD_REQUIRED ON
     )
 
-    set_target_properties(test_version PROPERTIES
-        COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK
-        INCLUDE_DIRECTORIES ${Boost_INCLUDE_DIR}
-    )
+    # set_target_properties(test_version PROPERTIES
+    #     COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK
+    #     INCLUDE_DIRECTORIES ${Boost_INCLUDE_DIR}
+    # )
 
     target_link_libraries(test_version
         ${Boost_LIBRARIES}
