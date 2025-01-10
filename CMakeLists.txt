@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.12)
 
 set(PATCH_VERSION "1" CACHE INTERNAL "Patch version")
-set(PROJECT_VESRION 0.0.${PATCH_VERSION})
+set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 
-project(helloworld VERSION ${PROJECT_VESRION})
+project(helloworld VERSION ${PROJECT_VERSION})
 
 option(WITH_BOOST_TEST "Whether to build Boost test" ON)
 
@@ -13,7 +13,7 @@ add_executable(helloworld_cli main.cpp)
 add_library(helloworld lib.cpp)
 
 set_target_properties(helloworld_cli helloworld PROPERTIES
-    CXX_STANDARD 14
+    CXX_STANDARD 23
     CXX_STANDARD_REQUIRED ON
 )
 
@@ -30,7 +30,7 @@ if(WITH_BOOST_TEST)
     add_executable(test_version test_version.cpp)
 
     set_target_properties(test_version PROPERTIES
-        CXX_STANDARD 14
+        CXX_STANDARD 23
         CXX_STANDARD_REQUIRED ON
     )
 
