@@ -1,6 +1,9 @@
 name: 'C++ CI'
 
 on:
+  pull_request:
+    branches:
+      - master
   push:
     branches:
       - master
@@ -9,15 +12,104 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - name: GCC-Release
+            compiler: gcc
+            c_compiler: gcc-14
+            cpp_compiler: g++-14
+            build_dir: build-gcc-release
+            build_type: Release
+            install_compiler: true
+            build_packages: true
+          - name: GCC-Debug
+            compiler: gcc
+            c_compiler: gcc-14
+            cpp_compiler: g++-14
+            build_dir: build-gcc-debug
+            build_type: Debug
+            install_compiler: true
+          - name: GCC-RelWithDebInfo
+            compiler: gcc
+            c_compiler: gcc-14
+            cpp_compiler: g++-14
+            build_dir: build-gcc-relwithdebinfo
+            build_type: RelWithDebInfo
+            install_compiler: true
+          - name: GCC-MinSizeRel
+            compiler: gcc
+            c_compiler: gcc-14
+            cpp_compiler: g++-14
+            build_dir: build-gcc-minsizerel
+            build_type: MinSizeRel
+            install_compiler: true
+          - name: Clang-Release
+            compiler: clang
+            c_compiler: clang
+            cpp_compiler: clang++
+            build_dir: build-clang-release
+            build_type: Release
+          - name: Clang-Debug
+            compiler: clang
+            c_compiler: clang
+            cpp_compiler: clang++
+            build_dir: build-clang-debug
+            build_type: Debug
+          - name: Clang-RelWithDebInfo
+            compiler: clang
+            c_compiler: clang
+            cpp_compiler: clang++
+            build_dir: build-clang-relwithdebinfo
+            build_type: RelWithDebInfo
+          - name: Clang-MinSizeRel
+            compiler: clang
+            c_compiler: clang
+            cpp_compiler: clang++
+            build_dir: build-clang-minsizerel
+            build_type: MinSizeRel
+    name: ${{ matrix.name }}
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: true
-      - run: sudo apt-get update && sudo apt-get install libboost-test-dev -y
-      - run: cmake . -DPATCH_VERSION=${{ github.run_number }} -DWITH_BOOST_TEST=ON
-      - run: cmake --build .
-      - run: cmake --build . --target test
-      - run: cmake --build . --target package
+      - name: Install CMake
+        run: |
+          wget -qO- "https://cmake.org/files/v4.2/cmake-4.2.1-linux-x86_64.tar.gz" | sudo tar --strip-components=1 -xz -C /usr/local
+      - name: Install GCC
+        if: matrix.install_compiler
+        run: sudo apt-get update && sudo apt-get install -y ${{ matrix.cpp_compiler }}
+      - run: |
+          cmake -G Ninja \
+            -B ${{ matrix.build_dir }} \
+            -D PATCH_VERSION=${{ github.run_number }} \
+            -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -D CMAKE_C_COMPILER=${{ matrix.c_compiler }} \
+            -D CMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
+      - run: cmake --build ${{ matrix.build_dir }}
+      - run: cmake --build ${{ matrix.build_dir }} --target test
+      - if: matrix.build_packages && github.event_name == 'push'
+        run: cmake --build ${{ matrix.build_dir }} --target package
+      - name: Upload artifacts
+        if: matrix.build_packages && github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts
+          path: ${{ matrix.build_dir }}/helloworld-0.0.${{ github.run_number }}-Linux.deb
+
+  release:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    needs: build
+    steps:
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-artifacts
+          path: release-artifacts
+      - id: get_path
+        name: Get package relative path
+        run: echo "package_path=$(find release-artifacts -name helloworld-0.0.${{ github.run_number }}-Linux.deb | head -n 1)" >> "$GITHUB_OUTPUT"
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -35,6 +127,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./helloworld-0.0.${{ github.run_number }}-Linux.deb
+          asset_path: ${{ steps.get_path.outputs.package_path }}
           asset_name: helloworld-0.0.${{ github.run_number }}-Linux.deb
           asset_content_type: application/vnd.debian.binary-package
