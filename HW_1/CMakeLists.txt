@@ -1,49 +1,69 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 4.0.3)
 
 set(PATCH_VERSION "1" CACHE INTERNAL "Patch version")
-set(PROJECT_VESRION 0.0.${PATCH_VERSION})
+set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 
-project(helloworld VERSION ${PROJECT_VESRION})
-
-option(WITH_BOOST_TEST "Whether to build Boost test" ON)
+project(helloworld VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 configure_file(version.h.in version.h)
 
 add_executable(helloworld_cli main.cpp)
-add_library(helloworld lib.cpp)
+add_library(helloworld STATIC lib.cpp)
 
 set_target_properties(helloworld_cli helloworld PROPERTIES
-    CXX_STANDARD 14
+    CXX_STANDARD 26
     CXX_STANDARD_REQUIRED ON
 )
 
 target_include_directories(helloworld
-    PRIVATE "${CMAKE_BINARY_DIR}"
+    PRIVATE "${CMAKE_CURRENT_BINARY_DIR}"
 )
 
 target_link_libraries(helloworld_cli PRIVATE
+    helloworld -static
+)
+
+find_package(Boost 1.88.0 CONFIG COMPONENTS unit_test_framework)
+if(NOT Boost_FOUND)
+    include(FetchContent)
+    set(BOOST_INCLUDE_LIBRARIES test)
+    FetchContent_Declare(
+        Boost
+        URL https://github.com/boostorg/boost/releases/download/boost-1.88.0/boost-1.88.0-cmake.tar.xz
+        URL_MD5 3edffaacd2cfe63c240ef1b99497c74f
+        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+        EXCLUDE_FROM_ALL)
+    FetchContent_MakeAvailable(Boost)
+endif()
+
+add_executable(test_version test_version.cpp)
+
+set_target_properties(test_version PROPERTIES
+    CXX_STANDARD 26
+    CXX_STANDARD_REQUIRED ON
+)
+
+target_link_libraries(test_version
+    PRIVATE Boost::unit_test_framework
     helloworld
 )
 
-if(WITH_BOOST_TEST)
-    find_package(Boost COMPONENTS unit_test_framework REQUIRED)
-    add_executable(test_version test_version.cpp)
-
-    set_target_properties(test_version PROPERTIES
-        CXX_STANDARD 14
-        CXX_STANDARD_REQUIRED ON
-    )
-
-    set_target_properties(test_version PROPERTIES
-        COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK
-        INCLUDE_DIRECTORIES ${Boost_INCLUDE_DIR}
-    )
-
-    target_link_libraries(test_version
-        ${Boost_LIBRARIES}
-        helloworld
-    )
+if(PROJECT_IS_TOP_LEVEL)
+    add_compile_options(-fdiagnostics-color=always)
+    include(cmake/googletest.cmake)
+    list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
+
+add_executable(g_test_version g_test_version.cpp)
+set_target_properties(test_version g_test_version PROPERTIES
+    CXX_STANDARD 26
+    CXX_STANDARD_REQUIRED ON
+)
+
+target_link_libraries(g_test_version
+    PRIVATE GTest::gtest_main
+    helloworld
+)
 
 if (MSVC)
     target_compile_options(helloworld_cli PRIVATE
@@ -52,11 +72,12 @@ if (MSVC)
     target_compile_options(helloworld PRIVATE
         /W4
     )
-    if(WITH_BOOST_TEST)
-        target_compile_options(test_version PRIVATE
-            /W4
-        )
-    endif()
+    target_compile_options(test_version PRIVATE
+        /W4
+    )
+    target_compile_options(g_test_version PRIVATE
+        /W4
+    )
 else ()
     target_compile_options(helloworld_cli PRIVATE
         -Wall -Wextra -pedantic -Werror
@@ -64,23 +85,27 @@ else ()
     target_compile_options(helloworld PRIVATE
         -Wall -Wextra -pedantic -Werror
     )
-    if(WITH_BOOST_TEST)
-        target_compile_options(test_version PRIVATE
-            -Wall -Wextra -pedantic -Werror
-        )
-    endif()
+    target_compile_options(test_version PRIVATE
+        -Wall -Wextra -pedantic -Werror
+    )
+    target_compile_options(g_test_version PRIVATE
+        -Wall -Wextra -pedantic -Werror
+    )
 endif()
 
-install(TARGETS helloworld_cli RUNTIME DESTINATION bin)
+install(TARGETS helloworld_cli RUNTIME DESTINATION bin
+                                       COMPONENT "${PROJECT_NAME}")
 
-set(CPACK_GENERATOR DEB)
-set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
-set(CPACK_PACKAGE_VERSION_MINOR "${PROJECT_VERSION_MINOR}")
-set(CPACK_PACKAGE_VERSION_PATCH "${PROJECT_VERSION_PATCH}")
-set(CPACK_PACKAGE_CONTACT example@example.com)
-include(CPack)
-
-if(WITH_BOOST_TEST)
-    enable_testing()
-    add_test(test_version test_version)
+if(PROJECT_IS_TOP_LEVEL)
+    set(CPACK_GENERATOR DEB)
+    set(CPACK_PACKAGE_CONTACT Nikolai_Grin@Mail.Ru)
+    include(CPack)
+else()
+    set(HW_1_DEB_NAME
+        "${PROJECT_NAME}-${PROJECT_VERSION}-Linux.deb"
+        PARENT_SCOPE)
 endif()
+
+enable_testing()
+add_test(HW_1.test_version test_version)
+add_test(HW_1.g_test_version g_test_version)
