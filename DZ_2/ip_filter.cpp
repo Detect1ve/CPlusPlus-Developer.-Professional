@@ -1,8 +1,6 @@
-#include <cassert>
-#include <cstdlib>
+#include <algorithm>
+#include <charconv>
 #include <iostream>
-#include <string>
-#include <vector>
 
 // ("",  '.') -> [""]
 // ("11", '.') -> ["11"]
@@ -10,13 +8,16 @@
 // ("11.", '.') -> ["11", ""]
 // (".11", '.') -> ["", "11"]
 // ("11.22", '.') -> ["11", "22"]
-std::vector<std::string> split(const std::string &str, char d)
-{
-    std::vector<std::string> r;
 
+auto split(
+    const std::string & str,
+    const char          d) -> std::vector<std::string>
+{
     std::string::size_type start = 0;
     std::string::size_type stop = str.find_first_of(d);
-    while(stop != std::string::npos)
+    std::vector<std::string> r;
+
+    while (stop != std::string::npos)
     {
         r.push_back(str.substr(start, stop - start));
 
@@ -29,33 +30,139 @@ std::vector<std::string> split(const std::string &str, char d)
     return r;
 }
 
-int main(int argc, char const *argv[])
+auto comp(
+    const std::vector<std::string>& a,
+    const std::vector<std::string>& b) -> bool
+{
+    for (auto first = a.cbegin(), second = b.cbegin(); first != a.cend() && second != b.cend(); ++first, ++second)
+    {
+        unsigned char first_number = 0;
+        unsigned char second_number = 0;
+
+        std::from_chars(first->data(), first->data() + first->size(), first_number);
+        std::from_chars(second->data(), second->data() + second->size(), second_number);
+
+        if (first_number == second_number)
+        {
+            continue;
+        }
+
+        if (first_number > second_number)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    return false;
+}
+
+auto reverse_lexicographic_sort(std::vector<std::vector<std::string>> & ip_pool)
+{
+	std::sort(ip_pool.begin(), ip_pool.end(), comp);
+}
+
+template <typename First, typename... Rest>
+auto filter(
+    const First &   ip_pool,
+    const Rest &... octet)
+{
+    std::array<int, sizeof...(octet)> a_octet = {octet...};
+    std::vector<std::vector<std::string>> result;
+
+    for (const auto & ip : ip_pool)
+    {
+        size_t i = 0;
+        bool need_to_add = true;
+
+        for (auto ip_part = ip.cbegin(); ip_part != ip.cend() && i != a_octet.size(); ++ip_part, ++i)
+        {
+            unsigned char number;
+
+            std::from_chars(ip_part->data(), ip_part->data() + ip_part->size(), number);
+            if (number != a_octet[i])
+            {
+                need_to_add = false;
+                break;
+            }
+        }
+
+        if (need_to_add)
+        {
+            result.push_back(ip);
+        }
+    }
+
+    return result;
+}
+
+auto filter_any(
+    const std::vector<std::vector<std::string>>& ip_pool,
+    const unsigned char any_octet)
+{
+    std::vector<std::vector<std::string>> result;
+
+    for (const auto & ip : ip_pool)
+    {
+        bool need_to_add = false;
+
+        for (const auto & ip_part : ip)
+        {
+            unsigned char number = 0;
+
+            std::from_chars(ip_part.data(), ip_part.data() + ip_part.size(), number);
+            if (number == any_octet)
+            {
+                need_to_add = true;
+                break;
+            }
+        }
+
+        if (need_to_add)
+        {
+            result.push_back(ip);
+        }
+    }
+
+    return result;
+}
+
+auto print(const std::vector<std::vector<std::string>>& ip_pool)
+{
+    for (const auto & ip : ip_pool)
+    {
+        for (auto ip_part = ip.cbegin(); ip_part != ip.cend(); ++ip_part)
+        {
+            if (ip_part != ip.cbegin())
+            {
+                std::cout << ".";
+            }
+
+            std::cout << *ip_part;
+        }
+
+        std::cout << std::endl;
+    }
+
+    std::cout << std::endl;
+}
+
+auto main(int  /*argc*/, char const * /*argv*/[]) -> int
 {
     try
     {
-        std::vector<std::vector<std::string> > ip_pool;
+        std::vector<std::vector<std::string>> ip_pool;
 
-        for(std::string line; std::getline(std::cin, line);)
+        for (std::string line; std::getline(std::cin, line);)
         {
             std::vector<std::string> v = split(line, '\t');
             ip_pool.push_back(split(v.at(0), '.'));
         }
 
-        // TODO reverse lexicographically sort
-
-        for(std::vector<std::vector<std::string> >::const_iterator ip = ip_pool.cbegin(); ip != ip_pool.cend(); ++ip)
-        {
-            for(std::vector<std::string>::const_iterator ip_part = ip->cbegin(); ip_part != ip->cend(); ++ip_part)
-            {
-                if (ip_part != ip->cbegin())
-                {
-                    std::cout << ".";
-
-                }
-                std::cout << *ip_part;
-            }
-            std::cout << std::endl;
-        }
+        // TODO reverse lexicographic sort
+        reverse_lexicographic_sort(ip_pool);
+        print(ip_pool);
 
         // 222.173.235.246
         // 222.130.177.64
@@ -66,7 +173,8 @@ int main(int argc, char const *argv[])
         // 1.1.234.8
 
         // TODO filter by first byte and output
-        // ip = filter(1)
+        auto ip = filter(ip_pool, 1);
+        print(ip);
 
         // 1.231.69.33
         // 1.87.203.225
@@ -75,7 +183,8 @@ int main(int argc, char const *argv[])
         // 1.1.234.8
 
         // TODO filter by first and second bytes and output
-        // ip = filter(46, 70)
+        ip = filter(ip_pool, 46, 70);
+        print(ip);
 
         // 46.70.225.39
         // 46.70.147.26
@@ -83,7 +192,8 @@ int main(int argc, char const *argv[])
         // 46.70.29.76
 
         // TODO filter by any byte and output
-        // ip = filter_any(46)
+        ip = filter_any(ip_pool, 46);
+        print(ip);
 
         // 186.204.34.46
         // 186.46.222.194
