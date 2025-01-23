@@ -26,8 +26,13 @@ include(cmake/fetch_boost.cmake)
 include(cmake/fetch_googletest.cmake)
 include(cmake/warning_flags.cmake)
 
+include(common/attribute_wrapper.cmake)
+include(common/capture.cmake)
+include(common/custom_print.cmake)
+
 set(SUBDIRS
-  HW_1)
+  HW_1
+  HW_2)
 
 foreach(SUBDIR ${SUBDIRS})
   check_subdirectory_compatibility(${SUBDIR})
