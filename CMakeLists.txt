@@ -19,6 +19,10 @@ set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 
 list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 
+include(common/boost_algorithm.cmake)
+include(common/boost_uuid.cmake)
+include(common/capture.cmake)
+
 include(cmake/clang-tidy.cmake)
 include(cmake/fetch_googletest.cmake)
 include(cmake/gcc_warnings.cmake)
@@ -26,6 +30,11 @@ include(cmake/gcc_warnings.cmake)
 check_subdirectory_compatibility(HW_1)
 if (IS_COMPATIBLE)
   add_subdirectory(HW_1)
+endif()
+
+check_subdirectory_compatibility(HW_2)
+if (IS_COMPATIBLE)
+  add_subdirectory(HW_2)
 endif()
 
 enable_testing()
