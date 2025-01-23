@@ -29,9 +29,11 @@ jobs:
       - run: cmake --build build
       - run: cmake --build build --target test
       - run: cmake --build build --target package
-      - id: get_path
-        name: Get package relative path
-        run: echo "package_path=$(find . -name helloworld-0.0.${{ github.run_number }}-Linux.deb | head -n 1)" >> "$GITHUB_OUTPUT"
+      - id: find_packages
+        name: Find all unique DEB packages
+        run: |
+          PACKAGES=$(find . -name "*-0.0.${{ github.run_number }}-Linux.deb" | awk -F/ '{print $NF, $0}' | sort -k1,1 -u | cut -d' ' -f2- | jq -R -s -c 'split("\n")[:-1]')
+          echo "packages=$PACKAGES" >> "$GITHUB_OUTPUT"
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -42,16 +44,31 @@ jobs:
           release_name: Release ${{ github.run_number }}
           draft: false
           prerelease: false
-      - name: Upload Release Asset
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1
+      - name: Upload Release Assets
+        uses: actions/github-script@v6
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UPLOAD_URL: ${{ steps.create_release.outputs.upload_url }}
+          PACKAGES: ${{ steps.find_packages.outputs.packages }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ steps.get_path.outputs.package_path }}
-          asset_name: helloworld-0.0.${{ github.run_number }}-Linux.deb
-          asset_content_type: application/vnd.debian.binary-package
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const packages = JSON.parse(process.env.PACKAGES);
+
+            for (const packagePath of packages) {
+              const packageName = packagePath.split('/').pop();
+              console.log(`Uploading ${packageName} from ${packagePath}`);
+
+              await github.rest.repos.uploadReleaseAsset({
+                url: process.env.UPLOAD_URL,
+                headers: {
+                  'content-type': 'application/vnd.debian.binary-package',
+                  'content-length': fs.statSync(packagePath).size
+                },
+                name: packageName,
+                data: fs.readFileSync(packagePath)
+              });
+            }
 
   pull_request_ci:
     runs-on: ubuntu-latest
