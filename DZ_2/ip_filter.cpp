@@ -78,7 +78,7 @@ auto filter(
 
         for (auto ip_part = ip.cbegin(); ip_part != ip.cend() && i != a_octet.size(); ++ip_part, ++i)
         {
-            unsigned char number;
+            unsigned char number = 0;
 
             std::from_chars(ip_part->data(), ip_part->data() + ip_part->size(), number);
             if (number != a_octet[i])
@@ -145,7 +145,7 @@ auto print(const std::vector<std::vector<std::string>>& ip_pool)
         std::cout << std::endl;
     }
 
-    std::cout << std::endl;
+    // std::cout << std::endl;
 }
 
 auto main(int  /*argc*/, char const * /*argv*/[]) -> int
@@ -162,6 +162,7 @@ auto main(int  /*argc*/, char const * /*argv*/[]) -> int
 
         // TODO reverse lexicographic sort
         reverse_lexicographic_sort(ip_pool);
+
         print(ip_pool);
 
         // 222.173.235.246
