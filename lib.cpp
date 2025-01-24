@@ -2,6 +2,6 @@
 
 #include "version.h"
 
-int version() {
+auto version() -> int {
 	return PROJECT_VERSION_PATCH;
 }

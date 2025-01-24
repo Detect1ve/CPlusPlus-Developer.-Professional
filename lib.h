@@ -1,4 +1,3 @@
 #pragma once
 
-int version();
-
+auto version() -> int;

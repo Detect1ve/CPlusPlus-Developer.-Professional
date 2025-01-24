@@ -18,7 +18,7 @@ jobs:
         with:
           submodules: true
       - run: sudo apt-get update && sudo apt-get install libboost-test-dev -y
-      - run: cmake -B build -DPATCH_VERSION=${{ github.run_number }} -DWITH_BOOST_TEST=ON
+      - run: cmake -G Ninja -B build -D PATCH_VERSION=${{ github.run_number }} -D WITH_BOOST_TEST=ON -D CMAKE_CXX_COMPILER=g++
       - run: cmake --build build
       - run: cmake --build build --target test
       - run: cmake --build build --target package
