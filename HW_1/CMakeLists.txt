@@ -18,7 +18,7 @@ set_target_properties(helloworld_cli helloworld PROPERTIES
 )
 
 target_include_directories(helloworld
-    PRIVATE "${CMAKE_BINARY_DIR}"
+    PRIVATE "${CMAKE_CURRENT_BINARY_DIR}"
 )
 
 target_link_libraries(helloworld_cli PRIVATE
