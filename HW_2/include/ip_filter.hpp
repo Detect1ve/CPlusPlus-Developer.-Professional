@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <charconv>
 #include <string>
+#include <vector>
 
 auto split(
     const std::string & str,
