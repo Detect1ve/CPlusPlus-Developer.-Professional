@@ -6,6 +6,7 @@ include(googletest.cmake)
 
 add_subdirectory(HW_1)
 add_subdirectory(HW_2)
+add_subdirectory(HW_3)
 
 list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 
