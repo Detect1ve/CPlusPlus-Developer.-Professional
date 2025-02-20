@@ -22,6 +22,7 @@ include(cmake/googletest.cmake)
 
 add_subdirectory_if_compatible(HW_1)
 add_subdirectory_if_compatible(HW_2)
+add_subdirectory_if_compatible(HW_3)
 
 enable_testing()
 
