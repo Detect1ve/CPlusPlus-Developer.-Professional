@@ -33,7 +33,8 @@ include(common/custom_print.cmake)
 set(SUBDIRS
   HW_1
   HW_2
-  HW_3)
+  HW_3
+  HW_4)
 
 foreach(SUBDIR ${SUBDIRS})
   check_subdirectory_compatibility(${SUBDIR})
