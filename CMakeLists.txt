@@ -11,6 +11,7 @@ include(googletest.cmake)
 add_subdirectory(HW_1)
 add_subdirectory(HW_2)
 add_subdirectory(HW_3)
+add_subdirectory(HW_4)
 
 enable_testing()
 
@@ -23,6 +24,9 @@ set(CPACK_DEBIAN_HELLOWORLD_PACKAGE_NAME ${HW_1_DEB_NAME})
 
 set(CPACK_DEBIAN_IP_FILTER_FILE_NAME ${HW_2_DEB_NAME})
 set(CPACK_DEBIAN_IP_FILTER_PACKAGE_NAME ${HW_2_DEB_NAME})
+
+set(CPACK_DEBIAN_PRINT_IP_FILE_NAME ${HW_4_DEB_NAME})
+set(CPACK_DEBIAN_PRINT_IP_PACKAGE_NAME ${HW_4_DEB_NAME})
 
 # For some unknown reason, FetchContent_Declare for GTest adds extra components.
 # It seems to be a bug in CMake.
