@@ -23,6 +23,7 @@ jobs:
             build_type: Release
             install_compiler: true
             build_packages: true
+            build_docs: true
           - name: GCC-Debug
             compiler: gcc
             c_compiler: gcc-14
@@ -90,8 +91,10 @@ jobs:
       - run: cmake --build ${{ matrix.build_dir }} --target test
       - if: matrix.build_packages && github.event_name == 'push'
         run: cmake --build ${{ matrix.build_dir }} --target package
+      - if: matrix.build_docs && github.event_name == 'push'
+        run: cmake --build ${{ matrix.build_dir }} --target docs
       - name: Upload artifacts
-        if: matrix.build_packages && github.event_name == 'push'
+        if: (matrix.build_packages || matrix.build_docs) && github.event_name == 'push'
         uses: actions/upload-artifact@v4
         with:
           name: release-artifacts
@@ -112,6 +115,18 @@ jobs:
         run: |
           PACKAGES=$(find release-artifacts -name "*-0.0.${{ github.run_number }}-Linux.deb" | awk -F/ '{print $NF, $0}' | sort -k1,1 -u | cut -d' ' -f2- | jq -R -s -c 'split("\n")[:-1]')
           echo "packages=$PACKAGES" >> "$GITHUB_OUTPUT"
+      - id: find_docs
+        name: Find Doxygen Documentation
+        run: |
+          DOCS_DIR=$(cmake -LA -N release-artifacts | grep DOXYGEN_OUTPUT_DIRECTORY | cut -d= -f2)/html
+          echo "docs_dir=$DOCS_DIR" >> "$GITHUB_OUTPUT"
+      - name: Deploy Doxygen Documentation to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ${{ steps.find_docs.outputs.docs_dir }}
+          force_orphan: true
+          full_commit_message: 'Deploy Doxygen documentation for ${{ github.sha }}'
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
