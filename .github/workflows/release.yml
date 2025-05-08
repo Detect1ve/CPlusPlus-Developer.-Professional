@@ -34,6 +34,19 @@ jobs:
         run: |
           PACKAGES=$(find . -name "*-0.0.${{ github.run_number }}-Linux.deb" | awk -F/ '{print $NF, $0}' | sort -k1,1 -u | cut -d' ' -f2- | jq -R -s -c 'split("\n")[:-1]')
           echo "packages=$PACKAGES" >> "$GITHUB_OUTPUT"
+      - run: cmake --build build --target docs
+      - id: find_docs
+        name: Find Doxygen Documentation
+        run: |
+          DOCS_DIR=$(cmake -LA -N build | grep DOXYGEN_OUTPUT_DIRECTORY | cut -d= -f2)/html
+          echo "docs_dir=$DOCS_DIR" >> "$GITHUB_OUTPUT"
+      - name: Deploy Doxygen Documentation to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ${{ steps.find_docs.outputs.docs_dir }}
+          force_orphan: true
+          full_commit_message: 'Deploy Doxygen documentation for ${{ github.sha }}'
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -89,3 +102,4 @@ jobs:
       - run: cmake --build build
       - run: cmake --build build --target test
       - run: cmake --build build --target package
+      - run: cmake --build build --target docs
