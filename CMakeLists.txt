@@ -29,6 +29,7 @@ add_subdirectory(HW_3)
 add_subdirectory(HW_4)
 add_subdirectory(HW_5)
 add_subdirectory(HW_6)
+add_subdirectory(HW_7)
 
 enable_testing()
 
@@ -47,5 +48,8 @@ set(CPACK_DEBIAN_PRINT_IP_PACKAGE_NAME ${HW_4_DEB_NAME})
 
 set(CPACK_DEBIAN_MATRIX_FILE_NAME ${HW_6_DEB_NAME})
 set(CPACK_DEBIAN_MATRIX_PACKAGE_NAME ${HW_6_DEB_NAME})
+
+set(CPACK_DEBIAN_BULK_FILE_NAME ${HW_7_DEB_NAME})
+set(CPACK_DEBIAN_BULK_PACKAGE_NAME ${HW_7_DEB_NAME})
 
 include(CPack)
