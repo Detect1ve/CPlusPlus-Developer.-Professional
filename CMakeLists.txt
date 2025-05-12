@@ -15,6 +15,7 @@ set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 
 list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 
+include(cmake/absl.cmake)
 include(cmake/boost.cmake)
 include(cmake/capture.cmake)
 include(cmake/clang-tidy.cmake)
@@ -27,6 +28,7 @@ add_subdirectory_if_compatible(HW_4)
 add_subdirectory_if_compatible(HW_5)
 add_subdirectory_if_compatible(HW_6)
 add_subdirectory_if_compatible(HW_7)
+add_subdirectory_if_compatible(HW_8)
 
 enable_testing()
 
@@ -48,5 +50,8 @@ set(CPACK_DEBIAN_MATRIX_PACKAGE_NAME ${HW_6_DEB_NAME})
 
 set(CPACK_DEBIAN_BULK_FILE_NAME ${HW_7_DEB_NAME})
 set(CPACK_DEBIAN_BULK_PACKAGE_NAME ${HW_7_DEB_NAME})
+
+set(CPACK_DEBIAN_BAYAN_FILE_NAME ${HW_8_DEB_NAME})
+set(CPACK_DEBIAN_BAYAN_PACKAGE_NAME ${HW_8_DEB_NAME})
 
 include(CPack)
