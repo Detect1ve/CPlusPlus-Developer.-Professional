@@ -22,6 +22,7 @@ set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 
 include(cmake/clang-tidy.cmake)
+include(cmake/fetch_absl.cmake)
 include(cmake/fetch_boost.cmake)
 include(cmake/fetch_googletest.cmake)
 include(cmake/warning_flags.cmake)
@@ -37,7 +38,8 @@ set(SUBDIRS
   HW_4
   HW_5
   HW_6
-  HW_7)
+  HW_7
+  HW_8)
 
 foreach(SUBDIR ${SUBDIRS})
   check_subdirectory_compatibility(${SUBDIR})
