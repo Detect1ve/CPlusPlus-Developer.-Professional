@@ -1,7 +1,8 @@
-find_package(Boost 1.89.0 CONFIG COMPONENTS unit_test_framework algorithm uuid)
+find_package(Boost 1.89.0 CONFIG COMPONENTS unit_test_framework algorithm uuid crc
+  filesystem program_options)
 if (NOT Boost_FOUND)
   include(FetchContent)
-  set(BOOST_INCLUDE_LIBRARIES test algorithm uuid)
+  set(BOOST_INCLUDE_LIBRARIES test algorithm uuid crc filesystem program_options)
   FetchContent_Declare(
     Boost
     URL https://github.com/boostorg/boost/releases/download/boost-1.89.0/boost-1.89.0-cmake.tar.xz

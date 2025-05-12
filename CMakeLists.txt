@@ -19,6 +19,7 @@ set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 
 list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 
+include(common/absl.cmake)
 include(common/boost_algorithm.cmake)
 include(common/boost_uuid.cmake)
 include(common/capture.cmake)
@@ -60,6 +61,11 @@ endif()
 check_subdirectory_compatibility(HW_7)
 if (IS_COMPATIBLE)
   add_subdirectory(HW_7)
+endif()
+
+check_subdirectory_compatibility(HW_8)
+if (IS_COMPATIBLE)
+  add_subdirectory(HW_8)
 endif()
 
 enable_testing()
