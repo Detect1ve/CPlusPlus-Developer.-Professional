@@ -35,6 +35,7 @@ add_subdirectory_if_compatible(HW_10)
 add_subdirectory_if_compatible(HW_11)
 add_subdirectory_if_compatible(HW_12)
 add_subdirectory_if_compatible(HW_13)
+add_subdirectory_if_compatible(Project_work)
 
 enable_testing()
 
