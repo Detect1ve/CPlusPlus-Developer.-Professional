@@ -1,0 +1,71 @@
+cmake_minimum_required(VERSION 3.25..4.2.3)
+project(ProducerConsumerQueue LANGUAGES CXX)
+
+if (PROJECT_IS_TOP_LEVEL)
+  if (NOT MSVC)
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+      add_compile_options(-fcolor-diagnostics)
+    else()
+      add_compile_options(-fdiagnostics-color=always)
+    endif()
+  endif()
+
+  set(MINIMUM_CXX_STANDARD 20)
+  include(../cmake/cxx_standard.cmake)
+  set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
+endif()
+
+if (PROJECT_IS_TOP_LEVEL)
+  include(../cmake/clang-tidy.cmake)
+  include(../cmake/fetch_googletest.cmake)
+  include(../cmake/warning_flags.cmake)
+  include(../common/custom_print.cmake)
+  list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  set(PROJECT_WORK_COMPILE_WARNING_FLAGS -Wc++20-compat-pedantic)
+endif()
+
+add_library(data_queue INTERFACE)
+target_include_directories(data_queue INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+if (NOT MSVC)
+  target_compile_options(data_queue INTERFACE -Wno-effc++ -Wno-strict-overflow)
+endif()
+
+add_executable(queue_test test/queue_test.cpp)
+target_link_libraries(queue_test PRIVATE data_queue GTest::gtest_main)
+target_compile_options(queue_test PRIVATE
+  ${COMPILE_WARNING_FLAGS} ${PROJECT_WORK_COMPILE_WARNING_FLAGS})
+if (NOT MSVC)
+  target_compile_options(queue_test PRIVATE -Wno-global-constructors)
+endif()
+
+enable_testing()
+add_test(NAME Project_work.queue_test COMMAND $<TARGET_FILE:queue_test>)
+
+add_executable(queue_performance_test test/queue_performance_test.cpp)
+target_link_libraries(queue_performance_test PRIVATE custom_print data_queue)
+target_compile_options(queue_performance_test PRIVATE
+  ${COMPILE_WARNING_FLAGS} ${PROJECT_WORK_COMPILE_WARNING_FLAGS})
+
+set(CLANG_TIDY_PROJECT_WORK_OPTS
+    "-altera-struct-pack-align"
+    "-fuchsia-default-arguments-calls"
+    "-fuchsia-default-arguments-declarations"
+    "-fuchsia-overloaded-operator"
+    "-modernize-use-trailing-return-type")
+
+set_smart_tidy(queue_test
+  COGNITIVE_IGNORE_MACROS
+  EXCLUDE
+    "${CLANG_TIDY_PROJECT_WORK_OPTS}"
+  HAS_EXCEPTIONS)
+
+set_smart_tidy(queue_performance_test
+  EXCLUDE
+    "-llvm-prefer-static-over-anonymous-namespace"
+    "${CLANG_TIDY_PROJECT_WORK_OPTS}"
+  EXTRA_INCLUDES
+    "${CUSTOM_PRINT_INCLUDE_DIR}"
+  HAS_EXCEPTIONS)
