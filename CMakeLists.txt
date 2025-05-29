@@ -37,6 +37,7 @@ add_subdirectory(HW_10)
 add_subdirectory(HW_11)
 add_subdirectory(HW_12)
 add_subdirectory(HW_13)
+add_subdirectory(Project_work)
 
 enable_testing()
 
