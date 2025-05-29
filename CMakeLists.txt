@@ -94,6 +94,11 @@ if (IS_COMPATIBLE)
   add_subdirectory(HW_13)
 endif()
 
+check_subdirectory_compatibility(Project_work)
+if (IS_COMPATIBLE)
+  add_subdirectory(Project_work)
+endif()
+
 enable_testing()
 
 set(CPACK_GENERATOR DEB)
