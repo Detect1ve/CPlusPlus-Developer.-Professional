@@ -1,10 +1,47 @@
-cmake_minimum_required(VERSION 3.9)
-project(async)
+cmake_minimum_required(VERSION 4.0.3)
 
-set(CMAKE_CXX_STANDARD 14)
+if(NOT DEFINED PATCH_VERSION)
+  set(PATCH_VERSION
+      "1"
+      CACHE INTERNAL "Patch version")
+endif()
 
-add_library(async SHARED async.cpp async.h)
+set(PROJECT_VERSION 0.0.${PATCH_VERSION})
+project(async VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
-add_executable(async_cli main.cpp)
+add_compile_options(-Wall -Wextra -pedantic)
 
-target_link_libraries(async_cli async)
+set(CMAKE_CXX_STANDARD 26)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+if(PROJECT_IS_TOP_LEVEL)
+  add_compile_options(-fdiagnostics-color=always)
+endif()
+
+add_library(async SHARED lib/async.cpp include/async.h)
+target_include_directories(async PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+
+add_library(async_static STATIC lib/async.cpp)
+target_include_directories(async_static PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+
+add_executable(async_cli src/main.cpp)
+target_link_libraries(async_cli PRIVATE async_static -static)
+
+install(TARGETS async
+        LIBRARY DESTINATION lib
+        COMPONENT "${PROJECT_NAME}")
+install(FILES include/async.h
+        DESTINATION include/async
+        COMPONENT "${PROJECT_NAME}")
+install(TARGETS async_cli
+        RUNTIME DESTINATION bin
+        COMPONENT "${PROJECT_NAME}")
+if(PROJECT_IS_TOP_LEVEL)
+  set(CPACK_GENERATOR DEB)
+  set(CPACK_PACKAGE_CONTACT Nikolai_Grin@Mail.Ru)
+  include(CPack)
+else()
+  set(HW_9_DEB_NAME
+      "${PROJECT_NAME}-${PROJECT_VERSION}-Linux.deb"
+      PARENT_SCOPE)
+endif()
