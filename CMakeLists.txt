@@ -29,6 +29,7 @@ add_subdirectory_if_compatible(HW_5)
 add_subdirectory_if_compatible(HW_6)
 add_subdirectory_if_compatible(HW_7)
 add_subdirectory_if_compatible(HW_8)
+add_subdirectory_if_compatible(HW_9)
 
 enable_testing()
 
@@ -53,5 +54,8 @@ set(CPACK_DEBIAN_BULK_PACKAGE_NAME ${HW_7_DEB_NAME})
 
 set(CPACK_DEBIAN_BAYAN_FILE_NAME ${HW_8_DEB_NAME})
 set(CPACK_DEBIAN_BAYAN_PACKAGE_NAME ${HW_8_DEB_NAME})
+
+set(CPACK_DEBIAN_ASYNC_FILE_NAME ${HW_9_DEB_NAME})
+set(CPACK_DEBIAN_ASYNC_PACKAGE_NAME ${HW_9_DEB_NAME})
 
 include(CPack)
