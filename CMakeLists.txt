@@ -24,6 +24,7 @@ add_subdirectory_if_compatible(HW_1)
 add_subdirectory_if_compatible(HW_2)
 add_subdirectory_if_compatible(HW_3)
 add_subdirectory_if_compatible(HW_4)
+add_subdirectory_if_compatible(HW_5)
 
 enable_testing()
 
