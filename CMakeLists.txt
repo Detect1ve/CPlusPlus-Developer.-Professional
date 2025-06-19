@@ -52,6 +52,11 @@ if (IS_COMPATIBLE)
   add_subdirectory(HW_5)
 endif()
 
+check_subdirectory_compatibility(HW_6)
+if (IS_COMPATIBLE)
+  add_subdirectory(HW_6)
+endif()
+
 enable_testing()
 
 set(CPACK_GENERATOR DEB)
