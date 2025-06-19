@@ -32,7 +32,8 @@ set(SUBDIRS
   HW_2
   HW_3
   HW_4
-  HW_5)
+  HW_5
+  HW_6)
 
 foreach(SUBDIR ${SUBDIRS})
   check_subdirectory_compatibility(${SUBDIR})
