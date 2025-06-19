@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.31.6)
+cmake_minimum_required(VERSION 4.0.3)
 
 set(PATCH_VERSION "1" CACHE INTERNAL "Patch version")
 set(PROJECT_VERSION 0.0.${PATCH_VERSION})
@@ -6,8 +6,6 @@ set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 project(helloworld VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 configure_file(version.h.in version.h)
-
-add_compile_options(-fdiagnostics-color=always)
 
 add_executable(helloworld_cli main.cpp)
 add_library(helloworld STATIC lib.cpp)
@@ -25,21 +23,23 @@ target_link_libraries(helloworld_cli PRIVATE
     helloworld -static
 )
 
-find_package(Boost 1.87.0 QUIET CONFIG COMPONENTS unit_test_framework)
+find_package(Boost 1.88.0 CONFIG COMPONENTS unit_test_framework)
 if(NOT Boost_FOUND)
   include(FetchContent)
   set(BOOST_INCLUDE_LIBRARIES test)
   FetchContent_Declare(
     Boost
-    URL https://github.com/boostorg/boost/releases/download/boost-1.87.0/boost-1.87.0-cmake.tar.xz
-    URL_MD5 d55d43218e81ca3d0fc14436b7665bf1
-    DOWNLOAD_NO_PROGRESS ON
+    URL https://github.com/boostorg/boost/releases/download/boost-1.88.0/boost-1.88.0-cmake.tar.xz
+    URL_MD5 3edffaacd2cfe63c240ef1b99497c74f
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     EXCLUDE_FROM_ALL)
   FetchContent_MakeAvailable(Boost)
 endif()
 
 if(PROJECT_IS_TOP_LEVEL)
-  include(googletest.cmake)
+  add_compile_options(-fdiagnostics-color=always)
+  include(cmake/googletest.cmake)
+  list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
 add_executable(test_version test_version.cpp)
