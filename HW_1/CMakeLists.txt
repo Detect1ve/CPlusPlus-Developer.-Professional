@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.12)
 set(PATCH_VERSION "1" CACHE INTERNAL "Patch version")
 set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 
-project(helloworld VERSION ${PROJECT_VERSION})
+project(helloworld VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 option(WITH_BOOST_TEST "Whether to build Boost test" ON)
 
@@ -69,14 +69,18 @@ else ()
     endif()
 endif()
 
-install(TARGETS helloworld_cli RUNTIME DESTINATION bin)
+install(TARGETS helloworld_cli RUNTIME DESTINATION bin
+                                       COMPONENT "${PROJECT_NAME}")
 
-set(CPACK_GENERATOR DEB)
-set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
-set(CPACK_PACKAGE_VERSION_MINOR "${PROJECT_VERSION_MINOR}")
-set(CPACK_PACKAGE_VERSION_PATCH "${PROJECT_VERSION_PATCH}")
-set(CPACK_PACKAGE_CONTACT example@example.com)
-include(CPack)
+if(PROJECT_IS_TOP_LEVEL)
+  set(CPACK_GENERATOR DEB)
+  set(CPACK_PACKAGE_CONTACT Nikolai_Grin@Mail.Ru)
+  include(CPack)
+else()
+  set(HW_1_DEB_NAME
+      "${PROJECT_NAME}-${PROJECT_VERSION}-Linux.deb"
+      PARENT_SCOPE)
+endif()
 
 if(WITH_BOOST_TEST)
     enable_testing()
