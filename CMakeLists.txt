@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.13.3)
 
 project(C++-Developer-Professional LANGUAGES CXX)
 
+include(googletest.cmake)
+
 add_subdirectory(HW_1)
 
 enable_testing()
