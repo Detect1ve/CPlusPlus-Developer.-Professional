@@ -11,7 +11,7 @@ add_executable(helloworld_cli main.cpp)
 add_library(helloworld STATIC lib.cpp)
 
 set_target_properties(helloworld_cli helloworld PROPERTIES
-    CXX_STANDARD 23
+    CXX_STANDARD 26
     CXX_STANDARD_REQUIRED ON
 )
 
@@ -36,16 +36,17 @@ if(NOT Boost_FOUND)
   FetchContent_MakeAvailable(Boost)
 endif()
 
+add_executable(test_version test_version.cpp)
+
 if(PROJECT_IS_TOP_LEVEL)
   add_compile_options(-fdiagnostics-color=always)
   include(cmake/googletest.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
-add_executable(test_version test_version.cpp)
 add_executable(g_test_version g_test_version.cpp)
 set_target_properties(test_version g_test_version PROPERTIES
-    CXX_STANDARD 23
+    CXX_STANDARD 26
     CXX_STANDARD_REQUIRED ON
 )
 
@@ -69,6 +70,9 @@ if (MSVC)
     target_compile_options(test_version PRIVATE
         /W4
     )
+    target_compile_options(g_test_version PRIVATE
+        /W4
+    )
 else ()
     target_compile_options(helloworld_cli PRIVATE
         -Wall -Wextra -pedantic -Werror
@@ -77,6 +81,9 @@ else ()
         -Wall -Wextra -pedantic -Werror
     )
     target_compile_options(test_version PRIVATE
+        -Wall -Wextra -pedantic -Werror
+    )
+    target_compile_options(g_test_version PRIVATE
         -Wall -Wextra -pedantic -Werror
     )
 endif()
