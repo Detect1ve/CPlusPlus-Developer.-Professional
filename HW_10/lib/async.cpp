@@ -270,6 +270,8 @@ namespace {
 
     void init_threads() {
         if (!taskmanager::threads_initialized.exchange(true)) {
+            taskmanager::should_terminate = false;
+
             taskmanager::log_thread() = std::thread(log_worker);
             taskmanager::file_thread1() = std::thread(file_worker, 1);
             taskmanager::file_thread2() = std::thread(file_worker, 2);
