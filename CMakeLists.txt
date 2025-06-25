@@ -19,10 +19,11 @@ set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 
 list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 
-include(common/absl.cmake)
 include(common/boost_algorithm.cmake)
+include(common/boost_asio.cmake)
 include(common/boost_uuid.cmake)
 include(common/capture.cmake)
+include(common/socket_wrapper.cmake)
 
 include(cmake/clang-tidy.cmake)
 include(cmake/fetch_googletest.cmake)
@@ -71,6 +72,11 @@ endif()
 check_subdirectory_compatibility(HW_9)
 if (IS_COMPATIBLE)
   add_subdirectory(HW_9)
+endif()
+
+check_subdirectory_compatibility(HW_10)
+if (IS_COMPATIBLE)
+  add_subdirectory(HW_10)
 endif()
 
 enable_testing()
