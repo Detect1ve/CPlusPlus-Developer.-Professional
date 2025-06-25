@@ -30,6 +30,7 @@ include(cmake/warning_flags.cmake)
 include(common/attribute_wrapper.cmake)
 include(common/capture.cmake)
 include(common/custom_print.cmake)
+include(common/socket_wrapper.cmake)
 
 set(SUBDIRS
   HW_1
@@ -40,7 +41,8 @@ set(SUBDIRS
   HW_6
   HW_7
   HW_8
-  HW_9)
+  HW_9
+  HW_10)
 
 foreach(SUBDIR ${SUBDIRS})
   check_subdirectory_compatibility(${SUBDIR})
