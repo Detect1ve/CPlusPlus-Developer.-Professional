@@ -20,6 +20,7 @@ include(cmake/boost.cmake)
 include(cmake/capture.cmake)
 include(cmake/clang-tidy.cmake)
 include(cmake/googletest.cmake)
+include(cmake/socket_wrapper.cmake)
 
 add_subdirectory_if_compatible(HW_1)
 add_subdirectory_if_compatible(HW_2)
@@ -30,6 +31,7 @@ add_subdirectory_if_compatible(HW_6)
 add_subdirectory_if_compatible(HW_7)
 add_subdirectory_if_compatible(HW_8)
 add_subdirectory_if_compatible(HW_9)
+add_subdirectory_if_compatible(HW_10)
 
 enable_testing()
 
@@ -57,5 +59,8 @@ set(CPACK_DEBIAN_BAYAN_PACKAGE_NAME ${HW_8_DEB_NAME})
 
 set(CPACK_DEBIAN_ASYNC_FILE_NAME ${HW_9_DEB_NAME})
 set(CPACK_DEBIAN_ASYNC_PACKAGE_NAME ${HW_9_DEB_NAME})
+
+set(CPACK_DEBIAN_BULK_SERVER_FILE_NAME ${HW_10_DEB_NAME})
+set(CPACK_DEBIAN_BULK_SERVER_PACKAGE_NAME ${HW_10_DEB_NAME})
 
 include(CPack)

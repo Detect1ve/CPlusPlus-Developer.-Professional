@@ -33,65 +33,36 @@ struct OutputTask {
 
 class taskmanager {
 public:
-    taskmanager(const std::size_t max_task_count, std::string_view manager_id):
-        max_static_task_count(max_task_count), task_manager_id(manager_id) { };
-
-    [[nodiscard]] bool is_dynamic_block_active() const noexcept {
-        return dynamic_block_nesting_level > 0;
-    }
+    explicit taskmanager(const std::size_t max_task_count):
+        max_static_task_count(max_task_count) { };
 
     void add_task(std::string_view task) {
-        static constexpr std::string_view CLOSE_BRACKET = "}";
-        static constexpr std::string_view OPEN_BRACKET = "{";
-
-        if (task == OPEN_BRACKET) {
-            if (!is_dynamic_block_active()) {
-                dynamic_block_timestamp = std::chrono::system_clock::now();
-                process_tasks(static_block_task);
-            }
-
-            dynamic_block_nesting_level++;
-
-            return;
+        if (static_block_task.empty()) {
+            static_block_timestamp = std::chrono::system_clock::now();
         }
 
-        if (task == CLOSE_BRACKET) {
-            if (dynamic_block_nesting_level > 0) {
-                dynamic_block_nesting_level--;
-                if (!is_dynamic_block_active()) {
-                    process_tasks(dynamic_block_task);
-                }
-
-                return;
-            }
-        }
-
-        if (is_dynamic_block_active()) {
-            dynamic_block_task.emplace_back(task);
-        } else {
-            if (static_block_task.empty()) {
-                static_block_timestamp = std::chrono::system_clock::now();
-            }
-
-            static_block_task.emplace_back(task);
-            if (static_block_task.size() >= max_static_task_count) {
-                process_tasks(static_block_task);
-            }
+        static_block_task.emplace_back(task);
+        if (static_block_task.size() >= max_static_task_count) {
+            process_tasks(static_block_task, static_block_timestamp);
         }
     }
 
-    void process_tasks(std::vector<std::string>& block_task) {
+    static void process_tasks(std::vector<std::string>& block_task,
+        const std::chrono::system_clock::time_point& timestamp) {
+        process_tasks(block_task, timestamp, "0");
+    }
+
+    static void process_tasks(std::vector<std::string>& block_task,
+        const std::chrono::system_clock::time_point& timestamp,
+        const std::string& context_id) {
         if (block_task.empty()) [[unlikely]] {
             return;
         }
 
-        std::chrono::system_clock::time_point *timestamp = (!static_block_task.empty() ?
-            &static_block_timestamp : &dynamic_block_timestamp);
-
         OutputTask task;
         task.commands = block_task;
-        task.timestamp = *timestamp;
-        task.context_id = task_manager_id;
+        task.timestamp = timestamp;
+        task.context_id = context_id;
 
         {
             const std::scoped_lock<std::mutex> lock(queue_mutex());
@@ -102,12 +73,11 @@ public:
         queue_cv().notify_all();
 
         block_task.clear();
-        *timestamp = std::chrono::system_clock::time_point{};
     }
 
     void finish() {
-        if (!is_dynamic_block_active() && !static_block_task.empty()) {
-            process_tasks(static_block_task);
+        if (!static_block_task.empty()) {
+            process_tasks(static_block_task, static_block_timestamp);
         }
     }
 
@@ -157,17 +127,20 @@ public:
     }
 
 private:
-    int dynamic_block_nesting_level = 0;
     std::size_t max_static_task_count;
-    std::chrono::system_clock::time_point dynamic_block_timestamp;
     std::chrono::system_clock::time_point static_block_timestamp;
-    std::string task_manager_id;
-    std::vector<std::string> dynamic_block_task;
     std::vector<std::string> static_block_task;
 };
 
 std::atomic<bool> taskmanager::should_terminate{false};
 std::atomic<bool> taskmanager::threads_initialized{false};
+
+struct ConnectionContext {
+    int dynamic_block_nesting_level = 0;
+    std::vector<std::string> dynamic_block_task;
+    std::chrono::system_clock::time_point dynamic_block_timestamp;
+    std::string id;
+};
 
 namespace {
     std::mutex& contexts_mutex() {
@@ -176,10 +149,46 @@ namespace {
         return mutex;
     }
 
-    std::map<void*, std::unique_ptr<taskmanager>>& contexts() {
-        static std::map<void*, std::unique_ptr<taskmanager>> contexts_map;
+    std::map<void*, std::unique_ptr<ConnectionContext>>& contexts() {
+        static std::map<void*, std::unique_ptr<ConnectionContext>> contexts_map;
 
         return contexts_map;
+    }
+
+    std::unique_ptr<taskmanager>& shared_task_manager() {
+        static std::unique_ptr<taskmanager> manager;
+
+        return manager;
+    }
+
+    void process_command(ConnectionContext* context, const std::string& command) {
+        if (command == "{") {
+            if (context->dynamic_block_nesting_level == 0) {
+                if (shared_task_manager()) {
+                    shared_task_manager()->finish();
+                }
+
+                context->dynamic_block_timestamp = std::chrono::system_clock::now();
+            }
+
+            context->dynamic_block_nesting_level++;
+        } else if (command == "}") {
+            context->dynamic_block_nesting_level--;
+            if (context->dynamic_block_nesting_level == 0) {
+                if (shared_task_manager()) {
+                    taskmanager::process_tasks(context->dynamic_block_task,
+                        context->dynamic_block_timestamp, context->id);
+                }
+            }
+        } else if (!command.empty()) {
+            if (context->dynamic_block_nesting_level > 0) {
+                context->dynamic_block_task.emplace_back(command);
+            } else {
+                if (shared_task_manager()) {
+                    shared_task_manager()->add_task(command);
+                }
+            }
+        }
     }
 
     void log_worker() {
@@ -271,6 +280,8 @@ namespace {
 
     void init_threads() {
         if (!taskmanager::threads_initialized.exchange(true)) {
+            taskmanager::should_terminate = false;
+
             taskmanager::log_thread() = std::thread(log_worker);
             taskmanager::file_thread1() = std::thread(file_worker, 1);
             taskmanager::file_thread2() = std::thread(file_worker, 2);
@@ -279,6 +290,10 @@ namespace {
 
     void stop_threads() {
         if (taskmanager::threads_initialized.exchange(false)) {
+            if(shared_task_manager()) {
+                shared_task_manager()->finish();
+            }
+
             taskmanager::should_terminate = true;
             taskmanager::queue_cv().notify_all();
 
@@ -293,21 +308,27 @@ namespace {
             if (taskmanager::file_thread2().joinable()) {
                 taskmanager::file_thread2().join();
             }
+
+            if (shared_task_manager()) {
+                shared_task_manager().reset();
+            }
         }
     }
 } // namespace
 
 handle_t connect(std::size_t bulk) {
-    init_threads();
+    const std::scoped_lock<std::mutex> lock(contexts_mutex());
+    if (!shared_task_manager()) {
+        shared_task_manager() = std::make_unique<taskmanager>(bulk);
+        init_threads();
+    }
 
     static std::atomic<int> next_id{0};
     const int unique_id = next_id++;
-    const std::string context_id = std::to_string(unique_id);
 
-    auto context = std::make_unique<taskmanager>(bulk, context_id);
+    auto context = std::make_unique<ConnectionContext>();
+    context->id = std::to_string(unique_id);
     auto *handle = static_cast<handle_t>(context.get());
-
-    const std::scoped_lock<std::mutex> lock(contexts_mutex());
     contexts()[handle] = std::move(context);
 
     return handle;
@@ -318,7 +339,7 @@ void receive(handle_t handle, const char *data, std::size_t size) {
         return;
     }
 
-    taskmanager* context = nullptr;
+    ConnectionContext* context = nullptr;
     {
         const std::scoped_lock<std::mutex> lock(contexts_mutex());
         auto context_iterator = contexts().find(handle);
@@ -336,9 +357,7 @@ void receive(handle_t handle, const char *data, std::size_t size) {
     std::string command;
 
     while (std::getline(stream, command)) {
-        if (!command.empty()) {
-            context->add_task(command);
-        }
+        process_command(context, command);
     }
 }
 
@@ -347,12 +366,11 @@ void disconnect(handle_t handle) {
         return;
     }
 
-    std::unique_ptr<taskmanager> context;
+    std::unique_ptr<ConnectionContext> context;
     {
         const std::scoped_lock<std::mutex> lock(contexts_mutex());
         auto context_iterator = contexts().find(handle);
         if (context_iterator != contexts().end()) {
-            context_iterator->second->finish();
             context = std::move(context_iterator->second);
             contexts().erase(context_iterator);
         }
