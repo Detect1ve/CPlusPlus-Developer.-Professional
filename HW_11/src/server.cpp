@@ -1,0 +1,151 @@
+#include <iostream>
+
+#include <server.hpp>
+
+using boost::asio::ip::tcp;
+
+Session::Session(
+    tcp::socket socket,
+    Database*   database)
+    :
+    socket_(std::move(socket)),
+    database_(database),
+    buffer_(std::make_unique<boost::asio::streambuf>()) {}
+
+void Session::start()
+{
+    do_read();
+}
+
+void Session::do_read()
+{
+    auto self(shared_from_this());
+
+    boost::asio::async_read_until(socket_, *buffer_, '\n',
+        [this, self](
+            const boost::system::error_code& error_code,
+            const std::size_t                length)
+        {
+            if (!error_code)
+            {
+                std::string command;
+
+                command.resize(length);
+                boost::asio::buffer_copy(boost::asio::buffer(command), buffer_->data(),
+                    length);
+                buffer_->consume(length);
+
+                process_command(command);
+
+                do_read();
+            }
+            else if (error_code != boost::asio::error::eof)
+            {
+                std::cerr << "Error: " << error_code.message() << '\n';
+            }
+        });
+}
+
+void Session::do_write(std::string_view message)
+{
+    auto self(shared_from_this());
+
+    boost::asio::async_write(socket_, boost::asio::buffer(message),
+        [self](
+            boost::system::error_code error_code,
+            std::size_t               /*length*/)
+        {
+            if (error_code)
+            {
+                std::cerr << "Error: " << error_code.message() << '\n';
+            }
+        });
+}
+
+void Session::do_write(const std::vector<std::string>& messages)
+{
+    for (const auto& message : messages)
+    {
+        do_write(message + '\n');
+    }
+
+    do_write("OK\n");
+}
+
+void Session::process_command(std::string_view command)
+{
+    std::istringstream iss((std::string(command)));
+    std::string cmd;
+
+    iss >> cmd;
+
+    if (cmd == "INSERT")
+    {
+        int record_id = 0;
+        std::string name;
+        std::string table;
+
+        iss >> table >> record_id;
+
+        std::getline(iss >> std::ws, name);
+
+        if (database_->insert(table, record_id, name))
+        {
+            do_write("OK\n");
+        }
+        else
+        {
+            do_write("ERR duplicate " + std::to_string(record_id) + '\n');
+        }
+    }
+    else if (cmd == "TRUNCATE")
+    {
+        std::string table;
+
+        iss >> table;
+
+        database_->truncate(table);
+        do_write("OK\n");
+    }
+    else if (cmd == "INTERSECTION")
+    {
+        auto result = database_->intersection();
+
+        do_write(result);
+    }
+    else if (cmd == "SYMMETRIC_DIFFERENCE")
+    {
+        auto result = database_->symmetric_difference();
+
+        do_write(result);
+    }
+    else
+    {
+        do_write("ERR unknown command\n");
+    }
+}
+
+Server::Server(
+    boost::asio::io_context& io_context,
+    const int16_t            port)
+    :
+    acceptor_(io_context, tcp::endpoint(tcp::v4(), port))
+{
+    do_accept();
+}
+
+void Server::do_accept()
+{
+    acceptor_.async_accept(
+        [this](
+            boost::system::error_code error_code,
+            tcp::socket               socket)
+        {
+            if (!error_code)
+            {
+                std::make_shared<Session>(std::move(socket), &database_)->start();
+            }
+
+            do_accept();
+        });
+}
