@@ -32,6 +32,7 @@ add_subdirectory_if_compatible(HW_7)
 add_subdirectory_if_compatible(HW_8)
 add_subdirectory_if_compatible(HW_9)
 add_subdirectory_if_compatible(HW_10)
+add_subdirectory_if_compatible(HW_11)
 
 enable_testing()
 
@@ -62,5 +63,8 @@ set(CPACK_DEBIAN_ASYNC_PACKAGE_NAME ${HW_9_DEB_NAME})
 
 set(CPACK_DEBIAN_BULK_SERVER_FILE_NAME ${HW_10_DEB_NAME})
 set(CPACK_DEBIAN_BULK_SERVER_PACKAGE_NAME ${HW_10_DEB_NAME})
+
+set(CPACK_DEBIAN_JOIN_SERVER_FILE_NAME ${HW_11_DEB_NAME})
+set(CPACK_DEBIAN_JOIN_SERVER_PACKAGE_NAME ${HW_11_DEB_NAME})
 
 include(CPack)
