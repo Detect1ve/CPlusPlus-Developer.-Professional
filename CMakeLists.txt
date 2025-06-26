@@ -19,6 +19,7 @@ add_subdirectory(HW_7)
 add_subdirectory(HW_8)
 add_subdirectory(HW_9)
 add_subdirectory(HW_10)
+add_subdirectory(HW_11)
 
 enable_testing()
 
@@ -49,6 +50,9 @@ set(CPACK_DEBIAN_ASYNC_PACKAGE_NAME ${HW_9_DEB_NAME})
 
 set(CPACK_DEBIAN_BULK_SERVER_FILE_NAME ${HW_10_DEB_NAME})
 set(CPACK_DEBIAN_BULK_SERVER_PACKAGE_NAME ${HW_10_DEB_NAME})
+
+set(CPACK_DEBIAN_JOIN_SERVER_FILE_NAME ${HW_11_DEB_NAME})
+set(CPACK_DEBIAN_JOIN_SERVER_PACKAGE_NAME ${HW_11_DEB_NAME})
 
 # For some unknown reason, FetchContent_Declare for GTest adds extra components.
 # It seems to be a bug in CMake.
