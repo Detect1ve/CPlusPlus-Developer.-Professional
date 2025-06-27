@@ -33,6 +33,7 @@ add_subdirectory_if_compatible(HW_8)
 add_subdirectory_if_compatible(HW_9)
 add_subdirectory_if_compatible(HW_10)
 add_subdirectory_if_compatible(HW_11)
+add_subdirectory_if_compatible(HW_12)
 
 enable_testing()
 

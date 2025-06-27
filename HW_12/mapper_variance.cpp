@@ -1,7 +1,9 @@
 #include <charconv>
 #include <iostream>
 #include <map>
+#if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
 #include <string>
+#endif
 
 namespace
 {
@@ -57,10 +59,11 @@ namespace
     }
 } // namespace
 
-int main(int argc, char ** argv)
+int main()
 {
     std::map<double, int> price_counts;
     std::string line;
+
     while (std::getline(std::cin, line))
     {
         const std::string price_field =
@@ -82,7 +85,9 @@ int main(int argc, char ** argv)
 
     for (const auto& [price, count] : price_counts)
     {
-        std::cout << "price\t" << price << "\t" << count << std::endl;
+        const double price_squared = price * price;
+
+        std::cout << "price\t" << price << "\t" << price_squared << "\t" << count << '\n';
     }
 
     return 0;
