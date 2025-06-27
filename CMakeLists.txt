@@ -28,6 +28,7 @@ add_subdirectory(HW_8)
 add_subdirectory(HW_9)
 add_subdirectory(HW_10)
 add_subdirectory(HW_11)
+add_subdirectory(HW_12)
 
 enable_testing()
 
