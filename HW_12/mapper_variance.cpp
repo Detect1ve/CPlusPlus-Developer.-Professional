@@ -3,7 +3,6 @@
 #endif
 #include <iostream>
 #include <map>
-#include <string>
 #include <sstream>
 #include <vector>
 
@@ -46,7 +45,7 @@ auto extract_price_field(
     return "";
 }
 
-int main(int argc, char ** argv)
+auto main() -> int
 {
     std::map<double, int> price_counts;
     std::string line;
@@ -69,7 +68,10 @@ int main(int argc, char ** argv)
 
     for (const auto& [price, count] : price_counts)
     {
-        std::cout << "price\t" << price << "\t" << count << std::endl;
+        double price_squared = price * price;
+
+        std::cout << "price\t" << price << "\t" << price_squared << "\t" << count
+            << std::endl;
     }
 
     return 0;

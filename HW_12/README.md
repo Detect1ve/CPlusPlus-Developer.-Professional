@@ -1,85 +1,89 @@
+# 12. Mapreduce
 # MapReduce Homework
 
-Это задание на работу с кучей разных инструментов. Надеюсь, каждый из учащихся найдёт в этом задании что-то новое для себя.
+This is a task to work with a bunch of different tools. Hopes that each will find something new for themselves in this task.
 
-Вы научитесь (обязательная часть для проверки):
- * Вычислять среднее и дисперсию в парадигме map-reduce
+You will learn (mandatory part for verification):
+- Calculate the mean and variance in the map-reduce paradigm
 
-А самые смелые научатся также (не обязательно, без проверки):
- * Использовать docker образы
- * Работать с hadoop hdfs и hadoop map reduce
+And the bravest will also learn (not necessarily, without verification):
+- Use docker images
+- Work with hadoop hdfs and hadoop map reduce
 
-## 1. Мама, я - аналитик (обязательная часть задания, для проверки, C++ будет только в этой части)
-Возьмите мою заготовку проекта.
+## 1. Mom, I'm an analyst (mandatory part of the task, for checking, C++ will be only in this part)
+Take project template.
 
-В директории input лежит датасет, который я заранее подчистил от кривых строчек, но если хотите выполнить "задание со звёздочкой", то скачайте оригинал датасета с kaggle, ссылка лежит там же рядом.
+In the input directory there is a dataset, which are cleared of crooked lines in advance, but if you want to complete the "task with an asterisk", then download the original dataset from kaggle, the link is there nearby.
 
-Изучите написанный мною мейкфайл, он поможет вам скомпилировать ваш код. Чтобы собрать mapper наберите в консоли `make bin/mapper`, аналогично для reducer'а. `make all` соберёт сразу оба файла, а `make clean` приберётся после работы. 
+Study the makefile, it will help you compile your code. To build the mapper, type `make bin/mapper` in the console, similarly for the reducer. `make all` will build both files at once, and `make clean` will clean up after the work.
 
-mapper.cpp и reducer.cpp - это заготовки для вашего кода
+mapper.cpp and reducer.cpp are placeholders for your code
 
-run_locally.sh поможет вручную потестить код (ручное тестирование не отменяет необходимость unit-тестов)
+run_locally.sh will help you manually test your code (manual testing does not eliminate the need for unit tests)
 
-Это лишь заготовка проекта. Вы можете модицировать любые скрипты при необходимости, делайте как вам удобно. Можете воспользоваться другими инструментами сборки.
+This is just a draft of the project. You can modify any scripts if necessary, do as you wish. You can use other assembly tools.
 
-За работу... Изучите датасет, если будет непонятно, где какой столбец - почитайте описание на кэггле (https://www.kaggle.com/datasets/dgomonov/new-york-city-airbnb-open-data?resource=download). Сегодня наша задача - посчитать в парадигме map-reduce пару статистик: среднюю цену на недвижимость в NY и дисперсию цены. Напишите mapper'ы и reducer'ы для этого. Для каждой статистики у вас получится своя пара mapper+reducer. Они должны успешно отрабатывать при запуске run_locally.sh
+Get to work... Study the dataset, if it is not clear where which column is - read the description on Kaggle (https://www.kaggle.com/datasets/dgomonov/new-york-city-airbnb-open-data?resource=download). Today task is to calculate a pair of statistics in the map-reduce paradigm: the average price of real estate in NY and the price variance. Write mappers and reducers for this. For each statistic you will get your own mapper+reducer pair. They should work successfully when you run run_locally.sh
 
-Если вы не уверены, что посчитали значения правильно, воспользуйтесь вашим любимым инструментом для анализа данных (matlab/R/python+pandas/etc) и проверьте себя. А так же не пренебрегайте юнит-тестами. Самые любознательные могут попробовать выполнить эту работу в технике TDD (https://ru.wikipedia.org/wiki/%D0%A0%D0%B0%D0%B7%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%BA%D0%B0_%D1%87%D0%B5%D1%80%D0%B5%D0%B7_%D1%82%D0%B5%D1%81%D1%82%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5), ведь учёба - отличное время, чтобы пробовать новые подходы. 
+If you are not sure that you calculated the values ​​correctly, use your favorite data analysis tool (matlab/R/python+pandas/etc) and check yourself. And do not neglect unit tests. The most inquisitive can try to do this work using the TDD technique (https://ru.wikipedia.org/wiki/%D0%A0%D0%B0%D0%B7%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%BA%D0%B0_%D1%87%D0%B5%D1%80%D0%B5%D0%B7_%D1%82%D0%B5%D1%81%D1%82%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5), because studying is a great time to try new approaches.
 
-К концу этого этапа у вас будет две пары mapper+reducer, которые умеют вычислять среднее и дисперсию цены из данного вам датасета. Сдайте их на проверку вместе со всем, что нужно для сборки и проверки.
+By the end of this step, you will have two mapper+reducer pairs that can calculate the mean and variance of the price from the dataset you were given. Submit them for review along with everything you need to build and review them.
 
-## 2. Что общего между devops и бездомным? Оба хорошо разбираются в контейнерах (необязательная часть; не для проверки; для тех, кто осилит)
-Итак, если вы ещё не умеете пользоваться docker, то сейчас - самое время научиться. Вам помогут `man docker` и интернет (https://habr.com/ru/companies/ruvds/articles/438796/).  
-Docker - замечательный инструмент, это такая виртуалка уровня ОС, но не уровня железа. Используется, чтобы поставлять ваше ПО вместе с необходимым окружением, быстро разворачивать это на любом сервере или на куче серверов сразу. Он обязательно пригодится вам в жизни. Сейчас мы не будем учиться упаковывать в образ своё ПО, а будем только использовать чужие образы.  
-Этот этап у пользователей windows может проходить больнее, чем у unixоидов, таков путь.
+## 2. What do devops and a homeless person have in common? Both are good at containers (optional part; not for review; for those who can handle it)
+So, if you don't know how to use docker yet, now is the time to learn. `man docker` and the Internet will help you (https://habr.com/ru/companies/ruvds/articles/438796/). Docker is a great tool, it's a virtual machine at the OS level, but not at the hardware level. It is used to deliver your software along with the necessary environment, quickly deploy it on any server or on a bunch of servers at once. It will definitely come in handy in your life. Now we will not learn how to pack our software into an image, but we will only use other people's images. This stage can be more painful for Windows users than for Unix users, this is the way.
 
-И ещё один инструмент - docker-compose. Он бывает полезен, когда нужно запустить сразу несколько docker-контейнеров в связке. Аналогично: `man docker-compose` и habr (https://habr.com/ru/companies/ruvds/articles/450312/).
+And one more tool - docker-compose. It is useful when you need to run several docker containers in a bundle. Similar: `man docker-compose` and habr (https://habr.com/ru/companies/ruvds/articles/450312/).
 
-Теперь мы готовы к продолжению...
+Now we are ready to continue...
 
-Берём чужую репу https://github.com/tech4242/docker-hadoop-hive-parquet, клонируем и выполняем `docker-compose up`. У нас запускается несколько контейнеров с разными частями hadoop'а, список можно посмотреть в `docker ps` (первая колонка - id контейнера). Скопировать файлы со своей машины в любой из запущенных контейнеров можно с помощью `docker cp <src_file> <cont_id>:<dest_path>`. Открыть консольку в любом из контейнеров `docker exec -it <id> /bin/bash`. 
+We take someone else's repo https://github.com/tech4242/docker-hadoop-hive-parquet, clone it and run `docker-compose up`. We run several containers with different parts of Hadoop, the list can be viewed in `docker ps` (the first column is the container id). You can copy files from your machine to any of the running containers using `docker cp <src_file> <cont_id>:<dest_path>`. Open the console in any of the containers `docker exec -it <id> /bin/bash`.
 
-Сейчас наша задача - добиться, чтобы ваши mapper и reducer умели запускаться в контейнере datanode. Скопируйте их туда, откройте консольку и попробуйте запустить. Скорее всего, версии libc на вашей машине, где вы компилировали бинари, и в контейнере не совпадут, может вылезут и ещё какие-нибудь проблемы. Доблестно решаем проблемы, кто справится - тот молодец и сможет перейти к следующему этапу задания. Hint: подозреваю, что самый короткий путь - взять ещё один docker-образ с такой же версией оперционки, как в уже запущенных контейнерах, и с установленным g++, скомпилить ваши бинари в этой среде, тогда они запустятся и в целевых контейнерах, т.е. нужно производить сборку и запуск в одинаковой среде. Hint2: другой путь - модифицировать образы из этой репы так, чтобы версия ОС в них совпадала с вашей. В реальной жизни, вы, скорее всего, будете сами писать конфигурации докер-образов для своего ПО и будете иметь два докер-образа с похожей конфигурацией: один для сборки и тестирования вашего сервиса в CI, другой - для выкатки в прод, и у вас не будет проблем с версиями libc, потому что вы это сразу предусмотрите. 
+Now our task is to make your mapper and reducer able to run in the datanode container. Copy them there, open the console and try to run them. Most likely, the libc versions on your machine where you compiled the binaries and in the container will not match, and some other problems may pop up. We are valiantly solving problems, whoever copes with it is a good boy and will be able to move on to the next stage of the task. Hint: I suspect that the shortest way is to take another docker image with the same version of the operating system as in the already running containers, and with g++ installed, compile your binaries in this environment, then they will run in the target containers, i.e. you need to build and run in the same environment. Hint2: another way is to modify the images from this repo so that the OS version in them matches yours. In real life, you will most likely write your own Docker image configurations for your software and have two Docker images with similar configurations: one for building and testing your service in CI, the other for rolling out to production, and you will not have problems with libc versions, because you will take this into account right away.
 
-Итог второго этапа: вы умеете запускать докер-контейнеры, а ваши mapper и reducer умеют запускаться внутри них (внутри datanode).
+The result of the second stage: you know how to run docker containers, and your mapper and reducer can run inside them (inside the datanode).
 
-## 3. Открываем мир больших данных (необязательная часть; не для проверки; для тех, кто осилит)
+## 3. Opening the world of big data (optional part; not for testing; for those who can handle it)
 
 ### HDFS
-1) Скопируйте датасет с вашей машины в контейнер с namenode - поможет `docker cp`
-2) Давайте откроем консоль namenode и потыкаем в консольный интерфейс hdfs (https://gist.github.com/Alexflex/c8c53346b2feed4863956ab633fdd493#%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D1%8B-shell). Когда освоитесь, что к чему, скопируйте датасет из файловой системы контейнера в hdfs.
+1. Copy the dataset from your machine to the container with namenode - `docker cp` will help
+2. Let's open the namenode console and poke around in the hdfs console interface ([https://gist.github.com/Alexflex/c8c53346b2feed4863956ab633fdd493#команды-shell](https://gist.github.com/Alexflex/c8c53346b2feed4863956ab633fdd493#%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D1%8B-shell)). Once you've got the hang of it, copy the dataset from the container's file system to hdfs.
 
 ### Hadoop Map-Reduce
-1) Скопируйте с вашей машины в контейнер с namenode ваши маппер и редьюсер. Их не нужно помещать в hdfs, просто в ФС контейнера.
-2) Запустите map reduce задачу для расчёта средней цены (поищите туториалы по Hadoop MapReduce или просто следуйте подсказкам ниже):
-     * Hint1: вам понадобится файл hadoop-streaming.jar. С помощью команды `find / -name 'hadoop-streaming*.jar'` найдите, где в контейнере лежит hadoop-streaming.jar. Запускать командой `yarn jar <path> [params]`
-     * Hint2: разберитесь, как этим пользоваться, а если будут сложности, то можете взять за основу мой скрипт:
+1. Copy your mapper and reducer from your machine to the container with namenode. They do not need to be placed in hdfs, just in the container's FS.
+2. Run the map reduce task to calculate the average price (search for Hadoop MapReduce tutorials or just follow the prompts below):
+   - Hint1: You will need the hadoop-streaming.jar file. Use the command `find / -name 'hadoop-streaming*.jar'` to find where in the container the hadoop-streaming.jar is located. Run it with the command `yarn jar <path> [params]`
+   - Hint2: figure out how to use it, and if you have any difficulties, you can use my script as a basis:
 ```
 #!/usr/bin/env bash
 set -x
 
+\
 HADOOP_STREAMING_JAR=/opt/hadoop-2.7.4/share/hadoop/tools/lib/hadoop-streaming-2.7.4.jar
 OUT_DIR=$2
 
+\
 hdfs dfs -rm -r $OUT_DIR
- 
-yarn jar $HADOOP_STREAMING_JAR \
-	-D mapreduce.job.name=$3 \  # любое имя для логов
-	-files mapper_mean.py,reducer_mean.py \  # список файлов, которые нужно скопировать с namenode на datanode до запуска map reduce
-    -mapper 'python3 mapper_mean.py' \  # команда для запуск mapper'а на datanode узле, здесь пример с пайтоном, у вас будет по-другому
-    -reducer 'python3 reducer_mean.py' \  # команда для запуск reducer'а на datanode узле
-    -numReduceTasks 1 \  # количество редьюсеров
-    -input $1 \  # путь к датасету в hdfs
-    -output $OUT_DIR  # путь, куда сложить результат в hdfs
 
+yarn jar $HADOOP_STREAMING_JAR \
+	-D mapreduce.job.name=$3 \  # any name for logs
+	-files mapper_mean.py,reducer_mean.py \  # list of files to copy from namenode to datanode before running map reduce
+    -mapper 'python3 mapper_mean.py' \  # command to run mapper on datanode node, here is an example with python, yours will be different
+    -reducer 'python3 reducer_mean.py' \  # command to run reducer on datanode node
+    -numReduceTasks 1 \  # number of reducers
+    -input $1 \  # path to dataset in hdfs
+    -output $OUT_DIR  # path where to put the result in hdfs
+
+\
 hdfs dfs -cat $OUT_DIR/part-00000
 
+\
 echo $?
 
+\
 ```
 
-Итог третьего этапа:  
-  - вы потыкали в консольную утилиту hdfs, научились записывать файлы в hdfs и делать другие действия с этой файловой системой;
-  - вы запустили настоящую mapreduce задачу в настоящем bigdata фреймворке (Hadoop MapReduce) и оно посчитало нужные статистики
+Result of the third stage:
+- you poked around in the hdfs console utility, learned how to write files to hdfs and do other things with this file system;
+- you launched a real mapreduce task in a real bigdata framework (Hadoop MapReduce) and it calculated the necessary statistics
 
-**Profit! Вы молодцы! Так держать!**
+**Profit! You are great! Keep it up!**
