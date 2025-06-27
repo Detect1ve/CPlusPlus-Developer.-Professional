@@ -1,11 +1,16 @@
 #include <charconv>
+#include <iomanip>
 #include <iostream>
 #include <map>
+#if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
 #include <string>
+#endif
 
 namespace
 {
-    constexpr int PRICE_FIELD_INDEX = 9;
+    constexpr unsigned char MAX_PRICE_LENGTH = 5;
+    constexpr unsigned char MAX_PRICE_SQUARED_LENGTH = 11;
+    constexpr unsigned char PRICE_FIELD_INDEX = 9;
 
     struct Delimiter
     {
@@ -52,10 +57,11 @@ namespace
     }
 } // namespace
 
-int main(int argc, char ** argv)
+int main()
 {
     std::map<double, int> price_counts;
     std::string line;
+
     while (std::getline(std::cin, line))
     {
         const std::string price_field =
@@ -78,7 +84,11 @@ int main(int argc, char ** argv)
 
     for (const auto& [price, count] : price_counts)
     {
-        std::cout << "price\t" << price << "\t" << count << std::endl;
+        const double price_squared = price * price;
+
+        std::cout << "price\t" << std::setw(MAX_PRICE_LENGTH) << price << '\t'
+            << std::setw(MAX_PRICE_SQUARED_LENGTH) << price_squared << '\t'
+            << std::setw(4) << count << '\n';
     }
 
     return 0;
