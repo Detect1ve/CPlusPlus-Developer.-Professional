@@ -1,5 +1,13 @@
 cmake_minimum_required(VERSION 4.0.3)
-project(HW_12 LANGUAGES CXX)
+
+if(NOT DEFINED PATCH_VERSION)
+  set(PATCH_VERSION
+      "1"
+      CACHE INTERNAL "Patch version")
+endif()
+
+set(PROJECT_VERSION 0.0.${PATCH_VERSION})
+project(mapreduce VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 if (PROJECT_IS_TOP_LEVEL)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
@@ -83,4 +91,18 @@ else()
       ${CMAKE_CURRENT_BINARY_DIR}/output_variance && \
     grep -q 'Variance: 57673.5' ${CMAKE_CURRENT_BINARY_DIR}/output_variance"
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+endif()
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin/
+        DESTINATION bin
+        USE_SOURCE_PERMISSIONS
+        COMPONENT "${PROJECT_NAME}")
+if(PROJECT_IS_TOP_LEVEL)
+  set(CPACK_GENERATOR DEB)
+  set(CPACK_PACKAGE_CONTACT Nikolai_Grin@Mail.Ru)
+  include(CPack)
+else()
+  set(HW_12_DEB_NAME
+      "${PROJECT_NAME}-${PROJECT_VERSION}-Linux.deb"
+      PARENT_SCOPE)
 endif()
