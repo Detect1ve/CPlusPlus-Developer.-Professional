@@ -34,6 +34,7 @@ add_subdirectory_if_compatible(HW_9)
 add_subdirectory_if_compatible(HW_10)
 add_subdirectory_if_compatible(HW_11)
 add_subdirectory_if_compatible(HW_12)
+add_subdirectory_if_compatible(HW_13)
 
 enable_testing()
 
@@ -71,4 +72,8 @@ set(CPACK_DEBIAN_JOIN_SERVER_PACKAGE_NAME ${HW_11_DEB_NAME})
 set(CPACK_DEBIAN_MAPREDUCE_FILE_NAME ${HW_12_DEB_NAME})
 set(CPACK_DEBIAN_MAPREDUCE_PACKAGE_NAME ${HW_12_DEB_NAME})
 
+# For some known reason, FetchContent_Declare for Eigen3 adds extra components.
+# Report the issue and remove this workaround when it is fixed.
+get_cmake_property(CPACK_COMPONENTS_ALL COMPONENTS)
+list(REMOVE_ITEM CPACK_COMPONENTS_ALL "Devel" "Unspecified")
 include(CPack)
