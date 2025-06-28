@@ -41,7 +41,8 @@ set(SUBDIRS
   HW_9
   HW_10
   HW_11
-  HW_12)
+  HW_12
+  HW_13)
 
 foreach(SUBDIR ${SUBDIRS})
   check_subdirectory_compatibility(${SUBDIR})
@@ -57,4 +58,7 @@ set(CPACK_PACKAGE_CONTACT Nikolai_Grin@Mail.Ru)
 set(CPACK_DEB_COMPONENT_INSTALL ON)
 
 get_cmake_property(CPACK_COMPONENTS_ALL COMPONENTS)
+# For some known reason, FetchContent_Declare for Eigen3 adds extra component.
+# Report the issue and remove this workaround when it is fixed.
+list(REMOVE_ITEM CPACK_COMPONENTS_ALL "Devel")
 include(CPack)
