@@ -89,6 +89,11 @@ if (IS_COMPATIBLE)
   add_subdirectory(HW_12)
 endif()
 
+check_subdirectory_compatibility(HW_13)
+if (IS_COMPATIBLE)
+  add_subdirectory(HW_13)
+endif()
+
 enable_testing()
 
 set(CPACK_GENERATOR DEB)
@@ -96,4 +101,7 @@ set(CPACK_PACKAGE_CONTACT Nikolai_Grin@Mail.Ru)
 set(CPACK_DEB_COMPONENT_INSTALL ON)
 
 get_cmake_property(CPACK_COMPONENTS_ALL COMPONENTS)
+# For some known reason, FetchContent_Declare for Eigen3 adds extra components.
+# Report the issue and remove this workaround when it is fixed.
+list(REMOVE_ITEM CPACK_COMPONENTS_ALL "Devel" "Unspecified")
 include(CPack)
