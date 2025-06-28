@@ -591,7 +591,7 @@ std::pair<ProcessStatus, Options> option_process(std::span<const char *const> ar
     try
     {
         cmdline_options.add_options()
-            ("help", "produce help message");
+            ("help,h", "produce help message");
         mandatory_options.add_options()
             ("block_size", boost::program_options::value<std::int64_t>()
                 ->required()->notifier([&options, negative_check](std::int64_t value)
@@ -656,6 +656,7 @@ std::pair<ProcessStatus, Options> option_process(std::span<const char *const> ar
     catch (const boost::program_options::error& e)
     {
         cp::safe_error(e.what());
+        std::cerr << cmdline_options;
         ret = ProcessStatus::OPTION_ERROR;
     }
 
