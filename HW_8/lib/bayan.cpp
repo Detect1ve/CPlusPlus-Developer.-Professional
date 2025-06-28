@@ -447,7 +447,7 @@ auto option_process(
     try
     {
         cmdline_options.add_options()
-            ("help", "produce help message");
+            ("help,h", "produce help message");
         mandatory_options.add_options()
             ("block_size", boost::program_options::value<decltype(options.block_size)>
                 (&options.block_size)->required()->notifier(negative_check),
@@ -509,6 +509,7 @@ auto option_process(
     catch(const boost::program_options::error & e)
     {
         std::cout << e.what() << std::endl;
+        std::cout << cmdline_options;
         ret = -2;
     }
 
