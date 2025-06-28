@@ -1,5 +1,13 @@
 cmake_minimum_required(VERSION 3.25..4.2.0)
-project(fashio_mnist LANGUAGES CXX)
+
+if (NOT DEFINED PATCH_VERSION)
+  set(PATCH_VERSION
+      "1"
+      CACHE INTERNAL "Patch version")
+endif()
+
+set(PROJECT_VERSION 0.0.${PATCH_VERSION})
+project(fashio_mnist VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 if (PROJECT_IS_TOP_LEVEL)
   if (NOT MSVC)
@@ -88,3 +96,22 @@ endif()
 
 enable_testing()
 add_test(NAME HW_13.fashio_mnist_test COMMAND $<TARGET_FILE:fashio_mnist_test>)
+
+install(TARGETS fashio_mnist
+        RUNTIME DESTINATION bin
+        COMPONENT "${PROJECT_NAME}")
+if (PROJECT_IS_TOP_LEVEL)
+  set(CPACK_GENERATOR DEB)
+  set(CPACK_PACKAGE_CONTACT Nikolai_Grin@Mail.Ru)
+  include(CPack)
+else()
+  string(TOUPPER "${PROJECT_NAME}" PROJECT_NAME_UPPER)
+
+  set(CPACK_DEBIAN_${PROJECT_NAME_UPPER}_FILE_NAME
+      "${PROJECT_NAME}-${PROJECT_VERSION}-Linux.deb"
+      PARENT_SCOPE)
+
+  set(CPACK_DEBIAN_${PROJECT_NAME_UPPER}_PACKAGE_NAME
+      "${PROJECT_NAME}-${PROJECT_VERSION}-Linux.deb"
+      PARENT_SCOPE)
+endif()
