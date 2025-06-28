@@ -74,6 +74,9 @@ set(CPACK_DEBIAN_JOIN_SERVER_PACKAGE_NAME ${HW_11_DEB_NAME})
 set(CPACK_DEBIAN_MAPREDUCE_FILE_NAME ${HW_12_DEB_NAME})
 set(CPACK_DEBIAN_MAPREDUCE_PACKAGE_NAME ${HW_12_DEB_NAME})
 
+set(CPACK_DEBIAN_FASHIO_MNIST_FILE_NAME ${HW_13_DEB_NAME})
+set(CPACK_DEBIAN_FASHIO_MNIST_PACKAGE_NAME ${HW_13_DEB_NAME})
+
 # For some known reason, FetchContent_Declare for Eigen3 adds extra components.
 # Report the issue and remove this workaround when it is fixed.
 get_cmake_property(CPACK_COMPONENTS_ALL COMPONENTS)
