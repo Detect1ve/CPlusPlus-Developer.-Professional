@@ -149,6 +149,23 @@ TEST(HW8, FindDuplicatesTest)
     boost::filesystem::remove_all(temp_dir);
 }
 
+TEST(HW8, HelpOptionTest)
+{
+    const std::array argv =
+    {
+        "bayan_test",
+        "-h"
+    };
+
+    StdoutCapture::Begin();
+    auto [status, options] = option_process(argv);
+    auto capturedStdout = StdoutCapture::End();
+
+    ASSERT_EQ(status, ProcessStatus::HELP_REQUESTED);
+    ASSERT_FALSE(capturedStdout.empty());
+    ASSERT_TRUE(absl::StrContains(capturedStdout, "produce help message"));
+}
+
 TEST(HW8, UnrecognisedOptionTest)
 {
     const std::array argv =
