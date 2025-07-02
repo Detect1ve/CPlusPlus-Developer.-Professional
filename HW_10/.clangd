@@ -1,0 +1,20 @@
+CompileFlags:
+  Add: [
+    "-I/home/nikolaigrin/course/CPlusPlus-Developer.-Professional/HW_10/build/_deps/boost-src/libs/asio/include",
+    "-I/home/nikolaigrin/course/CPlusPlus-Developer.-Professional/HW_10/build/_deps/boost-src/libs/config/include",
+    "-I/home/nikolaigrin/course/CPlusPlus-Developer.-Professional/HW_10/build/_deps/boost-src/libs/assert/include",
+    "-I/home/nikolaigrin/course/CPlusPlus-Developer.-Professional/HW_10/build/_deps/boost-src/libs/throw_exception/include",
+    "-I/home/nikolaigrin/course/CPlusPlus-Developer.-Professional/HW_10/build/_deps/boost-src/libs/system/include",
+    "-I/home/nikolaigrin/course/CPlusPlus-Developer.-Professional/HW_10/build/_deps/boost-src/libs/date_time/include",
+    "-I/home/nikolaigrin/course/CPlusPlus-Developer.-Professional/HW_10/build/_deps/boost-src/libs/smart_ptr/include",
+    "-I/home/nikolaigrin/course/CPlusPlus-Developer.-Professional/HW_10/build/_deps/boost-src/libs/core/include",
+    "-I/home/nikolaigrin/course/CPlusPlus-Developer.-Professional/HW_10/build/_deps/boost-src/libs/utility/include",
+    "-I/home/nikolaigrin/course/CPlusPlus-Developer.-Professional/HW_10/build/_deps/boost-src/libs/static_assert/include",
+    "-I/home/nikolaigrin/course/CPlusPlus-Developer.-Professional/HW_10/build/_deps/boost-src/libs/type_traits/include",
+    "-I/home/nikolaigrin/course/CPlusPlus-Developer.-Professional/HW_10/build/_deps/boost-src/libs/numeric/conversion/include",
+    "-I/home/nikolaigrin/course/CPlusPlus-Developer.-Professional/HW_10/build/_deps/boost-src/libs/mpl/include",
+    "-I/home/nikolaigrin/course/CPlusPlus-Developer.-Professional/HW_10/build/_deps/boost-src/libs/preprocessor/include",
+    "-I/home/nikolaigrin/course/CPlusPlus-Developer.-Professional/HW_10/build/_deps/boost-src/libs/bind/include",
+    "-I/home/nikolaigrin/course/CPlusPlus-Developer.-Professional/HW_10/include/",
+    "-std=c++20"
+  ]

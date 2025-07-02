@@ -1,0 +1,6 @@
+CompileFlags:
+  Add: [
+    "-I/home/nikolaigrin/course/CPlusPlus-Developer.-Professional/HW_13/build/_deps/eigen3-src",
+    "-I/home/nikolaigrin/course/CPlusPlus-Developer.-Professional/HW_13/include/",
+    "-std=c++20"
+  ]

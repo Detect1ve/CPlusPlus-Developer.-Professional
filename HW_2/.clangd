@@ -1,0 +1,5 @@
+CompileFlags:
+  Add: [
+    "-I/home/nikolaigrin/course/CPlusPlus-Developer.-Professional/HW_2/include",
+    "-std=c++20"
+  ]
