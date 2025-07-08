@@ -1,7 +1,9 @@
 #pragma once
-#if __GNUC__ < 15
+#if __GNUC__ < 14
 #include <array>
 #include <charconv>
+#include <format>
+#include <limits>
 #include <span>
 #endif
 #include <expected>

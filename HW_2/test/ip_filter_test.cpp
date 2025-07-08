@@ -1,76 +1,26 @@
 #include <algorithm>
 
+#include <boost/algorithm/hex.hpp>
+#include <boost/uuid/detail/md5.hpp>
 #include <gtest/gtest.h>
-#include <openssl/evp.h>
 
 #include <ip_filter.hpp>
 
-constexpr auto to_hex(std::span<const unsigned char> digest) -> string
+auto compute_md5(std::string_view input) -> string
 {
-    static const std::array digits = std::to_array<const char>("0123456789abcdef");
+    boost::uuids::detail::md5 hash;
+    boost::uuids::detail::md5::digest_type digest;
     string result;
-    result.reserve(digest.size() * 2);
 
-    std::ranges::for_each(digest, [&result](const unsigned char byte)
-    {
-        result += digits[byte / 16];
-        result += digits[byte % 16];
-    });
+    hash.process_bytes(input.data(), input.length());
+    hash.get_digest(digest);
+
+    const auto *const char_digest = reinterpret_cast<const char*>(&digest);
+
+    boost::algorithm::hex_lower(char_digest, char_digest + sizeof(digest),
+        std::back_inserter(result));
 
     return result;
-}
-
-auto computeMD5FromString(
-    std::string_view     str,
-    unsigned char *const md5,
-    unsigned *const      md_len) -> int
-{
-    const EVP_MD *const md = EVP_md5();
-    struct MD_CTX_Deleter {
-        void operator()(EVP_MD_CTX* ctx) const
-        {
-            if (ctx != nullptr)
-            {
-                EVP_MD_CTX_free(ctx);
-            }
-        }
-    };
-    std::unique_ptr<EVP_MD_CTX, MD_CTX_Deleter> mdctx(EVP_MD_CTX_new());
-    int ret = 0;
-
-    if (nullptr == mdctx)
-    {
-        ADD_FAILURE() << "Message digest create failed.";
-        ret = -1;
-
-        return ret;
-    }
-
-    if (0 == EVP_DigestInit_ex(mdctx.get(), md, nullptr))
-    {
-        ADD_FAILURE() << "Message digest initialization failed.";
-        ret = -2;
-
-        return ret;
-    }
-
-    if (0 == EVP_DigestUpdate(mdctx.get(), str.data(), str.length()))
-    {
-        ADD_FAILURE() << "Message digest update failed.";
-        ret = -3;
-
-        return ret;
-    }
-
-    if (0 == EVP_DigestFinal_ex(mdctx.get(), md5, md_len))
-    {
-        ADD_FAILURE() << "Message digest finalization failed.";
-        ret = -4;
-
-        return ret;
-    }
-
-    return ret;
 }
 
 TEST(HW_2, ip_filter) {
@@ -81,9 +31,6 @@ TEST(HW_2, ip_filter) {
     reverse_lexicographic_sort(parse_result.value());
 
     {
-        unsigned char md_value[EVP_MAX_MD_SIZE] = {0};
-        unsigned md_len = 0;
-
         testing::internal::CaptureStdout();
 
         print(parse_result.value());
@@ -99,9 +46,7 @@ TEST(HW_2, ip_filter) {
 
         string result = testing::internal::GetCapturedStdout();
 
-        ASSERT_EQ(0, computeMD5FromString(result, md_value, &md_len));
-
-        encoded = to_hex(std::span<const unsigned char>(md_value, md_len));
+        encoded = compute_md5(result);
     }
 
     EXPECT_EQ(encoded, "24e7a7b2270daee89c64d3ca5fb3da1a");

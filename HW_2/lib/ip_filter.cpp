@@ -1,5 +1,8 @@
 #include <algorithm>
 #include <iostream>
+#if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
+#include <string>
+#endif
 
 #include <ip_filter.hpp>
 
