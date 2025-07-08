@@ -2,7 +2,15 @@ cmake_minimum_required(VERSION 4.0.3)
 
 project(C++-Developer-Professional LANGUAGES CXX)
 
-add_compile_options(-fdiagnostics-color=always)
+if (MSVC)
+  set(CMAKE_CXX_STANDARD 23)
+else ()
+  set(CMAKE_CXX_STANDARD 26)
+  add_compile_options(-fdiagnostics-color=always)
+endif()
+
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 
