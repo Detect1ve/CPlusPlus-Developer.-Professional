@@ -1,3 +1,6 @@
+#if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
+#include <chrono>
+#endif
 #include <condition_variable>
 #include <fstream>
 #include <iostream>
@@ -21,7 +24,7 @@ class taskmanager
 {
 public:
     taskmanager(
-        const int        max_task_count,
+        const size_t     max_task_count,
         std::string_view id)
         :
         max_static_task_count(max_task_count),
