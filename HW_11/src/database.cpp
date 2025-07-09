@@ -1,4 +1,7 @@
 #include <algorithm>
+#if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
+#include <charconv>
+#endif
 #include <set>
 #include <sstream>
 
