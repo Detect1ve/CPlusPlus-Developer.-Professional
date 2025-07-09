@@ -84,7 +84,7 @@ TEST(HW_7, static_blocks)
 
 TEST(HW_7, dynamic_blocks)
 {
-    sleep(1);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
 
     bool foundLogFile = false;
     auto const start_time = std::chrono::system_clock::now();
