@@ -1,6 +1,9 @@
 #pragma once
 
 #include <memory>
+#if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
+#include <string>
+#endif
 
 namespace editor::model
 {
