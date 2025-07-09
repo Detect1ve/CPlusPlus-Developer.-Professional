@@ -8,10 +8,11 @@ TEST(BayanTest, NoDuplicatesTest)
         boost::filesystem::current_path() / "bayan_test_dir";
     boost::filesystem::path cpp_file = temp_dir / "cpp.txt";
     boost::filesystem::path world_file = temp_dir / "world.txt";
+    std::string temp_dir_str = temp_dir.string();
     const char* argv[] =
     {
         "bayan_test",
-        "--scan_dirs", temp_dir.c_str(),
+        "--scan_dirs", temp_dir_str.c_str(),
         "--block_size", "5",
         "--scan_level", "0",
         "--file_masks", "*.txt"
@@ -58,9 +59,11 @@ TEST(BayanTest, FindDuplicatesTest)
 {
     boost::filesystem::path current_dir = boost::filesystem::current_path();
     boost::filesystem::path temp_dir = current_dir / "bayan_test_duplicates";
+    std::string temp_dir_str = temp_dir.string();
 
     boost::filesystem::path level1_dir = temp_dir / "level1";
     boost::filesystem::path level2_dir = level1_dir / "level2";
+    std::string level2_dir_str = level2_dir.string();
 
     boost::filesystem::path cpp_file1 = temp_dir / "cpp1.txt";
     boost::filesystem::path cpp_file2 = temp_dir / "cpp2.txt";
@@ -71,8 +74,8 @@ TEST(BayanTest, FindDuplicatesTest)
     const char* argv[] =
     {
         "bayan_test",
-        "--scan_dirs", temp_dir.c_str(),
-        "--scan_dirs", level2_dir.c_str(),
+        "--scan_dirs", temp_dir_str.c_str(),
+        "--scan_dirs", level2_dir_str.c_str(),
         "--block_size", "5",
         "--scan_level", "1",
         "--file_masks", "*TXT",
