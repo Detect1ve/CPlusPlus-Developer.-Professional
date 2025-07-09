@@ -56,7 +56,7 @@ std::enable_if_t<std::is_integral_v<T>> print_ip(T const& ip_address)
 
     for (size_t i = 0; i < size; ++i)
     {
-        uint8_t byte = ip_address >> ((size - 1 - i) * 8);
+        auto byte = ip_address >> ((size - 1 - i) * 8);
 
         std::cout << +byte;
 
@@ -142,7 +142,7 @@ template<typename T>
 std::enable_if_t<is_container<T>::value && !std::is_same_v<T, std::string>>
 print_ip(T const &ip_address)
 {
-    int size = ip_address.size();
+    size_t size = ip_address.size();
 
     for (auto octet : ip_address)
     {
