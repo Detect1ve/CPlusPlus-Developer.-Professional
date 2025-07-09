@@ -8,6 +8,10 @@ class MyAllocator
 public:
     typedef T value_type;
 
+#if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
+    MyAllocator() noexcept {}
+#endif
+
     auto allocate(const std::size_t n) -> T*
     {
         if (memory_alloc + n > size)
@@ -19,6 +23,11 @@ public:
 
         return static_cast<T*>(malloc(sizeof(T) * n));
     }
+
+#if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
+    template <typename U>
+    MyAllocator(const MyAllocator<U, size>&) noexcept {}
+#endif
 
     template <typename U>
     struct rebind
