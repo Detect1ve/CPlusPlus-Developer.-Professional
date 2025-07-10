@@ -1,3 +1,7 @@
+#if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
+#include <chrono>
+#include <string>
+#endif
 #include <iostream>
 #include <iomanip>
 
