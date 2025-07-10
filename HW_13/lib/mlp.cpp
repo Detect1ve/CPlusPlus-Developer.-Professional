@@ -207,12 +207,14 @@ auto MLP::evaluate(const std::string& test_data_path) -> float
             continue;
         }
 
-        auto [ptr, ec] = std::from_chars(token.data(), token.data() + token.size(),
-            true_label);
-        if (ec != std::errc{})
         {
-            std::cerr << "Error converting class label: " << token << std::endl;
-            continue;
+            auto [ptr, ec] = std::from_chars(token.data(), token.data() + token.size(),
+                true_label);
+            if (ec != std::errc{})
+            {
+                std::cerr << "Error converting class label: " << token << std::endl;
+                continue;
+            }
         }
 
         for (int i = 0; i < 784; ++i)
