@@ -28,7 +28,9 @@ else()
 endif()
 
 add_executable(print_ip src/main.cpp)
-target_link_libraries(print_ip PRIVATE -static)
+if (NOT MSVC)
+  target_link_libraries(print_ip PRIVATE -static)
+endif()
 
 install(TARGETS print_ip RUNTIME DESTINATION bin
                                  COMPONENT "${PROJECT_NAME}")

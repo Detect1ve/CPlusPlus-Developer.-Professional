@@ -56,7 +56,7 @@ HashAlgorithm::HashAlgorithm(string_view s)
     string lower_s(s);
     std::transform(lower_s.begin(), lower_s.end(), lower_s.begin(), [](unsigned char c)
     {
-        return std::tolower(c);
+        return static_cast<char>(std::tolower(c));
     });
 
     auto it = name_to_enum_map.find(lower_s);

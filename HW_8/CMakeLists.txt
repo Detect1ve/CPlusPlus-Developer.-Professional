@@ -40,7 +40,10 @@ target_link_libraries(bayan_lib
   PUBLIC Boost::filesystem)
 
 add_executable(bayan src/main.cpp)
-target_link_libraries(bayan PRIVATE bayan_lib -static)
+target_link_libraries(bayan PRIVATE bayan_lib)
+if (NOT MSVC)
+  target_link_libraries(bayan PRIVATE -static)
+endif()
 
 add_executable(bayan_test test/bayan_test.cpp)
 target_link_libraries(bayan_test PRIVATE bayan_lib GTest::gtest_main)

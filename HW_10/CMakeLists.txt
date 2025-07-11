@@ -41,7 +41,13 @@ target_link_libraries(server
   PUBLIC Boost::asio)
 
 add_executable(bulk_server src/main.cpp)
-target_link_libraries(bulk_server PRIVATE server -static)
+target_link_libraries(bulk_server PRIVATE server)
+if (MSVC)
+  target_compile_definitions(server PRIVATE _WIN32_WINNT=0x0A00)
+  target_compile_definitions(bulk_server PRIVATE _WIN32_WINNT=0x0A00)
+else ()
+  target_link_libraries(bulk_server PRIVATE -static)
+endif()
 
 install(TARGETS bulk_server
         RUNTIME DESTINATION bin

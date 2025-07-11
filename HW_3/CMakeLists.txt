@@ -27,7 +27,9 @@ endif()
 
 add_executable(main src/main.cpp)
 target_include_directories(main PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
-target_link_libraries(main PRIVATE -static)
+if (NOT MSVC)
+  target_link_libraries(main PRIVATE -static)
+endif()
 
 add_executable(my_allocator_test test/my_allocator_test.cpp)
 target_include_directories(my_allocator_test PRIVATE

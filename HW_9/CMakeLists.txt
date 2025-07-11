@@ -34,7 +34,10 @@ add_library(async_static STATIC lib/async.cpp)
 target_include_directories(async_static PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 add_executable(async_cli src/main.cpp)
-target_link_libraries(async_cli PRIVATE async_static -static)
+target_link_libraries(async_cli PRIVATE async_static)
+if (NOT MSVC)
+  target_link_libraries(async_cli PRIVATE -static)
+endif()
 
 install(TARGETS async
         LIBRARY DESTINATION lib

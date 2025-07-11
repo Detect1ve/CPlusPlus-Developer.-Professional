@@ -49,7 +49,10 @@ target_link_libraries(mlp_lib PUBLIC Eigen3::Eigen)
 target_include_directories(mlp_lib PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 add_executable(fashio_mnist src/main.cpp)
-target_link_libraries(fashio_mnist mlp_lib -static)
+target_link_libraries(fashio_mnist mlp_lib)
+if (NOT MSVC)
+  target_link_libraries(fashio_mnist -static)
+endif()
 
 enable_testing()
 add_executable(fashio_mnist_test test/mlp_test.cpp)

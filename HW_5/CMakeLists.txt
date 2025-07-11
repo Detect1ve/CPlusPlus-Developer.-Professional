@@ -30,4 +30,6 @@ file(GLOB_RECURSE HEADERS
 
 add_executable(editor ${SOURCES} ${HEADERS})
 target_include_directories(editor PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
-target_link_libraries(editor PRIVATE -static)
+if (NOT MSVC)
+  target_link_libraries(editor PRIVATE -static)
+endif()

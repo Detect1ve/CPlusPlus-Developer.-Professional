@@ -27,7 +27,7 @@ else()
   add_compile_options(-Wall -Wextra -pedantic)
 endif()
 
-if(PROJECT_IS_TOP_LEVEL)
+if (PROJECT_IS_TOP_LEVEL)
   include(../boost.cmake)
 endif()
 
@@ -39,7 +39,13 @@ set(SOURCES
     src/database.cpp
 )
 add_executable(join_server ${SOURCES})
-target_link_libraries(join_server PRIVATE Boost::asio -static)
+target_link_libraries(join_server PRIVATE Boost::asio)
+if (MSVC)
+  target_compile_definitions(join_server PRIVATE _WIN32_WINNT=0x0A00)
+else ()
+  target_link_libraries(join_server PRIVATE -static)
+endif()
+
 install(TARGETS join_server
         RUNTIME DESTINATION bin
         COMPONENT "${PROJECT_NAME}")

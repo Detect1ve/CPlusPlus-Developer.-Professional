@@ -36,7 +36,10 @@ add_library(taskmanager STATIC lib/taskmanager.cpp)
 target_include_directories(taskmanager PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 add_executable(bulk src/main.cpp)
-target_link_libraries(bulk PRIVATE taskmanager -static)
+target_link_libraries(bulk PRIVATE taskmanager)
+if (NOT MSVC)
+  target_link_libraries(bulk PRIVATE -static)
+endif()
 
 add_executable(taskmanager_test test/taskmanager_test.cpp)
 target_link_libraries(taskmanager_test PRIVATE taskmanager GTest::gtest_main)

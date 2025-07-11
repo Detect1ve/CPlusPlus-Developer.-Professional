@@ -34,7 +34,9 @@ endif()
 
 add_executable(matrix src/main.cpp)
 target_include_directories(matrix PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
-target_link_libraries(matrix PRIVATE -static)
+if (NOT MSVC)
+  target_link_libraries(matrix PRIVATE -static)
+endif()
 
 add_executable(matrix_test test/matrix_test.cpp)
 target_include_directories(matrix_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")

@@ -37,7 +37,10 @@ add_library(ip_filter_lib STATIC lib/ip_filter.cpp)
 target_include_directories(ip_filter_lib PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 add_executable(ip_filter src/main.cpp)
-target_link_libraries(ip_filter PRIVATE ip_filter_lib -static)
+target_link_libraries(ip_filter PRIVATE ip_filter_lib)
+if (NOT MSVC)
+  target_link_libraries(ip_filter PRIVATE -static)
+endif()
 
 add_executable(ip_filter_test test/ip_filter_test.cpp)
 target_link_libraries(ip_filter_test PRIVATE ip_filter_lib GTest::gtest_main
