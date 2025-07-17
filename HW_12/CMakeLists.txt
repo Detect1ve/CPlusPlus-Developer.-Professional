@@ -13,14 +13,23 @@ if (PROJECT_IS_TOP_LEVEL)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
-if (MSVC)
+if (MSVC OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   if (PROJECT_IS_TOP_LEVEL)
-    set(CMAKE_CXX_STANDARD 23)
+    if (MSVC)
+      set(CMAKE_CXX_STANDARD 23)
+    else ()
+      set(CMAKE_CXX_STANDARD 26)
+      add_compile_options(-fcolor-diagnostics)
+    endif()
     set(CMAKE_CXX_STANDARD_REQUIRED True)
     set(CMAKE_CXX_EXTENSIONS OFF)
   endif()
 
-  add_compile_options(/W4)
+  if (MSVC)
+    add_compile_options(/W4)
+  else()
+    add_compile_options(-Wall -Wextra -pedantic)
+  endif()
 
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin")
 
@@ -28,8 +37,17 @@ if (MSVC)
   add_executable(reducer reducer.cpp)
   add_executable(mapper_variance mapper_variance.cpp)
   add_executable(reducer_variance reducer_variance.cpp)
+else()
+  add_custom_target(mapreduce_all ALL
+    COMMAND make -f ${CMAKE_CURRENT_SOURCE_DIR}/Makefile all
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMENT "Building MapReduce using existing Makefile"
+    VERBATIM)
+endif()
 
-  enable_testing()
+enable_testing()
+
+if (WIN32)
   add_test(
     NAME HW_12.test_mean_price
     COMMAND powershell -Command
@@ -64,13 +82,6 @@ if (MSVC)
     }"
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 else()
-  add_custom_target(mapreduce_all ALL
-    COMMAND make -f ${CMAKE_CURRENT_SOURCE_DIR}/Makefile all
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMENT "Building MapReduce using existing Makefile"
-    VERBATIM)
-
-  enable_testing()
   add_test(
     NAME HW_12.test_mean_price
     COMMAND bash -c

@@ -7,5 +7,6 @@ if(NOT GTest_FOUND)
     GIT_TAG v1.17.0
     GIT_SHALLOW ON
     EXCLUDE_FROM_ALL)
+  set(INSTALL_GTEST OFF CACHE BOOL "Disable installation of GTest" FORCE)
   FetchContent_MakeAvailable(GTest)
 endif()

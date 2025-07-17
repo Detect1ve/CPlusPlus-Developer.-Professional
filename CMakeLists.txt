@@ -6,7 +6,11 @@ if (MSVC)
   set(CMAKE_CXX_STANDARD 23)
 else ()
   set(CMAKE_CXX_STANDARD 26)
-  add_compile_options(-fdiagnostics-color=always)
+  if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    add_compile_options(-fcolor-diagnostics)
+  else()
+    add_compile_options(-fdiagnostics-color=always)
+  endif()
 endif()
 
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -71,8 +75,8 @@ set(CPACK_DEBIAN_MAPREDUCE_PACKAGE_NAME ${HW_12_DEB_NAME})
 set(CPACK_DEBIAN_FASHIO_MNIST_FILE_NAME ${HW_13_DEB_NAME})
 set(CPACK_DEBIAN_FASHIO_MNIST_PACKAGE_NAME ${HW_13_DEB_NAME})
 
-# For some unknown reason, FetchContent_Declare for GTest adds extra components.
-# It seems to be a bug in CMake.
+# For some known reason, FetchContent_Declare for Eigen3 adds extra components.
+# Report the issue and remove this workaround when it is fixed.
 get_cmake_property(CPACK_COMPONENTS_ALL COMPONENTS)
-list(REMOVE_ITEM CPACK_COMPONENTS_ALL "gmock" "gtest")
+list(REMOVE_ITEM CPACK_COMPONENTS_ALL "Devel" "Unspecified")
 include(CPack)

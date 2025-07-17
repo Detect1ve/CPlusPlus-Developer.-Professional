@@ -47,7 +47,7 @@ void Session::do_write(std::string_view message)
     auto self(shared_from_this());
 
     boost::asio::async_write(socket_, boost::asio::buffer(message),
-        [this, self](
+        [self](
             boost::system::error_code ec,
             std::size_t               /*length*/)
         {
