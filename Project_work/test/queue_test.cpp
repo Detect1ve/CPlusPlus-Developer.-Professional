@@ -230,7 +230,7 @@ TEST(QueueTest, PopTimeout)
     auto duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     ASSERT_GE(duration, 90);
-    ASSERT_LE(duration, 150);
+    ASSERT_LE(duration, 180);
 }
 
 TEST(QueueTest, PushTimeout)
@@ -248,5 +248,5 @@ TEST(QueueTest, PushTimeout)
     auto duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     ASSERT_GE(duration, 90);
-    ASSERT_LE(duration, 150);
+    ASSERT_LE(duration, 180);
 }

@@ -83,27 +83,71 @@ auto filter_any(
     const unsigned char           any_octet)
     -> expected<vector<vector<string>>, error_code>
 {
+#if defined(__cpp_lib_ranges_to_container)
     return ip_pool | std::ranges::views::filter([any_octet](const auto& ip)
     {
         return std::ranges::any_of(ip, [any_octet](const std::string_view ip_part)
         {
             auto result = from_chars(std::span<const char>(ip_part));
-            if (!result) {
+            if (!result)
+            {
                 return false;
             }
 
             return result.value() == any_octet;
         });
     }) | std::ranges::to<vector<vector<string>>>();
+#else
+    vector<vector<string>> result;
+
+    for (const auto& ip : ip_pool)
+    {
+        bool found = false;
+
+        for (const auto& ip_part : ip)
+        {
+            auto res = from_chars(std::span<const char>(ip_part));
+            if (  res
+               && res.value() == any_octet)
+            {
+                found = true;
+                break;
+            }
+        }
+
+        if (found)
+        {
+            result.emplace_back(ip);
+        }
+    }
+
+    return result;
+#endif
 }
 
 void print(std::span<const vector<string>> ip_pool)
 {
+#if defined(__cpp_lib_ranges_to_container)
     for (const auto& ip : ip_pool)
     {
         std::cout << std::format("{}\n", ip | std::views::join_with(std::string_view("."))
             | std::ranges::to<string>());
     }
+#else
+    for (const auto& ip : ip_pool)
+    {
+        for (size_t i = 0; i < ip.size(); ++i)
+        {
+            std::cout << ip[i];
+            if (i + 1 < ip.size())
+            {
+                std::cout << ".";
+            }
+        }
+
+        std::cout << endl;
+    }
+#endif
 }
 
 auto stdin_to_vector() -> expected<vector<vector<string>>, error_code>

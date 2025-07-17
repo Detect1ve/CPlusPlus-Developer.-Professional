@@ -1,5 +1,6 @@
 #include <algorithm>
-#if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
+#if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER) \
+ || defined(__clang__)
 #include <charconv>
 #endif
 #include <set>

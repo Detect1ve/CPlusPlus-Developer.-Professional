@@ -43,6 +43,7 @@ template <typename First, typename... Rest>
 
     std::array<int, sizeof...(octet)> a_octet = {octet...};
 
+#if defined(__cpp_lib_ranges_to_container)
     return ip_pool | std::ranges::views::filter([&a_octet](const auto& ip)
     {
         auto common_range = std::min(a_octet.size(), ip.size());
@@ -51,12 +52,7 @@ template <typename First, typename... Rest>
         for (const auto& [idx, ip_part] : ip_view | std::views::enumerate)
         {
             auto result = from_chars(std::span<const char>(ip_part));
-            if (!result)
-            {
-                return false;
-            }
-
-            if (result.value() != a_octet[idx])
+            if (!result || result.value() != a_octet[idx])
             {
                 return false;
             }
@@ -64,6 +60,32 @@ template <typename First, typename... Rest>
 
         return true;
     }) | std::ranges::to<vector<vector<string>>>();
+#else
+    vector<vector<string>> result;
+    for (const auto& ip : ip_pool)
+    {
+        auto common_range = std::min(a_octet.size(), ip.size());
+        bool match = true;
+
+        for (size_t idx = 0; idx < common_range; ++idx)
+        {
+            auto res = from_chars(std::span<const char>(ip[idx]));
+            if (  !res
+               || res.value() != a_octet[idx])
+            {
+                match = false;
+                break;
+            }
+        }
+
+        if (match)
+        {
+            result.emplace_back(ip);
+        }
+    }
+
+    return result;
+#endif
 }
 
 [[nodiscard]] auto filter_any(

@@ -138,10 +138,21 @@ namespace bulk
         output << std::filesystem::path(task_manager_name).filename().string() << ": ";
 
         std::string_view delimiter = ", ";
-        // TODO: __cpp_lib_ranges_join_with for GCC 11.4
+#if defined(__cpp_lib_ranges_to_container)
         std::string result = block_task | std::views::join_with(delimiter)
             | std::ranges::to<std::string>();
+#else
+        std::string result;
 
+        for (size_t i = 0; i < block_task.size(); ++i)
+        {
+            result += block_task[i];
+            if (i + 1 < block_task.size())
+            {
+                result += delimiter;
+            }
+        }
+#endif
         output << result;
         output << std::endl;
 
