@@ -1,4 +1,5 @@
-#pragma once
+#ifndef VIEW_DOCUMENT_VIEW_HPP
+#define VIEW_DOCUMENT_VIEW_HPP
 
 #include <model/document.hpp>
 #include <view/primitive_view.hpp>
@@ -12,12 +13,14 @@ namespace editor::view
         ~DocumentView() = default;
 
         DocumentView(const DocumentView&) = delete;
-        auto operator=(const DocumentView&) -> DocumentView& = delete;
+        DocumentView& operator=(const DocumentView&) = delete;
+        DocumentView(DocumentView&&) = delete;
+        DocumentView& operator=(DocumentView&&) = delete;
 
         void render() const;
         void update();
 
-        [[nodiscard]] auto getDocument() const -> const model::Document*;
+        [[nodiscard]] const model::Document* getDocument() const;
 
     private:
         const model::Document* document_;
@@ -26,3 +29,5 @@ namespace editor::view
         void createPrimitiveViews();
     };
 } // namespace editor::view
+
+#endif /* VIEW_DOCUMENT_VIEW_HPP */

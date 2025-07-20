@@ -1,82 +1,87 @@
-#pragma once
+#ifndef MATRIX_HPP
+#define MATRIX_HPP
 
 #include <unordered_map>
-
-using std::pair;
-using std::unordered_map;
 
 template <typename T, T DefaultValue>
 class Matrix
 {
     struct PairHash
     {
-        auto operator()(const pair<int, int>& p) const noexcept -> std::size_t
+        std::size_t operator()(const std::pair<int, int>& coords) const noexcept
         {
-            return std::hash<int>{}(p.first) ^ (std::hash<int>{}(p.second) << 1);
+            return
+                std::hash<int>{}(coords.first) ^ (std::hash<int>{}(coords.second) << 1U);
         }
     };
 
-    unordered_map<pair<int, int>, T, PairHash> data;
+    std::unordered_map<std::pair<int, int>, T, PairHash> data;
 
     class ProxyRow
     {
-        Matrix& matrix;
+        Matrix* matrix;
         int row;
 
     public:
         ProxyRow(
-            Matrix&   m,
-            int const r)
+            Matrix*   matrix,
+            int const row)
             :
-            matrix(m),
-            row(r) {}
+            matrix(matrix),
+            row(row) {}
 
         class ProxyCell
         {
-            Matrix& matrix;
+            Matrix* matrix;
             int row;
             int col;
 
         public:
             ProxyCell(
-                Matrix&   m,
-                int const r,
-                int const c)
+                Matrix*   matrix,
+                int const row, // NOLINT(bugprone-easily-swappable-parameters)
+                int const col)
                 :
-                matrix(m),
-                row(r),
-                col(c) {}
+                matrix(matrix),
+                row(row),
+                col(col) {}
 
-            auto operator=(const T& value) -> ProxyCell&
+            ProxyCell(const ProxyCell&) = delete;
+            ProxyCell(ProxyCell&&) = delete;
+            ProxyCell& operator=(ProxyCell&&) = delete;
+            ~ProxyCell() = default;
+
+            ProxyCell& operator=(const T& value)
             {
-                pair<int, int> key{row, col};
+                const std::pair<int, int> key{row, col};
 
                 if (value == DefaultValue)
                 {
-                    matrix.data.erase(key);
+                    matrix->data.erase(key);
                 }
                 else
                 {
-                    matrix.data[key] = value;
+                    matrix->data[key] = value;
                 }
 
                 return *this;
             }
 
+            // NOLINTNEXTLINE(google-explicit-constructor,hicpp-explicit-conversions)
             operator T() const
             {
-                pair<int, int> key{row, col};
-                auto it = matrix.data.find(key);
+                const std::pair<int, int> key{row, col};
+                auto iter = matrix->data.find(key);
 
-                if (it != matrix.data.end())
+                if (iter != matrix->data.end())
                 {
-                    return it->second;
+                    return iter->second;
                 }
 
                 return DefaultValue;
             }
 
-            auto operator=(const ProxyCell& other) -> ProxyCell&
+            ProxyCell& operator=(const ProxyCell& other)
             {
                 if (this != &other)
                 {
@@ -88,56 +93,60 @@ class Matrix
             }
         };
 
-        auto operator[](int col) -> ProxyCell
+        ProxyCell operator[](int col)
         {
             return ProxyCell(matrix, row, col);
         }
     };
 
 public:
-    auto operator[](int row) -> ProxyRow
+    ProxyRow operator[](int row)
     {
-        return ProxyRow(*this, row);
+        return ProxyRow(this, row);
     }
 
-    [[nodiscard]] auto size() const noexcept -> std::size_t
+    [[nodiscard]] std::size_t size() const noexcept
     {
         return data.size();
     }
 
     class iterator
     {
-        typename unordered_map<pair<int, int>, T, PairHash>::const_iterator it;
+        typename std::unordered_map<std::pair<int, int>, T, PairHash>::const_iterator it;
 
     public:
-        iterator(typename unordered_map<pair<int, int>, T, PairHash>::const_iterator iter)
+        explicit iterator(
+            typename std::unordered_map<std::pair<int, int>, T, PairHash>::const_iterator
+                iter)
             : it(iter) {}
 
-        [[nodiscard]] auto operator!=(const iterator& other) const -> bool
+        [[nodiscard]] bool operator!=(const iterator& other) const
         {
             return it != other.it;
         }
 
-        auto operator++() -> iterator&
+        iterator& operator++()
         {
             ++it;
 
             return *this;
         }
 
-        [[nodiscard]] auto operator*() const -> std::tuple<int, int, T>
+        [[nodiscard]] std::tuple<int, int, T> operator*() const
         {
             return std::make_tuple(it->first.first, it->first.second, it->second);
         }
     };
 
-    [[nodiscard]] auto begin() const noexcept -> iterator
+    [[nodiscard]] iterator begin() const noexcept
     {
         return iterator(data.begin());
     }
 
-    [[nodiscard]] auto end() const noexcept -> iterator
+    [[nodiscard]] iterator end() const noexcept
     {
         return iterator(data.end());
     }
 };
+
+#endif /* MATRIX_HPP */

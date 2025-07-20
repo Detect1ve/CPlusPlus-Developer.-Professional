@@ -11,9 +11,9 @@ project(join_server VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 if (PROJECT_IS_TOP_LEVEL)
   if (MSVC)
-    set(CMAKE_CXX_STANDARD 23)
+    set(SUPPORTED_CXX_STANDARDS 23 20)
   else()
-    set(CMAKE_CXX_STANDARD 26)
+    set(SUPPORTED_CXX_STANDARDS 26 23 20)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
       add_compile_options(-fcolor-diagnostics)
     else()
@@ -21,8 +21,11 @@ if (PROJECT_IS_TOP_LEVEL)
     endif()
   endif()
 
+  include(../cxx_standard.cmake)
+  set(CMAKE_CXX_STANDARD ${CXX_STANDARD})
   set(CMAKE_CXX_STANDARD_REQUIRED True)
   set(CMAKE_CXX_EXTENSIONS OFF)
+  set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 endif()
 
 if (MSVC)
@@ -33,6 +36,7 @@ endif()
 
 if (PROJECT_IS_TOP_LEVEL)
   include(../boost.cmake)
+  include(../clang-tidy.cmake)
 endif()
 
 include_directories(include)
@@ -48,6 +52,19 @@ if (MSVC)
   target_compile_definitions(join_server PRIVATE _WIN32_WINNT=0x0A00)
 else ()
   target_link_libraries(join_server PRIVATE -static)
+endif()
+
+if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
+  set_target_properties(join_server PROPERTIES
+    CXX_CLANG_TIDY "${CLANG_TIDY_COMMON_OPTS},\
+      -altera-unroll-loops,\
+      -fuchsia-default-arguments-calls,\
+      -llvmlibc-callee-namespace,\
+      -llvmlibc-implementation-in-namespace,\
+      -llvmlibc-restrict-system-libc-headers,\
+      -misc-include-cleaner,\
+      -misc-no-recursion,\
+      -modernize-use-trailing-return-type")
 endif()
 
 install(TARGETS join_server

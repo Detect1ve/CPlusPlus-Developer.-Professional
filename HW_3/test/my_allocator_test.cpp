@@ -2,12 +2,12 @@
 
 #include <my_allocator.hpp>
 
-enum
+enum : unsigned char
 {
     CONTAINER_SIZE = 10,
 };
 
-TEST(HW_3, my_allocator)
+TEST(HW3, MyAllocator)
 {
     std::vector<int, MyAllocator<int, CONTAINER_SIZE>> vector_with_custom_alloc;
 

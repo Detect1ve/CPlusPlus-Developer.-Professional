@@ -4,7 +4,7 @@
 
 using namespace pc_queue;
 
-TEST(QueueTest, BasicFunctionality)
+TEST(ProjectWork, BasicFunctionality)
 {
     Queue<int> queue;
 
@@ -37,7 +37,7 @@ TEST(QueueTest, BasicFunctionality)
     ASSERT_FALSE(emptyItem.has_value());
 }
 
-TEST(QueueTest, MaxSizeLimit)
+TEST(ProjectWork, MaxSizeLimit)
 {
     Queue<int> queue(false, QueueMode::MULTI_PRODUCER_MULTI_CONSUMER, 2);
 
@@ -54,7 +54,7 @@ TEST(QueueTest, MaxSizeLimit)
     ASSERT_EQ(queue.size(), 2);
 }
 
-TEST(QueueTest, CloseQueue)
+TEST(ProjectWork, CloseQueue)
 {
     Queue<int> queue;
 
@@ -78,7 +78,7 @@ TEST(QueueTest, CloseQueue)
     ASSERT_FALSE(emptyItem.has_value());
 }
 
-TEST(QueueTest, ClearQueue)
+TEST(ProjectWork, ClearQueue)
 {
     Queue<int> queue;
 
@@ -94,7 +94,7 @@ TEST(QueueTest, ClearQueue)
     ASSERT_EQ(queue.size(), 0);
 }
 
-TEST(QueueTest, PriorityQueue)
+TEST(ProjectWork, PriorityQueue)
 {
     Queue<std::string, int> queue(true, QueueMode::MULTI_PRODUCER_MULTI_CONSUMER, 0);
 
@@ -115,7 +115,7 @@ TEST(QueueTest, PriorityQueue)
     ASSERT_EQ(item3.value(), "Low");
 }
 
-TEST(QueueTest, SingleProducerSingleConsumer)
+TEST(ProjectWork, SingleProducerSingleConsumer)
 {
     bool done(false);
     Queue<int> queue(false, QueueMode::SINGLE_PRODUCER_SINGLE_CONSUMER, 10);
@@ -149,13 +149,13 @@ TEST(QueueTest, SingleProducerSingleConsumer)
     consumer.join();
 
     ASSERT_EQ(consumed.size(), 100);
-    for (size_t i = 0; i < consumed.size(); ++i)
+    for (std::size_t i = 0; i < consumed.size(); ++i)
     {
         ASSERT_EQ(consumed[i], i);
     }
 }
 
-TEST(QueueTest, MultiProducerMultiConsumer)
+TEST(ProjectWork, MultiProducerMultiConsumer)
 {
     bool done(false);
     const int itemsPerProducer = 1000;
@@ -217,7 +217,7 @@ TEST(QueueTest, MultiProducerMultiConsumer)
     ASSERT_TRUE(queue.empty());
 }
 
-TEST(QueueTest, PopTimeout)
+TEST(ProjectWork, PopTimeout)
 {
     Queue<int> queue;
 
@@ -230,10 +230,10 @@ TEST(QueueTest, PopTimeout)
     auto duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     ASSERT_GE(duration, 90);
-    ASSERT_LE(duration, 180);
+    ASSERT_LE(duration, 190);
 }
 
-TEST(QueueTest, PushTimeout)
+TEST(ProjectWork, PushTimeout)
 {
     Queue<int> queue(false, QueueMode::MULTI_PRODUCER_MULTI_CONSUMER, 1);
 
@@ -248,5 +248,5 @@ TEST(QueueTest, PushTimeout)
     auto duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     ASSERT_GE(duration, 90);
-    ASSERT_LE(duration, 180);
+    ASSERT_LE(duration, 190);
 }

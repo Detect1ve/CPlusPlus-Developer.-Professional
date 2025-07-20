@@ -17,7 +17,7 @@ namespace editor::view
             {
                 std::cout << "Rendering Line from (" << line->getX1() << ","
                     << line->getY1() << ") to (" << line->getX2() << "," << line->getY2()
-                    << ") with thickness " << line->getThickness() << std::endl;
+                    << ") with thickness " << line->getThickness() << '\n';
             }
         }
     };
@@ -25,20 +25,20 @@ namespace editor::view
     PrimitiveView::PrimitiveView(const model::Primitive* primitive)
         : primitive_(primitive) {}
 
-    auto PrimitiveView::getPrimitive() const -> const model::Primitive*
+    const model::Primitive* PrimitiveView::getPrimitive() const
     {
         return primitive_;
     }
 
-    auto PrimitiveViewFactory::createView(const model::Primitive* primitive)
-        -> std::unique_ptr<PrimitiveView>
+    std::unique_ptr<PrimitiveView> PrimitiveViewFactory::createView(
+        const model::Primitive* primitive)
     {
         if (primitive == nullptr)
         {
             return nullptr;
         }
 
-        std::string type = primitive->getType();
+        const std::string type = primitive->getType();
 
         if (type == "Line")
         {

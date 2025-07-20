@@ -1,4 +1,5 @@
-#pragma once
+#ifndef CONTROLLER_PRIMITIVE_CONTROLLER_HPP
+#define CONTROLLER_PRIMITIVE_CONTROLLER_HPP
 
 #include <model/document.hpp>
 
@@ -10,16 +11,21 @@ namespace editor::controller
         explicit PrimitiveController(model::Document* document);
         ~PrimitiveController() = default;
 
-        void createLine(
-            int x1,
-            int y1,
-            int x2,
-            int y2,
-            int thickness = 1);
+        PrimitiveController(const PrimitiveController&) = delete;
+        PrimitiveController& operator=(const PrimitiveController&) = delete;
+        PrimitiveController(PrimitiveController&&) = delete;
+        PrimitiveController& operator=(PrimitiveController&&) = delete;
 
-        void removePrimitive(size_t index);
+        void createLine(
+            struct Point start,
+            struct Point end,
+            int          thickness);
+
+        void removePrimitive(std::size_t index);
 
     private:
         model::Document* document_;
     };
 } // namespace editor::controller
+
+#endif /* CONTROLLER_PRIMITIVE_CONTROLLER_HPP */

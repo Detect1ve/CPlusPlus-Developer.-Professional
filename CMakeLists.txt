@@ -15,10 +15,12 @@ endif()
 
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 
 list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 
 include(boost.cmake)
+include(clang-tidy.cmake)
 include(googletest.cmake)
 
 add_subdirectory(HW_1)

@@ -11,9 +11,9 @@ project(print_ip VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 if (PROJECT_IS_TOP_LEVEL)
   if (MSVC)
-    set(CMAKE_CXX_STANDARD 23)
+    set(SUPPORTED_CXX_STANDARDS 23 20)
   else()
-    set(CMAKE_CXX_STANDARD 26)
+    set(SUPPORTED_CXX_STANDARDS 26 23 20)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
       add_compile_options(-fcolor-diagnostics)
     else()
@@ -21,8 +21,11 @@ if (PROJECT_IS_TOP_LEVEL)
     endif()
   endif()
 
+  include(../cxx_standard.cmake)
+  set(CMAKE_CXX_STANDARD ${CXX_STANDARD})
   set(CMAKE_CXX_STANDARD_REQUIRED True)
   set(CMAKE_CXX_EXTENSIONS OFF)
+  set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 endif()
 
 if (MSVC)
@@ -31,9 +34,47 @@ else()
   add_compile_options(-Wall -Wextra -pedantic)
 endif()
 
+if (PROJECT_IS_TOP_LEVEL)
+  include(../clang-tidy.cmake)
+  include(../googletest.cmake)
+  list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
+endif()
+
+add_library(ip_address INTERFACE)
+target_include_directories(ip_address INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+
 add_executable(print_ip src/main.cpp)
+target_link_libraries(print_ip PRIVATE ip_address)
 if (NOT MSVC)
   target_link_libraries(print_ip PRIVATE -static)
+endif()
+
+add_executable(print_ip_test test/sfinae_ip_address_test.cpp)
+target_link_libraries(print_ip_test PRIVATE GTest::gtest_main ip_address)
+
+enable_testing()
+add_test(HW_4.print_ip_test print_ip_test)
+
+if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
+  set(CLANG_TIDY_HW_4_COMMON_OPTS
+    "-altera-unroll-loops,\
+     -fuchsia-default-arguments-calls,\
+     -google-runtime-int,\
+     -llvmlibc-callee-namespace,\
+     -llvmlibc-restrict-system-libc-headers,\
+     -misc-include-cleaner,\
+     -modernize-use-trailing-return-type;--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+
+  set_target_properties(print_ip PROPERTIES
+    CXX_CLANG_TIDY "${CLANG_TIDY_COMMON_OPTS},\
+      -llvmlibc-implementation-in-namespace,\
+      ${CLANG_TIDY_HW_4_COMMON_OPTS}")
+
+  set_target_properties(print_ip_test PROPERTIES
+    CXX_CLANG_TIDY "${CLANG_TIDY_COMMON_OPTS},\
+      -cppcoreguidelines-avoid-magic-numbers,\
+      -readability-magic-numbers,\
+      ${CLANG_TIDY_HW_4_COMMON_OPTS}")
 endif()
 
 install(TARGETS print_ip RUNTIME DESTINATION bin
@@ -72,7 +113,7 @@ set(DOXYGEN_USE_MDFILE_AS_MAINPAGE README.md)
 
 doxygen_add_docs(
   docs
-  ${CMAKE_CURRENT_SOURCE_DIR}/src README.md
+  ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/include README.md
   COMMENT "Generating API documentation with Doxygen"
 )
 

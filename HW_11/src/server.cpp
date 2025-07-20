@@ -22,22 +22,22 @@ void Session::do_read()
 
     boost::asio::async_read_until(socket_, buffer_, '\n',
         [this, self](
-            boost::system::error_code ec,
+            boost::system::error_code error_code,
             std::size_t               /*length*/)
         {
-            if (!ec)
+            if (!error_code)
             {
                 std::string command;
-                std::istream is(&buffer_);
-                std::getline(is, command);
+                std::istream input_stream(&buffer_);
+                std::getline(input_stream, command);
 
                 process_command(command);
 
                 do_read();
             }
-            else if (ec != boost::asio::error::eof)
+            else if (error_code != boost::asio::error::eof)
             {
-                std::cerr << "Error: " << ec.message() << std::endl;
+                std::cerr << "Error: " << error_code.message() << '\n';
             }
         });
 }
@@ -48,12 +48,12 @@ void Session::do_write(std::string_view message)
 
     boost::asio::async_write(socket_, boost::asio::buffer(message),
         [self](
-            boost::system::error_code ec,
+            boost::system::error_code error_code,
             std::size_t               /*length*/)
         {
-            if (ec)
+            if (error_code)
             {
-                std::cerr << "Error: " << ec.message() << std::endl;
+                std::cerr << "Error: " << error_code.message() << '\n';
             }
         });
 }
@@ -77,21 +77,21 @@ void Session::process_command(std::string_view command)
 
     if (cmd == "INSERT")
     {
-        int id;
+        int record_id = 0;
         std::string name;
         std::string table;
 
-        iss >> table >> id;
+        iss >> table >> record_id;
 
         std::getline(iss >> std::ws, name);
 
-        if (database_.insert(table, id, name))
+        if (database_.insert(table, record_id, name))
         {
             do_write("OK\n");
         }
         else
         {
-            do_write("ERR duplicate " + std::to_string(id) + "\n");
+            do_write("ERR duplicate " + std::to_string(record_id) + "\n");
         }
     }
     else if (cmd == "TRUNCATE")
@@ -123,7 +123,7 @@ void Session::process_command(std::string_view command)
 
 Server::Server(
     boost::asio::io_context& io_context,
-    short                    port)
+    const int16_t            port)
     :
     acceptor_(io_context, tcp::endpoint(tcp::v4(), port))
 {
@@ -134,10 +134,10 @@ void Server::do_accept()
 {
     acceptor_.async_accept(
         [this](
-            boost::system::error_code ec,
+            boost::system::error_code error_code,
             tcp::socket               socket)
         {
-            if (!ec)
+            if (!error_code)
             {
                 std::make_shared<Session>(std::move(socket), database_)->start();
             }
