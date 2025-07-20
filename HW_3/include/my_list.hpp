@@ -1,18 +1,21 @@
-#pragma once
+#ifndef MY_LIST_HPP
+#define MY_LIST_HPP
+
+#include <gsl/gsl>
 
 template <typename T, typename Alloc = std::allocator<T>>
 class MyList
 {
-    struct Node
+    struct Node // NOLINT(altera-struct-pack-align)
     {
-        Node(T const val): next(nullptr), val(val) { }
+        explicit Node(T const val): next(nullptr), val(val) { }
 
-        [[nodiscard]] auto getValue() const -> T
+        [[nodiscard]] T getValue() const
         {
             return val;
         }
 
-        [[nodiscard]] auto getNext() const -> Node*
+        [[nodiscard]] Node* getNext() const
         {
             return next;
         }
@@ -31,9 +34,9 @@ public:
     class iterator
     {
     public:
-        iterator(Node* const ptr) : current(ptr) {}
+        explicit iterator(Node* const ptr) : current(ptr) {}
 
-        auto operator++() -> iterator&
+        iterator& operator++()
         {
             if (current)
             {
@@ -43,12 +46,12 @@ public:
             return *this;
         }
 
-        auto operator*() const -> T
+        T operator*() const
         {
             return current->getValue();
         }
 
-        auto operator!=(const iterator& other) const -> bool
+        bool operator!=(const iterator& other) const
         {
             return current != other.current;
         }
@@ -57,22 +60,22 @@ public:
         Node* current;
     };
 
-    auto begin() -> iterator
+    iterator begin()
     {
         return iterator(head);
     }
 
-    auto end() -> iterator
+    iterator end()
     {
         return iterator(nullptr);
     }
 
-    [[nodiscard]] auto empty() const -> bool
+    [[nodiscard]] bool empty() const
     {
         return head == nullptr;
     }
 
-    [[nodiscard]] auto size() const -> std::size_t
+    [[nodiscard]] std::size_t size() const
     {
         return size_;
     }
@@ -83,11 +86,11 @@ public:
             typename std::allocator_traits<Alloc>::template rebind_alloc<Node>;
         NodeAllocator nodeAllocator;
 
-        Node *const newNode = nodeAllocator.allocate(1);
+        auto const newNode = static_cast<gsl::owner<Node*>>(nodeAllocator.allocate(1));
 
         new (newNode) Node(val);
 
-        if (!head)
+        if (head == nullptr)
         {
             head = newNode;
             tail = newNode;
@@ -100,6 +103,12 @@ public:
 
         size_++;
     }
+
+    MyList() = default;
+    MyList(const MyList&) = delete;
+    MyList& operator=(const MyList&) = delete;
+    MyList(MyList&&) = delete;
+    MyList& operator=(MyList&&) = delete;
 
     ~MyList()
     {
@@ -123,3 +132,5 @@ private:
     Node *tail = nullptr;
     std::size_t size_ = 0;
 };
+
+#endif /* MY_LIST_HPP */

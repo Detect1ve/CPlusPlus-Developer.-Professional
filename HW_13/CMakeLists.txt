@@ -41,10 +41,16 @@ if (NOT Eigen_FOUND)
   set(BUILD_TESTING OFF CACHE BOOL "Disable Eigen tests" FORCE)
   FetchContent_Declare(
     Eigen3
+    # SOURCE_DIR /home/vboxuser/cource/eigen
     GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
     GIT_TAG 3.4.0
     GIT_SHALLOW ON
     EXCLUDE_FROM_ALL)
+  # set(Eigen3_NO_INSTALL ON CACHE BOOL "Disable Eigen install" FORCE)
+  # set(EIGEN3_DISABLE_INSTALL ON CACHE BOOL "Disable Eigen install" FORCE)
+  # set(EIGEN_BUILD_DEVEL OFF CACHE BOOL "Disable Eigen devel install" FORCE)
+  # set(EIGEN_BUILD_DOC OFF CACHE BOOL "Disable Eigen doc install" FORCE)
+  # set(EIGEN_BUILD_PKGCONFIG OFF CACHE BOOL "Disable Eigen pkgconfig install" FORCE)
   FetchContent_MakeAvailable(Eigen3)
 endif()
 

@@ -2,7 +2,7 @@
 
 #include <bayan.hpp>
 
-TEST(BayanTest, NoDuplicatesTest)
+TEST(HW8, NoDuplicatesTest)
 {
     boost::filesystem::path temp_dir =
         boost::filesystem::current_path() / "bayan_test_dir";
@@ -55,7 +55,7 @@ TEST(BayanTest, NoDuplicatesTest)
     boost::filesystem::remove_all(temp_dir);
 }
 
-TEST(BayanTest, FindDuplicatesTest)
+TEST(HW8, FindDuplicatesTest)
 {
     boost::filesystem::path current_dir = boost::filesystem::current_path();
     boost::filesystem::path temp_dir = current_dir / "bayan_test_duplicates";

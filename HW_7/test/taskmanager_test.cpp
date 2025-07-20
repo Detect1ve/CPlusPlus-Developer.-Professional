@@ -10,7 +10,7 @@
 
 static const std::string TASK_MANAGER_NAME = "bulk";
 
-TEST(HW_7, static_blocks)
+TEST(HW7, StaticBlocks)
 {
     bool foundLogFile = false;
     auto const start_time = std::chrono::system_clock::now();
@@ -82,7 +82,7 @@ TEST(HW_7, static_blocks)
         << ", " << end_seconds << "]";
 }
 
-TEST(HW_7, dynamic_blocks)
+TEST(HW7, DynamicBlocks)
 {
     std::this_thread::sleep_for(std::chrono::seconds(1));
 

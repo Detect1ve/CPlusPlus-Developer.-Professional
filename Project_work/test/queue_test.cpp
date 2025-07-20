@@ -4,7 +4,7 @@
 
 using namespace pc_queue;
 
-TEST(QueueTest, BasicFunctionality)
+TEST(ProjectWork, BasicFunctionality)
 {
     Queue<int> queue;
 
@@ -37,7 +37,7 @@ TEST(QueueTest, BasicFunctionality)
     ASSERT_FALSE(emptyItem.has_value());
 }
 
-TEST(QueueTest, MaxSizeLimit)
+TEST(ProjectWork, MaxSizeLimit)
 {
     Queue<int> queue(false, QueueMode::MULTI_PRODUCER_MULTI_CONSUMER, 2);
 
@@ -54,7 +54,7 @@ TEST(QueueTest, MaxSizeLimit)
     ASSERT_EQ(queue.size(), 2);
 }
 
-TEST(QueueTest, CloseQueue)
+TEST(ProjectWork, CloseQueue)
 {
     Queue<int> queue;
 
@@ -78,7 +78,7 @@ TEST(QueueTest, CloseQueue)
     ASSERT_FALSE(emptyItem.has_value());
 }
 
-TEST(QueueTest, ClearQueue)
+TEST(ProjectWork, ClearQueue)
 {
     Queue<int> queue;
 
@@ -94,7 +94,7 @@ TEST(QueueTest, ClearQueue)
     ASSERT_EQ(queue.size(), 0);
 }
 
-TEST(QueueTest, PriorityQueue)
+TEST(ProjectWork, PriorityQueue)
 {
     Queue<std::string, int> queue(true, QueueMode::MULTI_PRODUCER_MULTI_CONSUMER, 0);
 
@@ -115,7 +115,7 @@ TEST(QueueTest, PriorityQueue)
     ASSERT_EQ(item3.value(), "Low");
 }
 
-TEST(QueueTest, SingleProducerSingleConsumer)
+TEST(ProjectWork, SingleProducerSingleConsumer)
 {
     bool done(false);
     Queue<int> queue(false, QueueMode::SINGLE_PRODUCER_SINGLE_CONSUMER, 10);
@@ -155,7 +155,7 @@ TEST(QueueTest, SingleProducerSingleConsumer)
     }
 }
 
-TEST(QueueTest, MultiProducerMultiConsumer)
+TEST(ProjectWork, MultiProducerMultiConsumer)
 {
     bool done(false);
     const int itemsPerProducer = 1000;
@@ -217,7 +217,7 @@ TEST(QueueTest, MultiProducerMultiConsumer)
     ASSERT_TRUE(queue.empty());
 }
 
-TEST(QueueTest, PopTimeout)
+TEST(ProjectWork, PopTimeout)
 {
     Queue<int> queue;
 
@@ -233,7 +233,7 @@ TEST(QueueTest, PopTimeout)
     ASSERT_LE(duration, 180);
 }
 
-TEST(QueueTest, PushTimeout)
+TEST(ProjectWork, PushTimeout)
 {
     Queue<int> queue(false, QueueMode::MULTI_PRODUCER_MULTI_CONSUMER, 1);
 

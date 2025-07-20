@@ -2,7 +2,7 @@
 
 #include <mlp.h>
 
-TEST(HW13, accuracy_with_predictions)
+TEST(HW13, AccuracyWithPredictions)
 {
     std::string test_data_path = std::string(PROJECT_SOURCE_DIR) + "/test.csv";
     std::string predictions_path = std::string(PROJECT_SOURCE_DIR) + "/test_data_mlp.txt";

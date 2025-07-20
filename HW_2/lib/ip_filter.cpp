@@ -13,10 +13,16 @@
 // (".11", '.') -> ["", "11"]
 // ("11.22", '.') -> ["11", "22"]
 
-auto from_chars(std::span<const char> chars) -> expected<unsigned char, error_code>
+enum : unsigned char
+{
+    BASE = 10
+};
+
+std::expected<unsigned char, std::error_code> from_chars(std::span<const char> chars)
 {
     unsigned char value = 0;
-    auto [ptr, ec] = std::from_chars(chars.data(), chars.data() + chars.size(), value);
+    auto [ptr, ec] = std::from_chars(chars.data(), chars.data() + chars.size(), value,
+        BASE);
 
     if (ec != std::errc())
     {
@@ -26,62 +32,67 @@ auto from_chars(std::span<const char> chars) -> expected<unsigned char, error_co
     return value;
 }
 
-constexpr auto split(
-    const string& str,
-    const char    d) -> vector<string>
+constexpr std::vector<std::string> split(
+    const std::string& str,
+    const char         d) // NOLINT(readability-identifier-length)
 {
-    string::size_type start = 0;
-    string::size_type stop = str.find_first_of(d);
-    vector<string> r;
+    std::string::size_type start = 0;
+    // NOLINTNEXTLINE(fuchsia-default-arguments-calls)
+    std::string::size_type stop = str.find_first_of(d);
+    std::vector<std::string> r; // NOLINT(readability-identifier-length)
 
-    while (stop != string::npos)
+    while (stop != std::string::npos)
     {
+        // NOLINTNEXTLINE(fuchsia-default-arguments-calls)
         r.push_back(str.substr(start, stop - start));
 
         start = stop + 1;
         stop = str.find_first_of(d, start);
     }
 
-    r.push_back(str.substr(start));
+    r.push_back(str.substr(start)); // NOLINT(fuchsia-default-arguments-calls)
 
     return r;
 }
 
-constexpr auto comp(
-    const vector<string>& a,
-    const vector<string>& b) -> bool
+namespace
 {
-    auto common_range = std::min(a.size(), b.size());
-    auto a_view = a | std::views::take(common_range);
-
-    for (const auto& [idx, a_part] : a_view | std::views::enumerate)
+    constexpr bool comp(
+        const std::vector<std::string>& first_ip,
+        const std::vector<std::string>& second_ip)
     {
-        auto first_result = from_chars(std::span<const char>(a_part));
-        auto second_result = from_chars(std::span<const char>(b[idx]));
+        auto common_range = std::min(first_ip.size(), second_ip.size());
+        auto first_view = first_ip | std::views::take(common_range);
 
-        if (!first_result || !second_result)
+        for (const auto& [idx, ip_part] : first_view | std::views::enumerate)
         {
-            continue;
+            auto first_result = from_chars(std::span<const char>(ip_part));
+            auto second_result = from_chars(std::span<const char>(second_ip[idx]));
+
+            if (!first_result || !second_result)
+            {
+                continue;
+            }
+
+            if (auto result = first_result.value() <=> second_result.value();
+                result != 0)
+            {
+                return result > 0;
+            }
         }
 
-        if (auto result = first_result.value() <=> second_result.value(); result != 0)
-        {
-            return result > 0;
-        }
+        return false;
     }
+} // namespace
 
-    return false;
-}
-
-void reverse_lexicographic_sort(vector<vector<string>>& ip_pool)
+void reverse_lexicographic_sort(std::vector<std::vector<std::string>>& ip_pool)
 {
-    std::ranges::sort(ip_pool, comp);
+    std::ranges::sort(ip_pool, comp, std::identity{});
 }
 
-auto filter_any(
-    const vector<vector<string>>& ip_pool,
-    const unsigned char           any_octet)
-    -> expected<vector<vector<string>>, error_code>
+std::expected<std::vector<std::vector<std::string>>, std::error_code> filter_any(
+    const std::vector<std::vector<std::string>>& ip_pool,
+    const unsigned char                any_octet)
 {
 #if defined(__cpp_lib_ranges_to_container)
     return ip_pool | std::ranges::views::filter([any_octet](const auto& ip)
@@ -96,15 +107,15 @@ auto filter_any(
 
             return result.value() == any_octet;
         });
-    }) | std::ranges::to<vector<vector<string>>>();
+    }) | std::ranges::to<std::vector<std::vector<std::string>>>();
 #else
-    vector<vector<string>> result;
+    std::vector<std::vector<std::string>> result;
 
-    for (const auto& ip : ip_pool)
+    for (const auto& ip_address : ip_pool)
     {
         bool found = false;
 
-        for (const auto& ip_part : ip)
+        for (const auto& ip_part : ip_address)
         {
             auto res = from_chars(std::span<const char>(ip_part));
             if (  res
@@ -117,7 +128,7 @@ auto filter_any(
 
         if (found)
         {
-            result.emplace_back(ip);
+            result.emplace_back(ip_address);
         }
     }
 
@@ -125,38 +136,40 @@ auto filter_any(
 #endif
 }
 
-void print(std::span<const vector<string>> ip_pool)
+void print(std::span<const std::vector<std::string>> ip_pool)
 {
 #if defined(__cpp_lib_ranges_to_container)
-    for (const auto& ip : ip_pool)
+    for (const auto& ip_address : ip_pool)
     {
-        std::cout << std::format("{}\n", ip | std::views::join_with(std::string_view("."))
-            | std::ranges::to<string>());
+        std::cout << std::format("{}\n", ip_address
+            | std::views::join_with(std::string_view("."))
+            | std::ranges::to<std::string>());
     }
 #else
-    for (const auto& ip : ip_pool)
+    for (const auto& ip_address : ip_pool)
     {
-        for (size_t i = 0; i < ip.size(); ++i)
+        for (size_t i = 0; i < ip_address.size(); ++i)
         {
-            std::cout << ip[i];
-            if (i + 1 < ip.size())
+            std::cout << ip_address[i];
+            if (i + 1 < ip_address.size())
             {
                 std::cout << ".";
             }
         }
 
-        std::cout << endl;
+        std::cout << '\n';
     }
 #endif
 }
 
-auto stdin_to_vector() -> expected<vector<vector<string>>, error_code>
+std::expected<std::vector<std::vector<std::string>>, std::error_code> stdin_to_vector()
 {
-    vector<vector<string>> ip_pool;
+    std::vector<std::vector<std::string>> ip_pool;
 
-    for (string line; std::getline(std::cin, line);)
+    for (std::string line; std::getline(std::cin, line);)
     {
-        vector<string> v = split(line, '\t');
+        // NOLINTNEXTLINE(readability-identifier-length)
+        std::vector<std::string> v = split(line, '\t'); 
 
         try
         {

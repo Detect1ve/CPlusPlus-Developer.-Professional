@@ -1,4 +1,6 @@
-#pragma once
+#ifndef IP_FILTER_HPP
+#define IP_FILTER_HPP
+
 #if __GNUC__ < 14
 #include <array>
 #include <charconv>
@@ -6,36 +8,35 @@
 #include <limits>
 #include <span>
 #endif
+#if defined(__clang__)
+#include <utility>
+#endif
 #include <expected>
 #include <ranges>
 #include <vector>
 
-using std::error_code;
-using std::expected;
-using std::string;
-using std::vector;
-
 [[nodiscard]]
-auto from_chars(std::span<const char> chars) -> expected<unsigned char, error_code>;
+std::expected<unsigned char, std::error_code> from_chars(std::span<const char> chars);
 
-[[nodiscard]] constexpr auto split(
-    const string& str,
-    char          d) -> vector<string>;
+[[nodiscard]] constexpr std::vector<std::string> split(
+    const std::string& str,
+    char               d); // NOLINT(readability-identifier-length)
 
-void reverse_lexicographic_sort(vector<vector<string>>& ip_pool);
+void reverse_lexicographic_sort(std::vector<std::vector<std::string>>& ip_pool);
 
-void print(std::span<const vector<string>> ip_pool);
+void print(std::span<const std::vector<std::string>> ip_pool);
 
 template <typename First, typename... Rest>
     requires std::ranges::range<First> && (std::integral<Rest> && ...)
-[[nodiscard]] auto filter(
+[[nodiscard]]
+std::expected<std::vector<std::vector<std::string>>, std::error_code> filter(
     const First&   ip_pool,
-    const Rest&... octet) -> expected<vector<vector<string>>, error_code>
+    const Rest&... octet)
 {
     for (const auto& val : std::initializer_list<int>{static_cast<int>(octet)...})
     {
-        if (  val < std::numeric_limits<unsigned char>::min()
-           || val > std::numeric_limits<unsigned char>::max())
+        if (  std::cmp_less(val, std::numeric_limits<unsigned char>::min())
+           || std::cmp_greater(val, std::numeric_limits<unsigned char>::max()))
         {
             return std::unexpected(std::make_error_code(std::errc::value_too_large));
         }
@@ -59,19 +60,19 @@ template <typename First, typename... Rest>
         }
 
         return true;
-    }) | std::ranges::to<vector<vector<string>>>();
+    }) | std::ranges::to<std::vector<std::vector<std::string>>>();
 #else
-    vector<vector<string>> result;
-    for (const auto& ip : ip_pool)
+    std::vector<std::vector<std::string>> result;
+    for (const auto& ip_address : ip_pool)
     {
-        auto common_range = std::min(a_octet.size(), ip.size());
+        auto common_range = std::min(a_octet.size(), ip_address.size());
         bool match = true;
 
         for (size_t idx = 0; idx < common_range; ++idx)
         {
-            auto res = from_chars(std::span<const char>(ip[idx]));
+            auto res = from_chars(std::span<const char>(ip_address[idx]));
             if (  !res
-               || res.value() != a_octet[idx])
+               || res.value() != a_octet.at(idx))
             {
                 match = false;
                 break;
@@ -80,7 +81,7 @@ template <typename First, typename... Rest>
 
         if (match)
         {
-            result.emplace_back(ip);
+            result.emplace_back(ip_address);
         }
     }
 
@@ -88,10 +89,12 @@ template <typename First, typename... Rest>
 #endif
 }
 
-[[nodiscard]] auto filter_any(
-    const vector<vector<string>>& ip_pool,
-    unsigned char                 any_octet)
-    -> expected<vector<vector<string>>, error_code>;
+[[nodiscard]]
+std::expected<std::vector<std::vector<std::string>>, std::error_code> filter_any(
+    const std::vector<std::vector<std::string>>& ip_pool,
+    unsigned char                                any_octet);
 
 [[nodiscard]]
-auto stdin_to_vector() -> expected<vector<vector<string>>, error_code>;
+std::expected<std::vector<std::vector<std::string>>, std::error_code> stdin_to_vector();
+
+#endif /* IP_FILTER_HPP */
