@@ -78,9 +78,9 @@ namespace pc_queue
         * @param[in] maxSize     Maximum queue size (0 - unlimited)
         */
         Queue(
-            const bool      usePriority = false,
-            const QueueMode mode = QueueMode::MULTI_PRODUCER_MULTI_CONSUMER,
-            const size_t    maxSize = 0)
+            const bool        usePriority = false,
+            const QueueMode   mode = QueueMode::MULTI_PRODUCER_MULTI_CONSUMER,
+            const std::size_t maxSize = 0)
             :
             usePriority_(usePriority),
             closed_(false),
@@ -188,7 +188,7 @@ namespace pc_queue
         *
         * @return Current queue size
         */
-        auto size() const -> size_t
+        auto size() const -> std::size_t
         {
             return (usePriority_ ? priorityQueue_.size() : queue_.size());
         }
@@ -282,7 +282,7 @@ namespace pc_queue
 
             if (maxSize_ > 0)
             {
-                size_t currentSize = size();
+                std::size_t currentSize = size();
 
                 if (currentSize >= maxSize_)
                 {
@@ -399,7 +399,7 @@ namespace pc_queue
             std::unique_lock<std::mutex>& lock,
             const int                     timeout) -> bool
         {
-            size_t currentSize = size();
+            std::size_t currentSize = size();
             bool queueFull = currentSize >= maxSize_;
 
             if (  queueFull
@@ -442,7 +442,7 @@ namespace pc_queue
         ///< Queue operating mode
         QueueMode mode_;
         ///< Maximum queue size (0 - unlimited)
-        size_t maxSize_;
+        std::size_t maxSize_;
         ///< Condition variable for waiting for a non-empty queue
         std::condition_variable notEmpty_;
         ///< Condition variable for waiting for a non-full queue

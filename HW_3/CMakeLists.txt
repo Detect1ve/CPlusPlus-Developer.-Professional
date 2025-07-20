@@ -4,9 +4,9 @@ project(HW_3 LANGUAGES CXX)
 
 if (PROJECT_IS_TOP_LEVEL)
   if (MSVC)
-    set(CMAKE_CXX_STANDARD 23)
-  else ()
-    set(CMAKE_CXX_STANDARD 26)
+    set(SUPPORTED_CXX_STANDARDS 23 20 17 14 11 98)
+  else()
+    set(SUPPORTED_CXX_STANDARDS 26 23 20 17 14 11 98)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
       add_compile_options(-fcolor-diagnostics)
     else()
@@ -14,8 +14,11 @@ if (PROJECT_IS_TOP_LEVEL)
     endif()
   endif()
 
+  include(../cxx_standard.cmake)
+  set(CMAKE_CXX_STANDARD ${CXX_STANDARD})
   set(CMAKE_CXX_STANDARD_REQUIRED True)
   set(CMAKE_CXX_EXTENSIONS OFF)
+  set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 endif()
 
 if (MSVC)
@@ -25,24 +28,68 @@ else()
 endif()
 
 if (PROJECT_IS_TOP_LEVEL)
+  include(../clang-tidy.cmake)
   include(../googletest.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
+find_package(Microsoft.GSL 4.2.0 CONFIG)
+if (NOT Microsoft.GSL_FOUND)
+  FetchContent_Declare(
+    GSL
+    GIT_REPOSITORY https://github.com/microsoft/GSL
+    GIT_TAG v4.2.0
+    GIT_SHALLOW ON
+    EXCLUDE_FROM_ALL)
+
+  FetchContent_MakeAvailable(GSL)
+endif()
+
+add_library(list_and_allocator INTERFACE)
+target_include_directories(list_and_allocator
+  INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_link_libraries(list_and_allocator INTERFACE Microsoft.GSL::GSL)
+
 add_executable(main src/main.cpp)
-target_include_directories(main PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_link_libraries(main PRIVATE list_and_allocator)
 if (NOT MSVC)
   target_link_libraries(main PRIVATE -static)
 endif()
 
 add_executable(my_allocator_test test/my_allocator_test.cpp)
-target_include_directories(my_allocator_test PRIVATE
-  "${CMAKE_CURRENT_SOURCE_DIR}/include")
-target_link_libraries(my_allocator_test PRIVATE GTest::gtest_main)
+target_link_libraries(my_allocator_test PRIVATE GTest::gtest_main list_and_allocator)
 
 add_executable(my_list_test test/my_list_test.cpp)
-target_include_directories(my_list_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
-target_link_libraries(my_list_test PRIVATE GTest::gtest_main)
+target_link_libraries(my_list_test PRIVATE GTest::gtest_main list_and_allocator)
+
+if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
+  set(CLANG_TIDY_HW_3_COMMON_OPTS
+    "-altera-id-dependent-backward-branch,\
+     -altera-struct-pack-align,\
+     -altera-unroll-loops,\
+     -fuchsia-overloaded-operator,\
+     -llvmlibc-inline-function-decl,\
+     -llvmlibc-restrict-system-libc-headers,\
+     -modernize-use-trailing-return-type;--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+
+  set_target_properties(main PROPERTIES
+    CXX_CLANG_TIDY "${CLANG_TIDY_COMMON_OPTS},\
+      -llvmlibc-callee-namespace,\
+      -llvmlibc-implementation-in-namespace,\
+      -misc-include-cleaner,\
+      ${CLANG_TIDY_HW_3_COMMON_OPTS}")
+
+  set_target_properties(my_allocator_test PROPERTIES
+    CXX_CLANG_TIDY "${CLANG_TIDY_COMMON_OPTS},\
+      -llvmlibc-implementation-in-namespace,\
+      -misc-include-cleaner,\
+      ${CLANG_TIDY_HW_3_COMMON_OPTS}")
+
+  set_target_properties(my_list_test PROPERTIES
+    CXX_CLANG_TIDY "${CLANG_TIDY_COMMON_OPTS},\
+      -llvmlibc-callee-namespace,\
+      ${CLANG_TIDY_HW_3_COMMON_OPTS}")
+endif()
 
 enable_testing()
 add_test(HW_3.my_allocator_test my_allocator_test)

@@ -13,7 +13,7 @@ namespace editor::controller
         primitiveController_ = std::make_unique<PrimitiveController>(document_.get());
     }
 
-    auto DocumentController::saveDocument(const std::string& filename) -> bool
+    bool DocumentController::saveDocument(const std::string& filename)
     {
         if (!document_) {
             return false;
@@ -22,7 +22,7 @@ namespace editor::controller
         return model::Document::saveToFile(*document_, filename);
     }
 
-    auto DocumentController::loadDocument(const std::string& filename) -> bool
+    bool DocumentController::loadDocument(const std::string& filename)
     {
         auto newDocument = model::Document::loadFromFile(filename);
 
@@ -37,12 +37,12 @@ namespace editor::controller
         return true;
     }
 
-    auto DocumentController::getDocument() const -> model::Document*
+    model::Document* DocumentController::getDocument() const
     {
         return document_.get();
     }
 
-    auto DocumentController::getPrimitiveController() const -> PrimitiveController*
+    PrimitiveController* DocumentController::getPrimitiveController() const
     {
         return primitiveController_.get();
     }

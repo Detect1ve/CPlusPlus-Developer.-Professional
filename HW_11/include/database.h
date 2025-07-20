@@ -16,7 +16,7 @@ class Database
 public:
     auto insert(
         std::string_view table,
-        int              id,
+        int              record_id,
         std::string_view name) -> bool;
 
     void truncate(std::string_view table);

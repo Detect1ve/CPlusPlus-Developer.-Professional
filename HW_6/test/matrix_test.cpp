@@ -2,13 +2,13 @@
 
 #include <matrix.hpp>
 
-enum
+enum : uint16_t
 {
     TEST_VALUE_1 = 314,
     TEST_VALUE_2 = 217,
 };
 
-TEST(HW_6, matrix)
+TEST(HW6, Matrix)
 {
     // infinite matrix int filled with values ​​-1
     Matrix<int, -1> matrix;

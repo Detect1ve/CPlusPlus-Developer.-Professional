@@ -1,18 +1,21 @@
-#pragma once
+#ifndef MY_ALLOCATOR_HPP
+#define MY_ALLOCATOR_HPP
 
 #include <cstdlib>
+
+#include <gsl/gsl>
 
 template <typename T, const std::size_t size>
 class MyAllocator
 {
 public:
-    typedef T value_type;
+    using value_type = T;
 
 #if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
     MyAllocator() noexcept {}
 #endif
 
-    auto allocate(const std::size_t n) -> T*
+    gsl::owner<T*> allocate(const std::size_t n)
     {
         if (memory_alloc + n > size)
         {
@@ -20,7 +23,7 @@ public:
         }
 
         memory_alloc += n;
-
+        // NOLINTNEXTLINE(cppcoreguidelines-no-malloc,hicpp-no-malloc)
         return static_cast<T*>(malloc(sizeof(T) * n));
     }
 
@@ -36,13 +39,15 @@ public:
     };
 
     void deallocate(
-        T* const          p,
-        const std::size_t n)
+        gsl::owner<T*> const ptr,
+        const std::size_t    n)
     {
         memory_alloc -= n;
-        free(p);
+        free(ptr); // NOLINT(cppcoreguidelines-no-malloc,hicpp-no-malloc)
     }
 
 private:
     std::size_t memory_alloc = 0;
 };
+
+#endif /* MY_ALLOCATOR_HPP */

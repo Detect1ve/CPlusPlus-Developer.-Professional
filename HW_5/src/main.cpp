@@ -1,8 +1,12 @@
 #include <controller/document_controller.hpp>
 #include <view/document_view.hpp>
 
-auto main() -> int
+int main()
 {
+    constexpr int kThickness = 1;
+    struct Point const start {.x = 10, .y = 10};
+    struct Point const end {.x = 100, .y = 100};
+
     auto documentController = std::make_unique<editor::controller::DocumentController>();
 
     documentController->createNewDocument("New Document");
@@ -10,7 +14,7 @@ auto main() -> int
     auto documentView =
         std::make_unique<editor::view::DocumentView>(documentController->getDocument());
 
-    documentController->getPrimitiveController()->createLine(10, 10, 100, 100);
+    documentController->getPrimitiveController()->createLine(start, end, kThickness);
 
     documentController->getPrimitiveController()->removePrimitive(0);
 

@@ -11,9 +11,9 @@ project(bayan VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 if (PROJECT_IS_TOP_LEVEL)
   if (MSVC)
-    set(CMAKE_CXX_STANDARD 23)
+    set(SUPPORTED_CXX_STANDARDS 23)
   else()
-    set(CMAKE_CXX_STANDARD 26)
+    set(SUPPORTED_CXX_STANDARDS 26 23)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
       add_compile_options(-fcolor-diagnostics)
     else()
@@ -21,18 +21,16 @@ if (PROJECT_IS_TOP_LEVEL)
     endif()
   endif()
 
+  include(../cxx_standard.cmake)
+  set(CMAKE_CXX_STANDARD ${CXX_STANDARD})
   set(CMAKE_CXX_STANDARD_REQUIRED True)
   set(CMAKE_CXX_EXTENSIONS OFF)
-endif()
-
-if (MSVC)
-  add_compile_options(/W4)
-else()
-  add_compile_options(-Wall -Wextra -pedantic)
+  set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 endif()
 
 if (PROJECT_IS_TOP_LEVEL)
   include(../boost.cmake)
+  include(../clang-tidy.cmake)
   include(../googletest.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
@@ -42,15 +40,77 @@ target_include_directories(bayan_lib PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include
 target_link_libraries(bayan_lib
   PRIVATE Boost::crc Boost::program_options Boost::uuid Boost::algorithm
   PUBLIC Boost::filesystem)
+if (MSVC)
+  target_compile_options(bayan_lib PRIVATE /W4)
+else()
+  target_compile_options(bayan_lib PRIVATE -Wall -Wextra -pedantic)
+endif()
 
 add_executable(bayan src/main.cpp)
 target_link_libraries(bayan PRIVATE bayan_lib)
 if (NOT MSVC)
   target_link_libraries(bayan PRIVATE -static)
 endif()
+if (MSVC)
+  target_compile_options(bayan PRIVATE /W4)
+else()
+  target_compile_options(bayan PRIVATE -Wall -Wextra -pedantic)
+endif()
+
+find_package(absl)
+if (NOT absl_FOUND)
+  FetchContent_Declare(
+    absl
+    GIT_REPOSITORY https://github.com/abseil/abseil-cpp.git
+    GIT_TAG 20250512.1
+    GIT_SHALLOW ON
+    EXCLUDE_FROM_ALL)
+
+  FetchContent_MakeAvailable(absl)
+endif()
 
 add_executable(bayan_test test/bayan_test.cpp)
-target_link_libraries(bayan_test PRIVATE bayan_lib GTest::gtest_main)
+target_link_libraries(bayan_test PRIVATE bayan_lib GTest::gtest_main absl::strings)
+if (MSVC)
+  target_compile_options(bayan_test PRIVATE /W4)
+else()
+  target_compile_options(bayan_test PRIVATE -Wall -Wextra -pedantic)
+endif()
+
+if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
+  set(CLANG_TIDY_HW_8_COMMON_OPTS
+    "-altera-struct-pack-align,\
+     -fuchsia-default-arguments-calls,\
+     -llvmlibc-callee-namespace,\
+     -llvmlibc-inline-function-decl,\
+     -llvmlibc-restrict-system-libc-headers,\
+     -misc-include-cleaner,\
+     -modernize-use-trailing-return-type;--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+
+  set_target_properties(bayan_lib PROPERTIES
+    CXX_CLANG_TIDY "${CLANG_TIDY_COMMON_OPTS},\
+      -altera-id-dependent-backward-branch,\
+      -altera-unroll-loops,\
+      -llvmlibc-implementation-in-namespace,\
+      ${CLANG_TIDY_HW_8_COMMON_OPTS}")
+
+  set_target_properties(bayan PROPERTIES
+    CXX_CLANG_TIDY "${CLANG_TIDY_COMMON_OPTS},\
+      -llvmlibc-implementation-in-namespace,\
+      ${CLANG_TIDY_HW_8_COMMON_OPTS}")
+
+  set_target_properties(bayan_test PROPERTIES
+    CXX_CLANG_TIDY "${CLANG_TIDY_COMMON_OPTS},\
+      ${CLANG_TIDY_HW_8_COMMON_OPTS};--config=\
+      {\
+        CheckOptions:\
+        [\
+          {\
+            key: readability-function-cognitive-complexity.IgnoreMacros, value: 'true'\
+          }\
+        ]\
+      }")
+endif()
 
 enable_testing()
 add_test(HW_8.bayan_test bayan_test)

@@ -9,17 +9,20 @@ project(helloworld VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 if (PROJECT_IS_TOP_LEVEL)
     if (MSVC)
-        set(CMAKE_CXX_STANDARD 23)
+        set(SUPPORTED_CXX_STANDARDS 23 20 17 14 11 98)
     else ()
-        set(CMAKE_CXX_STANDARD 26)
+        set(SUPPORTED_CXX_STANDARDS 26 23 20 17 14 11 98)
         if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
             add_compile_options(-fcolor-diagnostics)
         else ()
             add_compile_options(-fdiagnostics-color=always)
         endif()
     endif()
+    include(../cxx_standard.cmake)
+    set(CMAKE_CXX_STANDARD ${CXX_STANDARD})
     set(CMAKE_CXX_STANDARD_REQUIRED True)
     set(CMAKE_CXX_EXTENSIONS OFF)
+    set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 endif()
 
 configure_file(version.h.in version.h)
@@ -43,6 +46,7 @@ endif()
 
 if (PROJECT_IS_TOP_LEVEL)
     include(../boost.cmake)
+    include(../clang-tidy.cmake)
     include(../googletest.cmake)
     list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
@@ -60,6 +64,46 @@ target_link_libraries(g_test_version
     PRIVATE GTest::gtest_main
     helloworld
 )
+
+if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
+  set_target_properties(helloworld_cli PROPERTIES
+    CXX_CLANG_TIDY "${CLANG_TIDY_COMMON_OPTS},\
+      -hicpp-named-parameter,\
+      -llvmlibc-callee-namespace,\
+      -llvmlibc-implementation-in-namespace,\
+      -llvmlibc-restrict-system-libc-headers,\
+      -llvm-header-guard,\
+      -modernize-use-trailing-return-type,\
+      -performance-avoid-endl,\
+      -readability-named-parameter")
+
+  set_target_properties(helloworld PROPERTIES
+    CXX_CLANG_TIDY "${CLANG_TIDY_COMMON_OPTS},\
+      -cppcoreguidelines-macro-to-enum,\
+      -cppcoreguidelines-macro-usage,\
+      -llvmlibc-implementation-in-namespace,\
+      -llvm-header-guard,\
+      -modernize-macro-to-enum,\
+      -modernize-use-trailing-return-type")
+
+  set_target_properties(test_version PROPERTIES
+    CXX_CLANG_TIDY "${CLANG_TIDY_COMMON_OPTS},\
+      -altera-unroll-loops,\
+      -cppcoreguidelines-avoid-do-while,\
+      -cppcoreguidelines-pro-type-vararg,\
+      -fuchsia-default-arguments-calls,\
+      -fuchsia-statically-constructed-objects,\
+      -hicpp-vararg,\
+      -llvmlibc-callee-namespace,\
+      -llvmlibc-implementation-in-namespace,\
+      -misc-include-cleaner,\
+      -readability-identifier-length")
+
+  set_target_properties(g_test_version PROPERTIES
+    CXX_CLANG_TIDY "${CLANG_TIDY_COMMON_OPTS},\
+      -llvmlibc-callee-namespace,\
+      -llvmlibc-restrict-system-libc-headers")
+endif()
 
 if (MSVC)
     target_compile_options(helloworld_cli PRIVATE

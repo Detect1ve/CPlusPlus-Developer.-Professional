@@ -1,29 +1,40 @@
 #include <iostream>
+#include <ranges>
 
 #include <server.h>
 
-auto main(
+int main(
     const int   argc,
-    const char* argv[]) -> int
+    const char* argv[])
 {
     int ret = 0;
 
     try
     {
-        short port = 0;
-
-        if (argc != 2)
+        enum : unsigned char
         {
-            std::cerr << "Usage: join_server <port>" << std::endl;
+            BASE = 10
+        };
+        auto const args = std::span(argv, argc) | std::views::transform(
+        [](char const *const arg)
+        {
+            return std::string_view(arg);
+        });
+        int16_t port = 0;
+
+        if (args.size() != 2)
+        {
+            std::cerr << "Usage: " << args[0] << " <port>\n";
             ret = -1;
 
             return ret;
         }
 
-        auto [ptr, ec] = std::from_chars(argv[1], argv[1] + strlen(argv[1]), port);
+        auto [ptr, ec] = std::from_chars(args[1].data(), args[1].data() + args[1].size(),
+            port, BASE);
         if (ec != std::errc{})
         {
-            std::cerr << "Invalid port format" << std::endl;
+            std::cerr << "Invalid port format\n";
             ret = -2;
 
             return ret;
@@ -31,15 +42,15 @@ auto main(
 
         boost::asio::io_context io_context;
 
-        Server server(io_context, port);
+        const Server server(io_context, port);
 
-        std::cout << "Server started on port " << port << std::endl;
+        std::cout << "Server started on port " << port << '\n';
 
         io_context.run();
     }
     catch (const std::exception& e)
     {
-        std::cerr << "Exception: " << e.what() << std::endl;
+        std::cerr << "Exception: " << e.what() << '\n';
         ret = -3;
 
         return ret;

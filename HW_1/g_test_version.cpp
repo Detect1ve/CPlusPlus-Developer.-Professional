@@ -2,6 +2,6 @@
 
 #include <gtest/gtest.h>
 
-TEST(HW_1, g_test_version) {
+TEST(HW1, GTestVersion) {
 	EXPECT_GT(version(), 0);
 }

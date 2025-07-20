@@ -2,22 +2,24 @@
 
 namespace editor::model
 {
-    Document::Document(const std::string& name) : name_(name) {}
+    Document::Document(std::string name) : name_(std::move(name)) {}
 
     void Document::addPrimitive(std::unique_ptr<Primitive> primitive)
     {
         primitives_.emplace_back(std::move(primitive));
     }
 
-    void Document::removePrimitive(size_t index)
+    void Document::removePrimitive(std::size_t index)
     {
+        using diff_t = decltype(primitives_)::difference_type;
+
         if (index < primitives_.size())
         {
-            primitives_.erase(primitives_.begin() + index);
+            primitives_.erase(primitives_.begin() + static_cast<diff_t>(index));
         }
     }
 
-    auto Document::getPrimitive(size_t index) const -> const Primitive*
+    const Primitive* Document::getPrimitive(std::size_t index) const
     {
         if (index < primitives_.size())
         {
@@ -27,12 +29,12 @@ namespace editor::model
         return nullptr;
     }
 
-    auto Document::getPrimitiveCount() const -> size_t
+    std::size_t Document::getPrimitiveCount() const
     {
         return primitives_.size();
     }
 
-    auto Document::getName() const -> const std::string&
+    const std::string& Document::getName() const
     {
         return name_;
     }
@@ -42,15 +44,14 @@ namespace editor::model
         name_ = name;
     }
 
-    auto Document::saveToFile(
+    bool Document::saveToFile(
         const Document&    /*document*/,
-        const std::string& /*filename*/) -> bool
+        const std::string& /*filename*/)
     {
         return true;
     }
 
-    auto Document::loadFromFile(const std::string&  /*filename*/)
-        -> std::unique_ptr<Document>
+    std::unique_ptr<Document> Document::loadFromFile(const std::string&  /*filename*/)
     {
         return std::make_unique<Document>("Loaded Document");
     }
