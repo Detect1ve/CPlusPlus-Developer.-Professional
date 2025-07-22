@@ -51,5 +51,5 @@ TEST(HW2, IpFilter)
         encoded = compute_md5(result);
     }
 
-    EXPECT_EQ(encoded, "24e7a7b2270daee89c64d3ca5fb3da1a");
+    ASSERT_EQ(encoded, "24e7a7b2270daee89c64d3ca5fb3da1a");
 }

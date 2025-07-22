@@ -2,7 +2,7 @@
 
 #include <matrix.hpp>
 
-enum
+enum : unsigned short
 {
     TEST_VALUE_1 = 314,
     TEST_VALUE_2 = 217,

@@ -35,7 +35,7 @@ if (ENABLE_CLANG_TIDY)
 
   if (CLANG_TIDY_BIN)
     message(STATUS "clang-tidy enabled: ${CLANG_TIDY_BIN}")
-    set(CLANG_TIDY_COMMON_OPTS "${CLANG_TIDY_BIN};-checks=*")
+    set(CLANG_TIDY_COMMON_OPTS "${CLANG_TIDY_BIN};--use-color;-checks=*")
   else()
     message(STATUS "clang-tidy not found, static analysis will be skipped.")
   endif()

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MODEL_PRIMITIVES_LINE_HPP
+#define MODEL_PRIMITIVES_LINE_HPP
 
 #include <model/primitive.hpp>
 
@@ -8,44 +9,42 @@ namespace editor::model
     {
     public:
         Line(
-            int x1,
-            int y1,
-            int x2,
-            int y2,
-            int thickness = 1)
+            struct Point start,
+            struct Point end,
+            int thickness)
             :
-            x1_(x1),
-            y1_(y1),
-            x2_(x2),
-            y2_(y2),
+            x1_(start.x),
+            y1_(start.y),
+            x2_(end.x),
+            y2_(end.y),
             thickness_(thickness) {}
 
-        [[nodiscard]] auto getType() const -> std::string override
+        [[nodiscard]] std::string getType() const override
         {
             return "Line";
         }
 
-        [[nodiscard]] auto getX1() const -> int
+        [[nodiscard]] int getX1() const
         {
             return x1_;
         }
 
-        [[nodiscard]] auto getY1() const -> int
+        [[nodiscard]] int getY1() const
         {
             return y1_;
         }
 
-        [[nodiscard]] auto getX2() const -> int
+        [[nodiscard]] int getX2() const
         {
             return x2_;
         }
 
-        [[nodiscard]] auto getY2() const -> int
+        [[nodiscard]] int getY2() const
         {
             return y2_;
         }
 
-        [[nodiscard]] auto getThickness() const -> int
+        [[nodiscard]] int getThickness() const
         {
             return thickness_;
         }
@@ -58,3 +57,5 @@ namespace editor::model
         int thickness_;
     };
 } // namespace editor::model
+
+#endif /* MODEL_PRIMITIVES_LINE_HPP */

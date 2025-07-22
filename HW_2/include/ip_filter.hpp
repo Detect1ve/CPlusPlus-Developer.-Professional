@@ -8,7 +8,7 @@
 #include <limits>
 #include <span>
 #endif
-#if defined(__clang__)
+#if defined(__clang__) or __GNUC__ < 14
 #include <utility>
 #endif
 #include <expected>

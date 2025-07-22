@@ -2,12 +2,12 @@
 
 #include <matrix.hpp>
 
-enum
+enum : unsigned char
 {
     CONTAINER_SIZE = 10,
 };
 
-auto main() -> int
+int main()
 {
     Matrix<int, 0> matrix;
 
@@ -28,16 +28,16 @@ auto main() -> int
             std::cout << matrix[i][j] << " ";
         }
 
-        std::cout << std::endl;
+        std::cout << '\n';
     }
 
-    std::cout << matrix.size() << std::endl;
+    std::cout << matrix.size() << '\n';
 
     for (auto elem : matrix)
     {
-        auto [x, y, v] = elem;
+        auto [row, col, value] = elem;
 
-        std::cout << x << " " << y << " " << v << std::endl;
+        std::cout << row << " " << col << " " << value << '\n';
     }
 
     return 0;

@@ -1,5 +1,9 @@
-#pragma once
+#ifndef MODEL_DOCUMENT_HPP
+#define MODEL_DOCUMENT_HPP
 
+#if __cplusplus <= 201703L
+#include <string>
+#endif
 #include <vector>
 
 #include <model/primitive.hpp>
@@ -9,29 +13,32 @@ namespace editor::model
     class Document
     {
     public:
-        Document(const std::string& name = "Untitled");
+        explicit Document(std::string name);
         ~Document() = default;
 
         Document(const Document&) = delete;
-        auto operator=(const Document&) -> Document& = delete;
+        Document& operator=(const Document&) = delete;
+        Document(Document&&) = delete;
+        Document& operator=(Document&&) = delete;
 
         void addPrimitive(std::unique_ptr<Primitive> primitive);
         void removePrimitive(size_t index);
-        [[nodiscard]] auto getPrimitive(size_t index) const -> const Primitive*;
-        [[nodiscard]] auto getPrimitiveCount() const -> size_t;
+        [[nodiscard]] const Primitive* getPrimitive(size_t index) const;
+        [[nodiscard]] size_t getPrimitiveCount() const;
 
-        [[nodiscard]] auto getName() const -> const std::string&;
+        [[nodiscard]] const std::string& getName() const;
         void setName(const std::string& name);
 
-        [[nodiscard]] static auto saveToFile(
+        [[nodiscard]] static bool saveToFile(
             const Document&    document,
-            const std::string& filename) -> bool;
+            const std::string& filename);
 
-        static auto loadFromFile(const std::string& filename) ->
-            std::unique_ptr<Document>;
+        static std::unique_ptr<Document> loadFromFile(const std::string& filename);
 
     private:
         std::string name_;
         std::vector<std::unique_ptr<Primitive>> primitives_;
     };
 } // namespace editor::model
+
+#endif /* MODEL_DOCUMENT_HPP */

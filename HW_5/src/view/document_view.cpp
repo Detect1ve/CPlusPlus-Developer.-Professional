@@ -13,12 +13,12 @@ namespace editor::view
     {
         if (document_ == nullptr)
         {
-            std::cout << "No document to render" << std::endl;
+            std::cout << "No document to render\n";
             return;
         }
 
-        std::cout << "Rendering document: " << document_->getName() << std::endl;
-        std::cout << "Number of primitives: " << primitiveViews_.size() << std::endl;
+        std::cout << "Rendering document: " << document_->getName() << '\n';
+        std::cout << "Number of primitives: " << primitiveViews_.size() << '\n';
 
         for (const auto& view : primitiveViews_)
         {
@@ -31,7 +31,7 @@ namespace editor::view
         createPrimitiveViews();
     }
 
-    auto DocumentView::getDocument() const -> const model::Document*
+    const model::Document* DocumentView::getDocument() const
     {
         return document_;
     }

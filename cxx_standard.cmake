@@ -1,0 +1,17 @@
+set(CXX_STANDARD_FOUND 0)
+foreach(ver IN LISTS SUPPORTED_CXX_STANDARDS)
+  if(CMAKE_CXX_COMPILE_FEATURES)
+    if("cxx_std_${ver}" IN_LIST CMAKE_CXX_COMPILE_FEATURES)
+      set(CXX_STANDARD ${ver})
+      set(CXX_STANDARD_FOUND 1)
+      break()
+    endif()
+  endif()
+endforeach()
+
+if(NOT CXX_STANDARD_FOUND)
+  list(GET SUPPORTED_CXX_STANDARDS -1 MINIMUM_CXX_STANDARD)
+  message(FATAL_ERROR "Не найден поддерживаемый стандарт C++ (C++${MINIMUM_CXX_STANDARD} или выше требуется)")
+endif()
+
+message(STATUS "Use C++${CXX_STANDARD} standard")

@@ -4,9 +4,9 @@ project(HW_3 LANGUAGES CXX)
 
 if (PROJECT_IS_TOP_LEVEL)
   if (MSVC)
-    set(CMAKE_CXX_STANDARD 23)
-  else ()
-    set(CMAKE_CXX_STANDARD 26)
+    set(SUPPORTED_CXX_STANDARDS 23 20 17 14 11 98)
+  else()
+    set(SUPPORTED_CXX_STANDARDS 26 23 20 17 14 11 98)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
       add_compile_options(-fcolor-diagnostics)
     else()
@@ -14,6 +14,8 @@ if (PROJECT_IS_TOP_LEVEL)
     endif()
   endif()
 
+  include(../cxx_standard.cmake)
+  set(CMAKE_CXX_STANDARD ${CXX_STANDARD})
   set(CMAKE_CXX_STANDARD_REQUIRED True)
   set(CMAKE_CXX_EXTENSIONS OFF)
   set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
@@ -67,8 +69,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
     -fuchsia-overloaded-operator,\
     -llvmlibc-inline-function-decl,\
     -llvmlibc-restrict-system-libc-headers,\
-    -modernize-use-trailing-return-type;
-    --header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+    -modernize-use-trailing-return-type;--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
 
   set_target_properties(main PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_COMMON_OPTS},\

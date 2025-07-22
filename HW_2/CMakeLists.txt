@@ -11,9 +11,9 @@ project(ip_filter VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 if (PROJECT_IS_TOP_LEVEL)
   if (MSVC)
-    set(CMAKE_CXX_STANDARD 23)
+    set(SUPPORTED_CXX_STANDARDS 23)
   else()
-    set(CMAKE_CXX_STANDARD 26)
+    set(SUPPORTED_CXX_STANDARDS 26 23)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
       add_compile_options(-fcolor-diagnostics)
     else()
@@ -21,6 +21,8 @@ if (PROJECT_IS_TOP_LEVEL)
     endif()
   endif()
 
+  include(../cxx_standard.cmake)
+  set(CMAKE_CXX_STANDARD ${CXX_STANDARD})
   set(CMAKE_CXX_STANDARD_REQUIRED True)
   set(CMAKE_CXX_EXTENSIONS OFF)
   set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
@@ -61,8 +63,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
     -llvmlibc-inline-function-decl,\
     -llvmlibc-restrict-system-libc-headers,\
     -misc-include-cleaner,\
-    -modernize-use-trailing-return-type;
-    --header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+    -modernize-use-trailing-return-type;--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
 
   set_target_properties(ip_filter_lib PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_COMMON_OPTS},\
@@ -74,7 +75,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
       ${CLANG_TIDY_HW_2_COMMON_OPTS}")
 
   set_target_properties(ip_filter_test PROPERTIES
-    CXX_CLANG_TIDY "${CLANG_TIDY_COMMON_OPTS},
+    CXX_CLANG_TIDY "${CLANG_TIDY_COMMON_OPTS},\
       ${CLANG_TIDY_HW_2_COMMON_OPTS}")
 endif()
 
