@@ -11,9 +11,9 @@ project(bulk VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 if (PROJECT_IS_TOP_LEVEL)
   if (MSVC)
-    set(CMAKE_CXX_STANDARD 23)
+    set(SUPPORTED_CXX_STANDARDS 23 20)
   else()
-    set(CMAKE_CXX_STANDARD 26)
+    set(SUPPORTED_CXX_STANDARDS 26 23 20)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
       add_compile_options(-fcolor-diagnostics)
     else()
@@ -21,8 +21,11 @@ if (PROJECT_IS_TOP_LEVEL)
     endif()
   endif()
 
+  include(../cxx_standard.cmake)
+  set(CMAKE_CXX_STANDARD ${CXX_STANDARD})
   set(CMAKE_CXX_STANDARD_REQUIRED True)
   set(CMAKE_CXX_EXTENSIONS OFF)
+  set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 endif()
 
 if (MSVC)
@@ -32,6 +35,7 @@ else()
 endif()
 
 if (PROJECT_IS_TOP_LEVEL)
+  include(../clang-tidy.cmake)
   include(../googletest.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
@@ -47,6 +51,34 @@ endif()
 
 add_executable(taskmanager_test test/taskmanager_test.cpp)
 target_link_libraries(taskmanager_test PRIVATE taskmanager GTest::gtest_main)
+
+if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
+  set(CLANG_TIDY_HW_7_COMMON_OPTS
+    "-fuchsia-default-arguments-calls,\
+     -llvmlibc-callee-namespace,\
+     -llvmlibc-implementation-in-namespace,\
+     -llvmlibc-inline-function-decl,\
+     -llvmlibc-restrict-system-libc-headers,\
+     -misc-include-cleaner,\
+     -modernize-use-trailing-return-type;--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+
+  set_target_properties(taskmanager PROPERTIES
+    CXX_CLANG_TIDY "${CLANG_TIDY_COMMON_OPTS},\
+      -altera-unroll-loops,\
+      -fuchsia-overloaded-operator,\
+      ${CLANG_TIDY_HW_7_COMMON_OPTS}")
+
+  set_target_properties(bulk PROPERTIES
+    CXX_CLANG_TIDY "${CLANG_TIDY_COMMON_OPTS},\
+      ${CLANG_TIDY_HW_7_COMMON_OPTS}")
+
+  set_target_properties(taskmanager_test PROPERTIES
+    CXX_CLANG_TIDY "${CLANG_TIDY_COMMON_OPTS},\
+      -altera-unroll-loops,\
+      -cppcoreguidelines-pro-bounds-pointer-arithmetic,\
+      -fuchsia-statically-constructed-objects,\
+      ${CLANG_TIDY_HW_7_COMMON_OPTS}")
+endif()
 
 enable_testing()
 add_test(HW_7.taskmanager_test taskmanager_test)

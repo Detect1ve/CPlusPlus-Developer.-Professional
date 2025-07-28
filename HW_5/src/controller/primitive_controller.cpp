@@ -20,7 +20,7 @@ namespace editor::controller
         document_->addPrimitive(std::move(line));
     }
 
-    void PrimitiveController::removePrimitive(size_t const index)
+    void PrimitiveController::removePrimitive(std::size_t const index)
     {
         if (document_ == nullptr)
         {

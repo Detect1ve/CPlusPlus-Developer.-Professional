@@ -1,8 +1,9 @@
-#pragma once
+#ifndef TASKMANAGER_HPP
+#define TASKMANAGER_HPP
 
 #include <chrono>
 #include <iostream>
-#if __GNUC__ < 15
+#if __GNUC__ < 14
 #include <vector>
 #endif
 
@@ -18,24 +19,30 @@ namespace bulk
             max_static_task_count(max_task_count),
             task_manager_name(name) { };
 
-        [[nodiscard]] auto run(std::istream& input = std::cin) -> int;
+        taskmanager(const taskmanager&) = delete;
+        taskmanager& operator=(const taskmanager&) = delete;
+        taskmanager(const taskmanager&&) = delete;
+        taskmanager& operator=(const taskmanager&&) = delete;
+
+        [[nodiscard]] int run(std::istream& input);
+        [[nodiscard]] int run();
 
         ~taskmanager() noexcept;
 
     private:
-        auto add_task(std::string_view task) -> int;
-        [[nodiscard]] auto is_dynamic_block_active() const noexcept -> bool;
-        auto process_tasks(std::vector<std::string>& block_task) noexcept -> int;
+        int add_task(std::string_view task);
+        [[nodiscard]] bool is_dynamic_block_active() const noexcept;
+        int process_tasks(std::vector<std::string>& block_task) noexcept;
 
         int dynamic_block_nesting_level = 0;
         int task_count = 0;
         int max_static_task_count;
-        std::chrono::system_clock::time_point dynamic_block_timestamp =
-            std::chrono::system_clock::time_point{};
-        std::chrono::system_clock::time_point static_block_timestamp =
-            std::chrono::system_clock::time_point{};
+        std::chrono::system_clock::time_point dynamic_block_timestamp;
+        std::chrono::system_clock::time_point static_block_timestamp;
         std::string task_manager_name;
         std::vector<std::string> dynamic_block_task;
         std::vector<std::string> static_block_task;
     };
 } // namespace bulk
+
+#endif /* TASKMANAGER_HPP */

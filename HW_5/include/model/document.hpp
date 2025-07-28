@@ -22,9 +22,9 @@ namespace editor::model
         Document& operator=(Document&&) = delete;
 
         void addPrimitive(std::unique_ptr<Primitive> primitive);
-        void removePrimitive(size_t index);
-        [[nodiscard]] const Primitive* getPrimitive(size_t index) const;
-        [[nodiscard]] size_t getPrimitiveCount() const;
+        void removePrimitive(std::size_t index);
+        [[nodiscard]] const Primitive* getPrimitive(std::size_t index) const;
+        [[nodiscard]] std::size_t getPrimitiveCount() const;
 
         [[nodiscard]] const std::string& getName() const;
         void setName(const std::string& name);

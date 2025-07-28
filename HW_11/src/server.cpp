@@ -37,7 +37,7 @@ void Session::do_read()
             }
             else if (ec != boost::asio::error::eof)
             {
-                std::cerr << "Error: " << ec.message() << std::endl;
+                std::cerr << "Error: " << ec.message() << '\n';
             }
         });
 }
@@ -53,7 +53,7 @@ void Session::do_write(std::string_view message)
         {
             if (ec)
             {
-                std::cerr << "Error: " << ec.message() << std::endl;
+                std::cerr << "Error: " << ec.message() << '\n';
             }
         });
 }
@@ -77,7 +77,7 @@ void Session::process_command(std::string_view command)
 
     if (cmd == "INSERT")
     {
-        int id;
+        int id = 0;
         std::string name;
         std::string table;
 

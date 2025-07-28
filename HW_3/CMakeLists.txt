@@ -65,11 +65,12 @@ target_link_libraries(my_list_test PRIVATE GTest::gtest_main list_and_allocator)
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set(CLANG_TIDY_HW_3_COMMON_OPTS
     "-altera-id-dependent-backward-branch,\
-    -altera-unroll-loops,\
-    -fuchsia-overloaded-operator,\
-    -llvmlibc-inline-function-decl,\
-    -llvmlibc-restrict-system-libc-headers,\
-    -modernize-use-trailing-return-type;--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+     -altera-struct-pack-align,\
+     -altera-unroll-loops,\
+     -fuchsia-overloaded-operator,\
+     -llvmlibc-inline-function-decl,\
+     -llvmlibc-restrict-system-libc-headers,\
+     -modernize-use-trailing-return-type;--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
 
   set_target_properties(main PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_COMMON_OPTS},\

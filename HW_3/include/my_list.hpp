@@ -6,7 +6,7 @@
 template <typename T, typename Alloc = std::allocator<T>>
 class MyList
 {
-    struct Node // NOLINT(altera-struct-pack-align)
+    struct Node
     {
         explicit Node(T const val): next(nullptr), val(val) { }
 

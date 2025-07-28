@@ -54,9 +54,9 @@ void print_ip(T const& ip_address) requires(std::is_same_v<T, std::string>)
 template <typename T>
 void print_ip(T const& ip_address) requires(std::is_integral_v<T>)
 {
-    constexpr size_t size = sizeof(T);
+    constexpr std::size_t size = sizeof(T);
 
-    for (size_t i = 0; i < size; ++i)
+    for (std::size_t i = 0; i < size; ++i)
     {
         const uint8_t byte =
             static_cast<std::make_unsigned_t<T>>(ip_address) >> ((size - 1 - i) * 8);
@@ -105,7 +105,7 @@ void print_ip(T const& ip_address) requires is_monotype_tuple<T>::value
 {
     std::apply([](const auto&... args)
     {
-        size_t idx = 0;
+        std::size_t idx = 0;
 
         ((std::cout << (idx++ == 0 ? "" : ".") << args), ...);
         std::cout << '\n';
@@ -145,7 +145,7 @@ template<typename T>
 void print_ip(T const &ip_address)
     requires(is_container<T>::value && !std::is_same_v<T, std::string>)
 {
-    size_t size = ip_address.size();
+    std::size_t size = ip_address.size();
 
     for (auto octet : ip_address)
     {

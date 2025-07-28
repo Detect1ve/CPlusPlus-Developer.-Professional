@@ -21,7 +21,7 @@ namespace editor::controller
             struct Point end,
             int          thickness);
 
-        void removePrimitive(size_t index);
+        void removePrimitive(std::size_t index);
 
     private:
         model::Document* document_;

@@ -68,7 +68,7 @@ std::expected<std::vector<std::vector<std::string>>, std::error_code> filter(
         auto common_range = std::min(a_octet.size(), ip_address.size());
         bool match = true;
 
-        for (size_t idx = 0; idx < common_range; ++idx)
+        for (std::size_t idx = 0; idx < common_range; ++idx)
         {
             auto res = from_chars(std::span<const char>(ip_address[idx]));
             if (  !res

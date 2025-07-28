@@ -1,6 +1,5 @@
 #include <filesystem>
 #include <fstream>
-#include <ranges>
 
 #include <taskmanager.hpp>
 
@@ -16,16 +15,31 @@ namespace bulk::io
             s1(stream1),
             s2(stream2) {}
 
+        composite_stream(const composite_stream&) = delete;
+        composite_stream& operator=(const composite_stream&) = delete;
+        composite_stream(composite_stream&&) = delete;
+        composite_stream& operator=(composite_stream&&) = delete;
+        ~composite_stream() = default;
+
+
         template<typename T>
-        auto operator<<(const T& value) -> composite_stream&
+        composite_stream& operator<<(const T& value)
         {
-            s1 << value;
-            s2 << value;
+            if constexpr (std::is_array_v<std::remove_reference_t<T>>)
+            {
+                s1 << static_cast<const char*>(value);
+                s2 << static_cast<const char*>(value);
+            }
+            else
+            {
+                s1 << value;
+                s2 << value;
+            }
 
             return *this;
         }
 
-        auto operator<<(std::ostream& (*manip)(std::ostream&)) -> composite_stream&
+        composite_stream& operator<<(std::ostream& (*manip)(std::ostream&)) 
         {
             s1 << manip;
             s2 << manip;
@@ -41,12 +55,12 @@ namespace bulk::io
 
 namespace bulk
 {
-    [[nodiscard]] auto taskmanager::is_dynamic_block_active() const noexcept -> bool
+    [[nodiscard]] bool taskmanager::is_dynamic_block_active() const noexcept
     {
         return dynamic_block_nesting_level > 0;
     }
 
-    auto taskmanager::add_task(std::string_view task) -> int
+    int taskmanager::add_task(std::string_view task)
     {
         static constexpr std::string_view CLOSE_BRACKET = "}";
         static constexpr std::string_view OPEN_BRACKET = "{";
@@ -104,7 +118,7 @@ namespace bulk
         return ret;
     }
 
-    auto taskmanager::process_tasks(std::vector<std::string>& block_task) noexcept -> int
+    int taskmanager::process_tasks(std::vector<std::string>& block_task) noexcept
     {
         int ret = 0;
 
@@ -119,7 +133,7 @@ namespace bulk
         auto timestamp_seconds = std::chrono::duration_cast<std::chrono::seconds>(
             timestamp->time_since_epoch()).count();
 
-        std::filesystem::path log_path =
+        const std::filesystem::path log_path =
             std::filesystem::path(task_manager_name).filename().string() +
             std::to_string(timestamp_seconds) + ".log";
 
@@ -127,7 +141,7 @@ namespace bulk
 
         if (!file.is_open())
         {
-            std::cerr << "Failed to open file" << std::endl;
+            std::cerr << "Failed to open file" << '\n';
             ret = -1;
 
             return ret;
@@ -137,14 +151,14 @@ namespace bulk
 
         output << std::filesystem::path(task_manager_name).filename().string() << ": ";
 
-        std::string_view delimiter = ", ";
+        const std::string_view delimiter = ", ";
 #if defined(__cpp_lib_ranges_to_container)
         std::string result = block_task | std::views::join_with(delimiter)
             | std::ranges::to<std::string>();
 #else
         std::string result;
 
-        for (size_t i = 0; i < block_task.size(); ++i)
+        for (std::size_t i = 0; i < block_task.size(); ++i)
         {
             result += block_task[i];
             if (i + 1 < block_task.size())
@@ -154,7 +168,7 @@ namespace bulk
         }
 #endif
         output << result;
-        output << std::endl;
+        output << '\n';
 
         block_task.clear();
 
@@ -164,7 +178,12 @@ namespace bulk
         return ret;
     }
 
-    auto taskmanager::run(std::istream& input) -> int
+    int taskmanager::run()
+    {
+        return run(std::cin);
+    }
+
+    int taskmanager::run(std::istream& input)
     {
         int ret = 0;
         std::string line;
@@ -175,13 +194,13 @@ namespace bulk
             {
                 if (this->add_task(line) != 0)
                 {
-                    std::cerr << "Error processing command: " << line << std::endl;
+                    std::cerr << "Error processing command: " << line << '\n';
                 }
             }
         }
         catch (const std::exception& e)
         {
-            std::cerr << "Fatal error: " << e.what() << std::endl;
+            std::cerr << "Fatal error: " << e.what() << '\n';
             ret = -1;
         }
 

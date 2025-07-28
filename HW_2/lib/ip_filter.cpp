@@ -13,13 +13,13 @@
 // (".11", '.') -> ["", "11"]
 // ("11.22", '.') -> ["11", "22"]
 
-enum : unsigned char
-{
-    BASE = 10
-};
-
 std::expected<unsigned char, std::error_code> from_chars(std::span<const char> chars)
 {
+    enum : unsigned char
+    {
+        BASE = 10
+    };
+
     unsigned char value = 0;
     auto [ptr, ec] = std::from_chars(chars.data(), chars.data() + chars.size(), value,
         BASE);
@@ -148,7 +148,7 @@ void print(std::span<const std::vector<std::string>> ip_pool)
 #else
     for (const auto& ip_address : ip_pool)
     {
-        for (size_t i = 0; i < ip_address.size(); ++i)
+        for (std::size_t i = 0; i < ip_address.size(); ++i)
         {
             std::cout << ip_address[i];
             if (i + 1 < ip_address.size())

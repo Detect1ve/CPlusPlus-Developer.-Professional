@@ -1,3 +1,7 @@
+#if __cplusplus <= 201703L
+#include <atomic>
+#include <thread>
+#endif
 #if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
 #include <chrono>
 #endif
@@ -24,7 +28,7 @@ class taskmanager
 {
 public:
     taskmanager(
-        const size_t     max_task_count,
+        const std::size_t     max_task_count,
         std::string_view id)
         :
         max_static_task_count(max_task_count),
@@ -131,7 +135,7 @@ public:
 
 private:
     int dynamic_block_nesting_level = 0;
-    size_t max_static_task_count;
+    std::size_t max_static_task_count;
     std::chrono::system_clock::time_point dynamic_block_timestamp =
         std::chrono::system_clock::time_point{};
     std::chrono::system_clock::time_point static_block_timestamp =
@@ -177,7 +181,7 @@ void log_worker() {
             std::cout << TASK_MANAGER_NAME << ": ";
 
             std::string_view delimiter = ", ";
-            for (size_t i = 0; i < task.commands.size(); ++i) {
+            for (std::size_t i = 0; i < task.commands.size(); ++i) {
                 std::cout << task.commands[i];
                 if (i < task.commands.size() - 1) {
                     std::cout << delimiter;
@@ -222,7 +226,7 @@ void file_worker(const int thread_id) {
                 file << TASK_MANAGER_NAME << ": ";
 
                 std::string delimiter = ", ";
-                for (size_t i = 0; i < task.commands.size(); ++i) {
+                for (std::size_t i = 0; i < task.commands.size(); ++i) {
                     file << task.commands[i];
                     if (i < task.commands.size() - 1) {
                         file << delimiter;

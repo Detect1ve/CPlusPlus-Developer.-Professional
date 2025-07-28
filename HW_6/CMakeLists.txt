@@ -51,30 +51,35 @@ target_include_directories(matrix_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/incl
 target_link_libraries(matrix_test PRIVATE GTest::gtest_main)
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
+  set(CLANG_TIDY_HW_6_COMMON_OPTS
+    "-altera-unroll-loops,\
+     -fuchsia-overloaded-operator,\
+     -llvmlibc-callee-namespace,\
+     -llvmlibc-implementation-in-namespace,\
+     -llvmlibc-inline-function-decl,\
+     -llvmlibc-restrict-system-libc-headers,\
+     -modernize-use-trailing-return-type;--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+
   set_target_properties(matrix PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_COMMON_OPTS},\
-      -altera-unroll-loops,\
-      -fuchsia-overloaded-operator,\
-      -llvmlibc-callee-namespace,\
-      -llvmlibc-implementation-in-namespace,\
-      -llvmlibc-inline-function-decl,\
-      -llvmlibc-restrict-system-libc-headers,\
-      -modernize-use-trailing-return-type;--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+      ${CLANG_TIDY_HW_6_COMMON_OPTS}")
 
   set_target_properties(matrix_test PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_COMMON_OPTS},\
-      -altera-unroll-loops,\
       -cppcoreguidelines-avoid-magic-numbers,\
-      -fuchsia-overloaded-operator,\
-      -llvmlibc-callee-namespace,\
-      -llvmlibc-implementation-in-namespace,\
-      -llvmlibc-inline-function-decl,\
-      -llvmlibc-restrict-system-libc-headers,\
       -misc-include-cleaner,\
       -performance-avoid-endl,\
-      -modernize-use-trailing-return-type,\
       -readability-identifier-length,\
-      -readability-magic-numbers;--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+      -readability-magic-numbers,\
+      ${CLANG_TIDY_HW_6_COMMON_OPTS};--config=\
+      {\
+        CheckOptions:\
+        [\
+          {\
+            key: readability-function-cognitive-complexity.IgnoreMacros, value: 'true'\
+          }\
+        ]\
+      }")
 endif()
 
 enable_testing()

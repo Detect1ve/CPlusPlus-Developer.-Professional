@@ -1,24 +1,31 @@
 #include <iostream>
+#if defined(__clang__) or __GNUC__ < 14
+#include <utility>
+#endif
 
 #include <bayan.hpp>
 
-auto main(
-    const int    argc,
-    char **const argv) -> int
+int main(
+    const int          argc,
+    const char **const argv)
 {
-    auto [ret, options] = option_process(argc, argv);
-    if (ret != 0)
-    {
-        std::cerr << "option_process return " << ret << std::endl;
+    auto [status, options] = option_process({argv, static_cast<std::size_t>(argc)});
 
-        return ret;
+    if (status == ProcessStatus::HELP_REQUESTED)
+    {
+        return std::to_underlying(ProcessStatus::SUCCESS);
     }
 
-    ret = process_files(options);
-    if (ret != 0)
+    if (status != ProcessStatus::SUCCESS)
     {
-        std::cerr << "process_files return " << ret << std::endl;
+        return std::to_underlying(status);
     }
 
-    return ret;
+    status = process_files(options);
+    if (status != ProcessStatus::SUCCESS)
+    {
+        std::cerr << "process_files return " << +std::to_underlying(status) << '\n';
+    }
+
+    return std::to_underlying(status);
 }

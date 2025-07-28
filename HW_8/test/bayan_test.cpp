@@ -1,15 +1,17 @@
 #include <gtest/gtest.h>
 
+#include <absl/strings/match.h>
+
 #include <bayan.hpp>
 
 TEST(HW8, NoDuplicatesTest)
 {
-    boost::filesystem::path temp_dir =
+    const boost::filesystem::path temp_dir =
         boost::filesystem::current_path() / "bayan_test_dir";
-    boost::filesystem::path cpp_file = temp_dir / "cpp.txt";
-    boost::filesystem::path world_file = temp_dir / "world.txt";
-    std::string temp_dir_str = temp_dir.string();
-    const char* argv[] =
+    const boost::filesystem::path cpp_file = temp_dir / "cpp.txt";
+    const boost::filesystem::path world_file = temp_dir / "world.txt";
+    const std::string& temp_dir_str = temp_dir.string();
+    const std::array argv =
     {
         "bayan_test",
         "--scan_dirs", temp_dir_str.c_str(),
@@ -17,8 +19,7 @@ TEST(HW8, NoDuplicatesTest)
         "--scan_level", "0",
         "--file_masks", "*.txt"
     };
-    int argc = sizeof(argv) / sizeof(argv[0]);
-    int result = 0;
+    auto result = ProcessStatus::SUCCESS;
 
     if (boost::filesystem::exists(temp_dir))
     {
@@ -42,14 +43,14 @@ TEST(HW8, NoDuplicatesTest)
 
     testing::internal::CaptureStdout();
 
-    auto [ret, options] = option_process(argc, const_cast<char**>(argv));
-    ASSERT_EQ(ret, 0);
+    auto [status, options] = option_process(argv);
+    ASSERT_EQ(status, ProcessStatus::SUCCESS);
 
     result = process_files(options);
 
     auto capturedStdout = testing::internal::GetCapturedStdout();
 
-    ASSERT_EQ(result, 0);
+    ASSERT_EQ(result, ProcessStatus::SUCCESS);
     ASSERT_EQ(capturedStdout, "No duplicate files found.\n");
 
     boost::filesystem::remove_all(temp_dir);
@@ -57,21 +58,21 @@ TEST(HW8, NoDuplicatesTest)
 
 TEST(HW8, FindDuplicatesTest)
 {
-    boost::filesystem::path current_dir = boost::filesystem::current_path();
-    boost::filesystem::path temp_dir = current_dir / "bayan_test_duplicates";
-    std::string temp_dir_str = temp_dir.string();
+    const boost::filesystem::path current_dir = boost::filesystem::current_path();
+    const boost::filesystem::path temp_dir = current_dir / "bayan_test_duplicates";
+    const std::string& temp_dir_str = temp_dir.string();
 
-    boost::filesystem::path level1_dir = temp_dir / "level1";
-    boost::filesystem::path level2_dir = level1_dir / "level2";
-    std::string level2_dir_str = level2_dir.string();
+    const boost::filesystem::path level1_dir = temp_dir / "level1";
+    const boost::filesystem::path level2_dir = level1_dir / "level2";
+    const std::string& level2_dir_str = level2_dir.string();
 
-    boost::filesystem::path cpp_file1 = temp_dir / "cpp1.txt";
-    boost::filesystem::path cpp_file2 = temp_dir / "cpp2.txt";
+    const boost::filesystem::path cpp_file1 = temp_dir / "cpp1.txt";
+    const boost::filesystem::path cpp_file2 = temp_dir / "cpp2.txt";
 
-    boost::filesystem::path world_file1 = temp_dir / "world1.txt";
-    boost::filesystem::path world_file2 = level1_dir / "world2.txt";
-    boost::filesystem::path world_file3 = level2_dir / "world3.txt";
-    const char* argv[] =
+    const boost::filesystem::path world_file1 = temp_dir / "world1.txt";
+    const boost::filesystem::path world_file2 = level1_dir / "world2.txt";
+    const boost::filesystem::path world_file3 = level2_dir / "world3.txt";
+    const std::array argv =
     {
         "bayan_test",
         "--scan_dirs", temp_dir_str.c_str(),
@@ -81,8 +82,7 @@ TEST(HW8, FindDuplicatesTest)
         "--file_masks", "*TXT",
         "--hash_algorithm", "md5"
     };
-    int argc = sizeof(argv) / sizeof(argv[0]);
-    int result = 0;
+    auto result = ProcessStatus::SUCCESS;
 
     if (boost::filesystem::exists(temp_dir))
     {
@@ -124,16 +124,16 @@ TEST(HW8, FindDuplicatesTest)
 
     testing::internal::CaptureStdout();
 
-    auto [ret, options] = option_process(argc, const_cast<char**>(argv));
-    ASSERT_EQ(ret, 0);
+    auto [status, options] = option_process(argv);
+    ASSERT_EQ(status, ProcessStatus::SUCCESS);
 
     result = process_files(options);
 
     auto capturedStdout = testing::internal::GetCapturedStdout();
 
-    ASSERT_EQ(result, 0);
+    ASSERT_EQ(result, ProcessStatus::SUCCESS);
 
-    ASSERT_FALSE(capturedStdout.find("No duplicate files found.\n") != std::string::npos);
+    ASSERT_FALSE(absl::StrContains(capturedStdout, "No duplicate files found.\n"));
 
     ASSERT_TRUE(capturedStdout.find(cpp_file1.string()) != std::string::npos);
     ASSERT_TRUE(capturedStdout.find(cpp_file2.string()) != std::string::npos);
@@ -142,4 +142,91 @@ TEST(HW8, FindDuplicatesTest)
     ASSERT_TRUE(capturedStdout.find(world_file3.string()) != std::string::npos);
 
     boost::filesystem::remove_all(temp_dir);
+}
+
+TEST(HW8, HelpOptionTest)
+{
+    const std::array argv =
+    {
+        "bayan_test",
+        "-h"
+    };
+
+    testing::internal::CaptureStdout();
+    auto [status, options] = option_process(argv);
+    auto capturedStdout = testing::internal::GetCapturedStdout();
+
+    ASSERT_EQ(status, ProcessStatus::HELP_REQUESTED);
+    ASSERT_FALSE(capturedStdout.empty());
+    ASSERT_TRUE(absl::StrContains(capturedStdout, "produce help message"));
+}
+
+TEST(HW8, UnrecognisedOptionTest)
+{
+    const std::array argv =
+    {
+        "bayan_test",
+        "--dummy-option"
+    };
+
+    testing::internal::CaptureStderr();
+    auto [status, options] = option_process(argv);
+    auto capturedStderr = testing::internal::GetCapturedStderr();
+
+    ASSERT_EQ(status, ProcessStatus::OPTION_ERROR);
+    ASSERT_TRUE(absl::StrContains(capturedStderr, "unrecognised option"));
+}
+
+TEST(HW8, MissingMandatoryOptionTest)
+{
+    const std::array argv =
+    {
+        "bayan_test",
+        "--scan_dirs", "/tmp",
+        "--scan_level", "0"
+    };
+
+    testing::internal::CaptureStderr();
+    auto [status, options] = option_process(argv);
+    auto capturedStderr = testing::internal::GetCapturedStderr();
+
+    ASSERT_EQ(status, ProcessStatus::OPTION_ERROR);
+    ASSERT_TRUE(absl::StrContains(capturedStderr, "required"));
+}
+
+TEST(HW8, BadValueOptionTest)
+{
+    const std::array argv =
+    {
+        "bayan_test",
+        "--scan_dirs", "/tmp",
+        "--scan_level", "0",
+        "--block_size", "-1"
+    };
+
+    testing::internal::CaptureStderr();
+    auto [status, options] = option_process(argv);
+    auto capturedStderr = testing::internal::GetCapturedStderr();
+
+    ASSERT_EQ(status, ProcessStatus::OPTION_ERROR);
+    ASSERT_TRUE(absl::StrContains(capturedStderr, "non-negative"));
+}
+
+TEST(HW8, BadHashAlgorithmTest)
+{
+    const std::array argv =
+    {
+        "bayan_test",
+        "--scan_dirs", "/tmp",
+        "--scan_level", "0",
+        "--block_size", "128",
+        "--hash_algorithm", "dummy_algorithm"
+    };
+
+    testing::internal::CaptureStderr();
+    auto [status, options] = option_process(argv);
+    auto capturedStderr = testing::internal::GetCapturedStderr();
+
+    ASSERT_EQ(status, ProcessStatus::OPTION_ERROR);
+    ASSERT_TRUE(absl::StrContains(capturedStderr, "is invalid"));
 }

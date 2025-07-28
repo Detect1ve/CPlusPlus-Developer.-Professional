@@ -9,7 +9,7 @@ namespace editor::model
         primitives_.emplace_back(std::move(primitive));
     }
 
-    void Document::removePrimitive(size_t index)
+    void Document::removePrimitive(std::size_t index)
     {
         using diff_t = decltype(primitives_)::difference_type;
 
@@ -19,7 +19,7 @@ namespace editor::model
         }
     }
 
-    const Primitive* Document::getPrimitive(size_t index) const
+    const Primitive* Document::getPrimitive(std::size_t index) const
     {
         if (index < primitives_.size())
         {
@@ -29,7 +29,7 @@ namespace editor::model
         return nullptr;
     }
 
-    size_t Document::getPrimitiveCount() const
+    std::size_t Document::getPrimitiveCount() const
     {
         return primitives_.size();
     }

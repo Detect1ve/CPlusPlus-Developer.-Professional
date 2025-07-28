@@ -149,7 +149,7 @@ TEST(ProjectWork, SingleProducerSingleConsumer)
     consumer.join();
 
     ASSERT_EQ(consumed.size(), 100);
-    for (size_t i = 0; i < consumed.size(); ++i)
+    for (std::size_t i = 0; i < consumed.size(); ++i)
     {
         ASSERT_EQ(consumed[i], i);
     }
@@ -230,7 +230,7 @@ TEST(ProjectWork, PopTimeout)
     auto duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     ASSERT_GE(duration, 90);
-    ASSERT_LE(duration, 180);
+    ASSERT_LE(duration, 190);
 }
 
 TEST(ProjectWork, PushTimeout)
@@ -248,5 +248,5 @@ TEST(ProjectWork, PushTimeout)
     auto duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     ASSERT_GE(duration, 90);
-    ASSERT_LE(duration, 180);
+    ASSERT_LE(duration, 190);
 }

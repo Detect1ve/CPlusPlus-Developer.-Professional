@@ -1,6 +1,7 @@
 #include <algorithm>
 #if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER) \
- || defined(__clang__)
+ || defined(__clang__) \
+ || __cplusplus <=  202002L
 #include <charconv>
 #endif
 #include <set>
@@ -8,32 +9,35 @@
 
 #include <database.h>
 
-auto Database::insert(
+bool Database::insert(
     std::string_view table,
     const int        id,
-    std::string_view name) -> bool
+    std::string_view name)
 {
     if (table == "A")
     {
-        std::lock_guard<std::mutex> lock(table_a_mutex_);
-        if (table_a_.find(id) != table_a_.end())
+        const std::lock_guard<std::mutex> lock(table_a_mutex_);
+        if (table_a_.contains(id))
         {
             return false;
         }
 
         table_a_[id] = name;
+
         return true;
     }
 
     if (table == "B")
     {
-        std::lock_guard<std::mutex> lock(table_b_mutex_);
-        if (table_b_.find(id) != table_b_.end())
+        const std::lock_guard<std::mutex> lock(table_b_mutex_);
+
+        if (table_b_.contains(id))
         {
             return false;
         }
 
         table_b_[id] = name;
+
         return true;
     }
 
@@ -44,33 +48,35 @@ void Database::truncate(std::string_view table)
 {
     if (table == "A")
     {
-        std::lock_guard<std::mutex> lock(table_a_mutex_);
+        const std::lock_guard<std::mutex> lock(table_a_mutex_);
+
         table_a_.clear();
     }
     else if (table == "B")
     {
-        std::lock_guard<std::mutex> lock(table_b_mutex_);
+        const std::lock_guard<std::mutex> lock(table_b_mutex_);
+
         table_b_.clear();
     }
 }
 
-auto Database::intersection() -> std::vector<std::string>
+std::vector<std::string> Database::intersection()
 {
     std::set<int> common_ids;
     std::vector<std::string> result;
 
-    std::lock_guard<std::mutex> lock_a(table_a_mutex_);
-    std::lock_guard<std::mutex> lock_b(table_b_mutex_);
+    const std::lock_guard<std::mutex> lock_a(table_a_mutex_);
+    const std::lock_guard<std::mutex> lock_b(table_b_mutex_);
 
     for (const auto& [id, _] : table_a_)
     {
-        if (table_b_.find(id) != table_b_.end())
+        if (table_b_.contains(id))
         {
             common_ids.insert(id);
         }
     }
 
-    for (int id : common_ids)
+    for (const int id : common_ids)
     {
         std::ostringstream oss;
 
@@ -81,19 +87,19 @@ auto Database::intersection() -> std::vector<std::string>
     return result;
 }
 
-auto Database::symmetric_difference() -> std::vector<std::string>
+std::vector<std::string> Database::symmetric_difference()
 {
     std::set<int> all_ids;
     std::set<int> common_ids;
     std::vector<std::string> result;
 
-    std::lock_guard<std::mutex> lock_a(table_a_mutex_);
-    std::lock_guard<std::mutex> lock_b(table_b_mutex_);
+    const std::lock_guard<std::mutex> lock_a(table_a_mutex_);
+    const std::lock_guard<std::mutex> lock_b(table_b_mutex_);
 
     for (const auto& [id, _] : table_a_)
     {
         all_ids.insert(id);
-        if (table_b_.find(id) != table_b_.end())
+        if (table_b_.contains(id))
         {
             common_ids.insert(id);
         }
@@ -104,21 +110,21 @@ auto Database::symmetric_difference() -> std::vector<std::string>
         all_ids.insert(id);
     }
 
-    for (int id : all_ids)
+    for (const int id : all_ids)
     {
-        if (common_ids.find(id) == common_ids.end())
+        if (!common_ids.contains(id))
         {
             std::ostringstream oss;
             oss << id << ",";
 
-            if (table_a_.find(id) != table_a_.end())
+            if (table_a_.contains(id))
             {
                 oss << table_a_[id];
             }
 
             oss << ",";
 
-            if (table_b_.find(id) != table_b_.end())
+            if (table_b_.contains(id))
             {
                 oss << table_b_[id];
             }

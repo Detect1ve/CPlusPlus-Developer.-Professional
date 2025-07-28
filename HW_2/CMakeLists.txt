@@ -57,13 +57,13 @@ target_link_libraries(ip_filter_test PRIVATE ip_filter_lib GTest::gtest_main
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set(CLANG_TIDY_HW_2_COMMON_OPTS
     "-altera-id-dependent-backward-branch,\
-    -altera-unroll-loops,\
-    -llvmlibc-callee-namespace,\
-    -llvmlibc-implementation-in-namespace,\
-    -llvmlibc-inline-function-decl,\
-    -llvmlibc-restrict-system-libc-headers,\
-    -misc-include-cleaner,\
-    -modernize-use-trailing-return-type;--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+     -altera-unroll-loops,\
+     -llvmlibc-callee-namespace,\
+     -llvmlibc-implementation-in-namespace,\
+     -llvmlibc-inline-function-decl,\
+     -llvmlibc-restrict-system-libc-headers,\
+     -misc-include-cleaner,\
+     -modernize-use-trailing-return-type;--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
 
   set_target_properties(ip_filter_lib PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_COMMON_OPTS},\
