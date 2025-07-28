@@ -490,7 +490,7 @@ std::pair<ProcessStatus, Options> option_process(std::span<const char *const> ar
                     {
                         options.hash_algorithm = HashAlgorithm(value);
                     }
-                    catch (const boost::program_options::validation_error& e)
+                    catch (const boost::program_options::validation_error&)
                     {
                         throw;
                     }

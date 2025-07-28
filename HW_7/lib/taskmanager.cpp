@@ -1,5 +1,6 @@
 #include <filesystem>
 #include <fstream>
+#include <ranges>
 
 #include <taskmanager.hpp>
 

@@ -5,7 +5,8 @@
 
 #include <fstream>
 #include <regex>
-#if defined(__clang__)
+#if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER) \
+ || defined(__clang__)
 #include <span>
 #endif
 
@@ -55,11 +56,11 @@ struct FileInfo
         std::size_t             block_size);
 
     FileInfo(const FileInfo& other);
-    FileInfo(const FileInfo&&) = delete;
+    FileInfo(FileInfo&&) noexcept = default;
     FileInfo& operator=(const FileInfo& other);
-    FileInfo& operator=(const FileInfo&&) = delete;
+    FileInfo& operator=(FileInfo&&) noexcept = default;
 
-    ~FileInfo();
+    ~FileInfo() noexcept;
 
     [[nodiscard]] uintmax_t get_size() const;
     [[nodiscard]] const std::vector<std::string>& get_hashes() const;

@@ -28,10 +28,6 @@ if (PROJECT_IS_TOP_LEVEL)
   set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 endif()
 
-if (MSVC)
-  add_compile_options(/W4)
-endif()
-
 if (PROJECT_IS_TOP_LEVEL)
   include(../boost.cmake)
   include(../clang-tidy.cmake)
@@ -44,14 +40,22 @@ target_include_directories(bayan_lib PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include
 target_link_libraries(bayan_lib
   PRIVATE Boost::crc Boost::program_options Boost::uuid Boost::algorithm
   PUBLIC Boost::filesystem)
-target_compile_options(bayan_lib PRIVATE -Wall -Wextra -pedantic)
+if (MSVC)
+  target_compile_options(bayan_lib PRIVATE /W4)
+else()
+  target_compile_options(bayan_lib PRIVATE -Wall -Wextra -pedantic)
+endif()
 
 add_executable(bayan src/main.cpp)
 target_link_libraries(bayan PRIVATE bayan_lib)
 if (NOT MSVC)
   target_link_libraries(bayan PRIVATE -static)
 endif()
-target_compile_options(bayan PRIVATE -Wall -Wextra -pedantic)
+if (MSVC)
+  target_compile_options(bayan PRIVATE /W4)
+else()
+  target_compile_options(bayan PRIVATE -Wall -Wextra -pedantic)
+endif()
 
 find_package(absl)
 if (NOT absl_FOUND)
@@ -67,7 +71,11 @@ endif()
 
 add_executable(bayan_test test/bayan_test.cpp)
 target_link_libraries(bayan_test PRIVATE bayan_lib GTest::gtest_main absl::strings)
-target_compile_options(bayan_test PRIVATE -Wall -Wextra -pedantic)
+if (MSVC)
+  target_compile_options(bayan_test PRIVATE /W4)
+else()
+  target_compile_options(bayan_test PRIVATE -Wall -Wextra -pedantic)
+endif()
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set(CLANG_TIDY_HW_8_COMMON_OPTS

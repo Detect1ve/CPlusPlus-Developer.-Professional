@@ -21,8 +21,8 @@ namespace bulk
 
         taskmanager(const taskmanager&) = delete;
         taskmanager& operator=(const taskmanager&) = delete;
-        taskmanager(const taskmanager&&) = delete;
-        taskmanager& operator=(const taskmanager&&) = delete;
+        taskmanager(taskmanager&&) = delete;
+        taskmanager& operator=(taskmanager&&) = delete;
 
         [[nodiscard]] int run(std::istream& input);
         [[nodiscard]] int run();

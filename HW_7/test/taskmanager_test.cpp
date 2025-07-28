@@ -8,7 +8,7 @@
 
 #include <taskmanager.hpp>
 
-static constexpr std::string TASK_MANAGER_NAME = "bulk";
+static const std::string TASK_MANAGER_NAME = "bulk";
 
 enum : unsigned char
 {
