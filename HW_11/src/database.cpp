@@ -1,7 +1,8 @@
 #include <algorithm>
-#if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER) \
- || defined(__clang__) \
- || __cplusplus <=  202002L
+#if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)\
+ || defined(__clang__)\
+ || __cplusplus <=  202002L\
+ || __GNUC__ < 14
 #include <charconv>
 #endif
 #include <set>

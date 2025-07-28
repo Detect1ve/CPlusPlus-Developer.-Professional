@@ -15,7 +15,7 @@
 #ifndef SFINAE_IP_ADDRESS_HPP
 #define SFINAE_IP_ADDRESS_HPP
 
-#if defined(__clang__)
+#if defined(__clang__) || __GNUC__ < 14
 #include <cstdint>
 #endif
 #if __GNUC__ < 14
@@ -58,7 +58,7 @@ void print_ip(T const& ip_address) requires(std::is_integral_v<T>)
 
     for (std::size_t i = 0; i < size; ++i)
     {
-        const uint8_t byte =
+        const std::uint8_t byte =
             static_cast<std::make_unsigned_t<T>>(ip_address) >> ((size - 1 - i) * 8);
 
         std::cout << +byte;

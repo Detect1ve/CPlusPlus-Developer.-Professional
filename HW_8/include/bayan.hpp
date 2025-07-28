@@ -5,8 +5,9 @@
 
 #include <fstream>
 #include <regex>
-#if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER) \
- || defined(__clang__)
+#if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)\
+ || defined(__clang__)\
+ || __GNUC__ < 14
 #include <span>
 #endif
 
