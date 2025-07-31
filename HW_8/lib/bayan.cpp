@@ -27,7 +27,8 @@ std::string compute_md5(std::string_view input)
     const auto *const char_digest = reinterpret_cast<const char*>(&digest);
     std::string result;
 
-    boost::algorithm::hex(char_digest, std::back_inserter(result));
+    boost::algorithm::hex(std::span(char_digest, sizeof(digest)),
+        std::back_inserter(result));
 
     return result;
 }

@@ -75,8 +75,6 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set_target_properties(taskmanager_test PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
       -altera-unroll-loops,\
-      -cppcoreguidelines-pro-bounds-pointer-arithmetic,\
-      -fuchsia-statically-constructed-objects,\
       ${CLANG_TIDY_HW_7_OPTS}")
 endif()
 

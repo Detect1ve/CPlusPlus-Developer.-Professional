@@ -29,6 +29,7 @@ if (PROJECT_IS_TOP_LEVEL)
 endif()
 
 if (PROJECT_IS_TOP_LEVEL)
+  include(../absl.cmake)
   include(../boost.cmake)
   include(../clang-tidy.cmake)
   include(../googletest.cmake)
@@ -55,18 +56,6 @@ if (MSVC)
   target_compile_options(bayan PRIVATE /W4)
 else()
   target_compile_options(bayan PRIVATE -Wall -Wextra -pedantic)
-endif()
-
-find_package(absl)
-if (NOT absl_FOUND)
-  FetchContent_Declare(
-    absl
-    GIT_REPOSITORY https://github.com/abseil/abseil-cpp.git
-    GIT_TAG 20250512.1
-    GIT_SHALLOW ON
-    EXCLUDE_FROM_ALL)
-
-  FetchContent_MakeAvailable(absl)
 endif()
 
 add_executable(bayan_test test/bayan_test.cpp)

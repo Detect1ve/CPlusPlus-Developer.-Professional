@@ -10,25 +10,144 @@
 
 namespace
 {
+    enum : unsigned char
+    {
+        BASE = 10,
+    };
+
     const std::string& TASK_MANAGER_NAME()
     {
         static const std::string s_name = "bulk";
 
         return s_name;
     }
+
+    void checkLogFile(
+        const std::chrono::system_clock::time_point& start_time,
+        const std::chrono::system_clock::time_point& end_time)
+    {
+        bool foundLogFile = false;
+
+        for (const auto& entry : std::filesystem::directory_iterator("."))
+        {
+            const std::string filename = entry.path().filename().string();
+            if (filename.starts_with(TASK_MANAGER_NAME()) && filename.ends_with(".log"))
+            {
+                const std::string timestamp_str =
+                    filename.substr(TASK_MANAGER_NAME().size(),
+                                    filename.find(".log") - TASK_MANAGER_NAME().size());
+                int64_t timestamp_seconds = 0;
+
+                auto [ptr, ec] = std::from_chars(timestamp_str.data(),
+                    std::next(timestamp_str.data(),
+                        static_cast<std::string::difference_type>(timestamp_str.size())),
+                    timestamp_seconds, BASE);
+                ASSERT_EQ(ec, std::errc{});
+
+                auto start_seconds = std::chrono::duration_cast<std::chrono::seconds>(
+                    start_time.time_since_epoch()).count();
+                auto end_seconds = std::chrono::duration_cast<std::chrono::seconds>(
+                    end_time.time_since_epoch()).count();
+
+                if (  timestamp_seconds >= start_seconds
+                   && timestamp_seconds <= end_seconds)
+                {
+                    foundLogFile = true;
+                    break;
+                }
+            }
+        }
+
+        auto start_seconds = std::chrono::duration_cast<std::chrono::seconds>(
+            start_time.time_since_epoch()).count();
+        auto end_seconds = std::chrono::duration_cast<std::chrono::seconds>(
+            end_time.time_since_epoch()).count();
+
+        ASSERT_TRUE(foundLogFile) << "Log file not found in time range [" << start_seconds
+            << ", " << end_seconds << "]";
+    }
+
+    void clear_log_files(
+        std::optional<std::chrono::system_clock::time_point> start_time,
+        std::optional<std::chrono::system_clock::time_point> end_time)
+    {
+        for (const auto &entry : std::filesystem::directory_iterator("."))
+        {
+            const std::string filename = entry.path().filename().string();
+            if (  entry.is_regular_file()
+               && filename.starts_with(TASK_MANAGER_NAME())
+               && filename.ends_with(".log"))
+            {
+                const std::string timestamp_str =
+                    filename.substr(TASK_MANAGER_NAME().size(),
+                    filename.find(".log") - TASK_MANAGER_NAME().size());
+                if (timestamp_str.empty())
+                {
+                    continue;
+                }
+
+                int64_t timestamp_seconds = 0;
+                auto [ptr, ec] = std::from_chars(timestamp_str.data(),
+                    std::next(timestamp_str.data(),
+                        static_cast<std::string::difference_type>(timestamp_str.size())),
+                    timestamp_seconds, BASE);
+                if (ec != std::errc())
+                {
+                    continue;
+                }
+
+                if (start_time && end_time)
+                {
+                    auto start_seconds = std::chrono::duration_cast<std::chrono::seconds>(
+                            start_time->time_since_epoch()).count();
+                    auto end_seconds = std::chrono::duration_cast<std::chrono::seconds>(
+                            end_time->time_since_epoch()).count();
+
+                    if (  timestamp_seconds >= start_seconds
+                       && timestamp_seconds <= end_seconds)
+                    {
+                        std::filesystem::remove(entry.path());
+                    }
+                }
+                else
+                {
+                    std::filesystem::remove(entry.path());
+                }
+            }
+        }
+    }
+
+    void clear_log_files()
+    {
+        clear_log_files(std::nullopt, std::nullopt);
+    }
 } // namespace
 
-enum : unsigned char
+class HW7 : public ::testing::Test
 {
-    BASE = 10,
+std::chrono::system_clock::time_point start_time;
+
+protected:
+    void SetUp() override
+    {
+        clear_log_files();
+        start_time = std::chrono::system_clock::now();
+    }
+
+    void TearDown() override
+    {
+        clear_log_files(start_time, std::chrono::system_clock::now());
+    }
+
+public:
+    [[nodiscard]] std::chrono::system_clock::time_point get_start_time() const
+    {
+        return start_time;
+    }
 };
 
-TEST(HW7, StaticBlocks)
+TEST_F(HW7, StaticBlocks)
 {
-    bool foundLogFile = false;
-    auto const start_time = std::chrono::system_clock::now();
-    auto end_time = std::chrono::system_clock::time_point{};
-
     testing::internal::CaptureStdout();
     {
         bulk::taskmanager my_task_manager(3, TASK_MANAGER_NAME());
@@ -52,7 +171,7 @@ TEST(HW7, StaticBlocks)
 
     auto capturedStdout = testing::internal::GetCapturedStdout();
 
-    end_time = std::chrono::system_clock::now();
+    const auto end_time = std::chrono::system_clock::now();
 
     const std::string expectedOutput =
         TASK_MANAGER_NAME() + ": cmd1, cmd2, cmd3\n" +
@@ -60,48 +179,12 @@ TEST(HW7, StaticBlocks)
 
     ASSERT_EQ(capturedStdout, expectedOutput);
 
-    for (const auto& entry : std::filesystem::directory_iterator("."))
-    {
-        const std::string filename = entry.path().filename().string();
-        if (filename.starts_with(TASK_MANAGER_NAME()) && filename.ends_with(".log"))
-        {
-            std::string timestamp_str = filename.substr(4, filename.find(".log") - 4);
-            int64_t timestamp_seconds = 0;
-
-            auto [ptr, ec] = std::from_chars(timestamp_str.data(),
-                timestamp_str.data() + timestamp_str.size(), timestamp_seconds, BASE);
-            ASSERT_EQ(ec, std::errc{});
-
-            auto start_seconds = std::chrono::duration_cast<std::chrono::seconds>(
-                start_time.time_since_epoch()).count();
-            auto end_seconds = std::chrono::duration_cast<std::chrono::seconds>(
-                end_time.time_since_epoch()).count();
-
-            if (timestamp_seconds >= start_seconds && timestamp_seconds <= end_seconds)
-            {
-                foundLogFile = true;
-                break;
-            }
-
-        }
-    }
-
-    auto start_seconds = std::chrono::duration_cast<std::chrono::seconds>(
-        start_time.time_since_epoch()).count();
-    auto end_seconds = std::chrono::duration_cast<std::chrono::seconds>(
-        end_time.time_since_epoch()).count();
-
-    ASSERT_TRUE(foundLogFile) << "Log file not found in time range [" << start_seconds
-        << ", " << end_seconds << "]";
+    checkLogFile(get_start_time(), end_time);
 }
 
-TEST(HW7, DynamicBlocks)
+TEST_F(HW7, DynamicBlocks)
 {
     std::this_thread::sleep_for(std::chrono::seconds(1));
-
-    bool foundLogFile = false;
-    auto const start_time = std::chrono::system_clock::now();
-    auto end_time = std::chrono::system_clock::time_point{};
 
     testing::internal::CaptureStdout();
     {
@@ -139,7 +222,7 @@ TEST(HW7, DynamicBlocks)
 
     auto capturedStdout = testing::internal::GetCapturedStdout();
 
-    end_time = std::chrono::system_clock::now();
+    const auto end_time = std::chrono::system_clock::now();
 
     const std::string expectedOutput =
         TASK_MANAGER_NAME() + ": cmd1, cmd2\n" +
@@ -148,36 +231,5 @@ TEST(HW7, DynamicBlocks)
 
     ASSERT_EQ(capturedStdout, expectedOutput);
 
-    for (const auto& entry : std::filesystem::directory_iterator("."))
-    {
-        const std::string filename = entry.path().filename().string();
-        if (filename.starts_with(TASK_MANAGER_NAME()) && filename.ends_with(".log"))
-        {
-            std::string timestamp_str = filename.substr(4, filename.find(".log") - 4);
-            int64_t timestamp_seconds = 0;
-
-            auto [ptr, ec] = std::from_chars(timestamp_str.data(),
-                timestamp_str.data() + timestamp_str.size(), timestamp_seconds, BASE);
-            ASSERT_EQ(ec, std::errc{});
-
-            auto start_seconds = std::chrono::duration_cast<std::chrono::seconds>(
-                start_time.time_since_epoch()).count();
-            auto end_seconds = std::chrono::duration_cast<std::chrono::seconds>(
-                end_time.time_since_epoch()).count();
-
-            if (timestamp_seconds >= start_seconds && timestamp_seconds <= end_seconds)
-            {
-                foundLogFile = true;
-                break;
-            }
-        }
-    }
-
-    auto start_seconds = std::chrono::duration_cast<std::chrono::seconds>(
-        start_time.time_since_epoch()).count();
-    auto end_seconds = std::chrono::duration_cast<std::chrono::seconds>(
-        end_time.time_since_epoch()).count();
-
-    ASSERT_TRUE(foundLogFile) << "Log file not found in time range [" << start_seconds
-        << ", " << end_seconds << "]";
+    checkLogFile(get_start_time(), end_time);
 }

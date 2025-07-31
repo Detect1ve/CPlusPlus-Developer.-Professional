@@ -120,10 +120,10 @@ public:
 private:
     void scan_directory_recursive(
         const boost::filesystem::path& dir,
-        std::vector<FileInfo>&              files);
+        std::vector<FileInfo>&         files);
     void scan_directory_non_recursive(
         const boost::filesystem::path& dir,
-        std::vector<FileInfo>&              files);
+        std::vector<FileInfo>&         files);
     [[nodiscard]] bool matches_masks(const boost::filesystem::path& file_path) const;
     [[nodiscard]] bool is_excluded(const boost::filesystem::path& dir) const;
 

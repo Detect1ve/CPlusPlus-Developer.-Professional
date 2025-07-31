@@ -14,10 +14,8 @@
 
 #include "async.h"
 
-namespace
-{
-    const std::string& TASK_MANAGER_NAME()
-    {
+namespace {
+    const std::string& TASK_MANAGER_NAME() {
         static const std::string s_name = "bulk";
 
         return s_name;
@@ -35,8 +33,8 @@ struct OutputTask {
 class taskmanager
 {
 public:
-    taskmanager(const std::size_t max_task_count, std::string_view id):
-        max_static_task_count(max_task_count), task_manager_id(id) { };
+    taskmanager(const std::size_t max_task_count, std::string_view manager_id):
+        max_static_task_count(max_task_count), task_manager_id(manager_id) { };
 
     [[nodiscard]] bool is_dynamic_block_active() const noexcept {
         return dynamic_block_nesting_level > 0;
@@ -96,12 +94,12 @@ public:
         task.context_id = task_manager_id;
 
         {
-            const std::lock_guard<std::mutex> lock(queue_mutex);
-            log_queue.push(task);
-            file_queue.push(task);
+            const std::lock_guard<std::mutex> lock(queue_mutex());
+            log_queue().push(task);
+            file_queue().push(task);
         }
 
-        queue_cv.notify_all();
+        queue_cv().notify_all();
 
         block_task.clear();
         *timestamp = std::chrono::system_clock::time_point{};
@@ -115,13 +113,48 @@ public:
 
     static std::atomic<bool> should_terminate;
     static std::atomic<bool> threads_initialized;
-    static std::condition_variable queue_cv;
-    static std::mutex queue_mutex;
-    static std::queue<OutputTask> file_queue;
-    static std::queue<OutputTask> log_queue;
-    static std::thread file_thread1;
-    static std::thread file_thread2;
-    static std::thread log_thread;
+
+    static std::condition_variable& queue_cv() {
+        static std::condition_variable condition;
+
+        return condition;
+    }
+
+    static std::mutex& queue_mutex() {
+        static std::mutex mutex;
+
+        return mutex;
+    }
+
+    static std::queue<OutputTask>& file_queue() {
+        static std::queue<OutputTask> queue;
+
+        return queue;
+    }
+
+    static std::queue<OutputTask>& log_queue() {
+        static std::queue<OutputTask> queue;
+
+        return queue;
+    }
+
+    static std::thread& file_thread1() {
+        static std::thread thread;
+
+        return thread;
+    }
+
+    static std::thread& file_thread2() {
+        static std::thread thread;
+
+        return thread;
+    }
+
+    static std::thread& log_thread() {
+        static std::thread thread;
+
+        return thread;
+    }
 
 private:
     int dynamic_block_nesting_level = 0;
@@ -135,139 +168,147 @@ private:
 
 std::atomic<bool> taskmanager::should_terminate{false};
 std::atomic<bool> taskmanager::threads_initialized{false};
-std::condition_variable taskmanager::queue_cv;
-std::mutex taskmanager::queue_mutex;
-std::queue<OutputTask> taskmanager::file_queue;
-std::queue<OutputTask> taskmanager::log_queue;
-std::thread taskmanager::file_thread1;
-std::thread taskmanager::file_thread2;
-std::thread taskmanager::log_thread;
 
-std::mutex contexts_mutex;
-std::map<void*, std::unique_ptr<taskmanager>> contexts;
+namespace {
+    std::mutex& contexts_mutex() {
+        static std::mutex mutex;
 
-void log_worker() {
-    while (true) {
-        OutputTask task;
-        {
-            std::unique_lock<std::mutex> lock(taskmanager::queue_mutex);
-            taskmanager::queue_cv.wait(lock, [] {
-                return !taskmanager::log_queue.empty() || taskmanager::should_terminate;
-            });
+        return mutex;
+    }
 
-            if (taskmanager::should_terminate && taskmanager::log_queue.empty()) {
-                break;
-            }
+    std::map<void*, std::unique_ptr<taskmanager>>& contexts() {
+        static std::map<void*, std::unique_ptr<taskmanager>> contexts_map;
 
-            if (!taskmanager::log_queue.empty()) {
-                task = taskmanager::log_queue.front();
-                taskmanager::log_queue.pop();
-            }
-        }
+        return contexts_map;
+    }
 
-        if (!task.commands.empty()) {
-            std::cout << TASK_MANAGER_NAME() << ": ";
+    void log_worker() {
+        while (true) {
+            OutputTask task;
+            {
+                std::unique_lock<std::mutex> lock(taskmanager::queue_mutex());
+                taskmanager::queue_cv().wait(lock, [] {
+                    return   !taskmanager::log_queue().empty()
+                          || taskmanager::should_terminate;
+                });
 
-            const std::string_view delimiter = ", ";
-            for (std::size_t i = 0; i < task.commands.size(); ++i) {
-                std::cout << task.commands[i];
-                if (i < task.commands.size() - 1) {
-                    std::cout << delimiter;
+                if (taskmanager::should_terminate && taskmanager::log_queue().empty()) {
+                    break;
+                }
+
+                if (!taskmanager::log_queue().empty()) {
+                    task = taskmanager::log_queue().front();
+                    taskmanager::log_queue().pop();
                 }
             }
 
-            std::cout << '\n';
-        }
-    }
-}
+            if (!task.commands.empty()) {
+                std::cout << TASK_MANAGER_NAME() << ": ";
 
-void file_worker(const int thread_id) {
-    while (true) {
-        OutputTask task;
-        bool has_task = false;
-        {
-            std::unique_lock<std::mutex> lock(taskmanager::queue_mutex);
-            taskmanager::queue_cv.wait(lock, [] {
-                return !taskmanager::file_queue.empty() || taskmanager::should_terminate;
-            });
-
-            if (taskmanager::should_terminate && taskmanager::file_queue.empty()) {
-                break;
-            }
-
-            if (!taskmanager::file_queue.empty()) {
-                task = taskmanager::file_queue.front();
-                taskmanager::file_queue.pop();
-                has_task = true;
-            }
-        }
-
-        if (has_task && !task.commands.empty()) {
-            auto timestamp_seconds = std::chrono::duration_cast<std::chrono::seconds>(
-                task.timestamp.time_since_epoch()).count();
-
-            const std::string filename = TASK_MANAGER_NAME() +
-                std::to_string(timestamp_seconds) + "_" + task.context_id + "_" +
-                std::to_string(thread_id) + ".log";
-
-            std::ofstream file(filename);
-            if (file.is_open()) {
-                file << TASK_MANAGER_NAME() << ": ";
-
-                const std::string delimiter = ", ";
+                const std::string_view delimiter = ", ";
                 for (std::size_t i = 0; i < task.commands.size(); ++i) {
-                    file << task.commands[i];
+                    std::cout << task.commands[i];
                     if (i < task.commands.size() - 1) {
-                        file << delimiter;
+                        std::cout << delimiter;
                     }
                 }
 
-                file << '\n';
-                file.close();
+                std::cout << '\n';
             }
         }
     }
-}
 
-void init_threads() {
-    if (!taskmanager::threads_initialized.exchange(true)) {
-        taskmanager::log_thread = std::thread(log_worker);
-        taskmanager::file_thread1 = std::thread(file_worker, 1);
-        taskmanager::file_thread2 = std::thread(file_worker, 2);
+    void file_worker(const int thread_id) {
+        static std::atomic<int> file_counter{0};
+        while (true) {
+            OutputTask task;
+            bool has_task = false;
+            {
+                std::unique_lock<std::mutex> lock(taskmanager::queue_mutex());
+                taskmanager::queue_cv().wait(lock, [] {
+                    return   !taskmanager::file_queue().empty()
+                          || taskmanager::should_terminate;
+                });
+
+                if (taskmanager::should_terminate && taskmanager::file_queue().empty()) {
+                    break;
+                }
+
+                if (!taskmanager::file_queue().empty()) {
+                    task = taskmanager::file_queue().front();
+                    taskmanager::file_queue().pop();
+                    has_task = true;
+                }
+            }
+
+            if (has_task && !task.commands.empty()) {
+                auto timestamp_seconds = std::chrono::duration_cast<std::chrono::seconds>(
+                    task.timestamp.time_since_epoch()).count();
+
+                const std::string filename = TASK_MANAGER_NAME() +
+                    std::to_string(timestamp_seconds) + "_" + task.context_id + "_" +
+                    std::to_string(thread_id) + "_" + std::to_string(file_counter++) +
+                    ".log";
+
+                std::ofstream file(filename);
+                if (file.is_open()) {
+                    file << TASK_MANAGER_NAME() << ": ";
+
+                    const std::string delimiter = ", ";
+                    for (std::size_t i = 0; i < task.commands.size(); ++i) {
+                        file << task.commands[i];
+                        if (i < task.commands.size() - 1) {
+                            file << delimiter;
+                        }
+                    }
+
+                    file << '\n';
+                    file.close();
+                }
+            }
+        }
     }
-}
 
-void stop_threads() {
-    if (taskmanager::threads_initialized.exchange(false)) {
-        taskmanager::should_terminate = true;
-        taskmanager::queue_cv.notify_all();
-
-        if (taskmanager::log_thread.joinable()) {
-            taskmanager::log_thread.join();
-        }
-
-        if (taskmanager::file_thread1.joinable()) {
-            taskmanager::file_thread1.join();
-        }
-
-        if (taskmanager::file_thread2.joinable()) {
-            taskmanager::file_thread2.join();
+    void init_threads() {
+        if (!taskmanager::threads_initialized.exchange(true)) {
+            taskmanager::log_thread() = std::thread(log_worker);
+            taskmanager::file_thread1() = std::thread(file_worker, 1);
+            taskmanager::file_thread2() = std::thread(file_worker, 2);
         }
     }
-}
+
+    void stop_threads() {
+        if (taskmanager::threads_initialized.exchange(false)) {
+            taskmanager::should_terminate = true;
+            taskmanager::queue_cv().notify_all();
+
+            if (taskmanager::log_thread().joinable()) {
+                taskmanager::log_thread().join();
+            }
+
+            if (taskmanager::file_thread1().joinable()) {
+                taskmanager::file_thread1().join();
+            }
+
+            if (taskmanager::file_thread2().joinable()) {
+                taskmanager::file_thread2().join();
+            }
+        }
+    }
+} // namespace
 
 handle_t connect(std::size_t bulk) {
     init_threads();
 
     static std::atomic<int> next_id{0};
-    const int id = next_id++;
-    const std::string context_id = std::to_string(id);
+    const int unique_id = next_id++;
+    const std::string context_id = std::to_string(unique_id);
 
     auto context = std::make_unique<taskmanager>(bulk, context_id);
-    handle_t handle = static_cast<handle_t>(context.get());
+    auto *handle = static_cast<handle_t>(context.get());
 
-    const std::lock_guard<std::mutex> lock(contexts_mutex);
-    contexts[handle] = std::move(context);
+    const std::lock_guard<std::mutex> lock(contexts_mutex());
+    contexts()[handle] = std::move(context);
 
     return handle;
 }
@@ -279,10 +320,10 @@ void receive(handle_t handle, const char *data, std::size_t size) {
 
     taskmanager* context = nullptr;
     {
-        std::lock_guard<std::mutex> lock(contexts_mutex);
-        auto it = contexts.find(handle);
-        if (it != contexts.end()) {
-            context = it->second.get();
+        const std::lock_guard<std::mutex> lock(contexts_mutex());
+        auto context_iterator = contexts().find(handle);
+        if (context_iterator != contexts().end()) {
+            context = context_iterator->second.get();
         }
     }
 
@@ -290,7 +331,7 @@ void receive(handle_t handle, const char *data, std::size_t size) {
         return;
     }
 
-    std::string input(data, size);
+    const std::string input(data, size);
     std::istringstream stream(input);
     std::string command;
 
@@ -308,18 +349,18 @@ void disconnect(handle_t handle) {
 
     std::unique_ptr<taskmanager> context;
     {
-        const std::lock_guard<std::mutex> lock(contexts_mutex);
-        auto it = contexts.find(handle);
-        if (it != contexts.end()) {
-            it->second->finish();
-            context = std::move(it->second);
-            contexts.erase(it);
+        const std::lock_guard<std::mutex> lock(contexts_mutex());
+        auto context_iterator = contexts().find(handle);
+        if (context_iterator != contexts().end()) {
+            context_iterator->second->finish();
+            context = std::move(context_iterator->second);
+            contexts().erase(context_iterator);
         }
     }
 
-    if (contexts.empty()) {
+    if (contexts().empty()) {
         stop_threads();
     }
 }
-
+// NOLINTNEXTLINE(google-readability-namespace-comments,llvm-namespace-comment)
 }

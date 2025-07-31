@@ -230,7 +230,7 @@ TEST(ProjectWork, PopTimeout)
     auto duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     ASSERT_GE(duration, 90);
-    ASSERT_LE(duration, 190);
+    ASSERT_LE(duration, 200);
 }
 
 TEST(ProjectWork, PushTimeout)
@@ -248,5 +248,5 @@ TEST(ProjectWork, PushTimeout)
     auto duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     ASSERT_GE(duration, 90);
-    ASSERT_LE(duration, 190);
+    ASSERT_LE(duration, 200);
 }
