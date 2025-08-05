@@ -41,7 +41,7 @@ if (PROJECT_IS_TOP_LEVEL)
 endif()
 
 add_library(ip_address INTERFACE)
-target_include_directories(ip_address INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_include_directories(ip_address INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 add_executable(print_ip src/main.cpp)
 target_link_libraries(print_ip PRIVATE ip_address)
@@ -51,6 +51,8 @@ endif()
 
 add_executable(print_ip_test test/sfinae_ip_address_test.cpp)
 target_link_libraries(print_ip_test PRIVATE GTest::gtest_main ip_address)
+target_include_directories(print_ip_test PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/../common/test)
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set(CLANG_TIDY_HW_4_OPTS
@@ -70,8 +72,9 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set_target_properties(print_ip_test PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
       -cppcoreguidelines-avoid-magic-numbers,\
+      -llvmlibc-inline-function-decl,\
       -readability-magic-numbers,\
-      ${CLANG_TIDY_HW_4_OPTS}")
+      ${CLANG_TIDY_HW_4_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/../common/test/.*")
 endif()
 
 enable_testing()

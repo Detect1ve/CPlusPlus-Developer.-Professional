@@ -2,6 +2,7 @@
 #include <boost/algorithm/hex.hpp>
 #include <boost/uuid/detail/md5.hpp>
 
+#include <capture.hpp>
 #include <ip_filter.hpp>
 
 namespace
@@ -31,7 +32,7 @@ TEST(HW2, IpFilter)
     reverse_lexicographic_sort(parse_result.value());
 
     {
-        testing::internal::CaptureStdout();
+        StdoutCapture::Begin();
 
         print(parse_result.value());
         // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
@@ -46,7 +47,7 @@ TEST(HW2, IpFilter)
         ASSERT_TRUE(ip_result) << "Cannot filter_any";
         print(ip_result.value());
 
-        const std::string result = testing::internal::GetCapturedStdout();
+        const std::string result = StdoutCapture::End();
 
         encoded = compute_md5(result);
     }

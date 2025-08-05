@@ -1,31 +1,43 @@
+#include <charconv>
 #include <iostream>
+#include <ranges>
 
-#include <server.h>
+#include <server.hpp>
 
-auto main(
+int main(
     const int   argc,
-    const char *argv[]) -> int
+    const char *argv[])
 {
+    enum : unsigned char
+    {
+        BASE = 10
+    };
     int ret = 0;
 
     try
     {
+        const auto args = std::span(argv, argc) | std::views::transform(
+            [](const char *const arg)
+            {
+                return std::string_view(arg);
+            });
         uint16_t port = 0;
         std::size_t bulk_size = 0;
 
-        if (argc != 3)
+        if (args.size() != 3)
         {
-            std::cerr << "Usage: " << argv[0] << " <port> <bulk_size>" << std::endl;
+            std::cerr << "Usage: " << args[0] << " <port> <bulk_size>\n";
             ret = -1;
 
             return ret;
         }
 
         {
-            auto [ptr, ec] = std::from_chars(argv[1], argv[1] + strlen(argv[1]), port);
+            auto [ptr, ec] = std::from_chars(args[1].data(),
+                args[1].data() + args[1].size(), port, BASE);
             if (ec != std::errc{})
             {
-                std::cerr << "Invalid port format" << std::endl;
+                std::cerr << "Invalid port format\n";
                 ret = -2;
 
                 return ret;
@@ -33,25 +45,24 @@ auto main(
         }
 
         {
-            auto [ptr, ec] = std::from_chars(argv[2], argv[2] + strlen(argv[2]),
-                bulk_size);
+            auto [ptr, ec] = std::from_chars(args[2].data(),
+                args[2].data() + args[2].size(), bulk_size, BASE);
             if (ec != std::errc{})
             {
-                std::cerr << "Invalid bulk_size format" << std::endl;
+                std::cerr << "Invalid bulk_size format\n";
                 ret = -3;
 
                 return ret;
             }
         }
 
-        boost::asio::io_context io_context;
-        async::Server server(io_context, port, bulk_size);
+        async::Server server(port, bulk_size);
 
-        io_context.run();
+        server.run();
     }
     catch (std::exception& e)
     {
-        std::cerr << "Exception: " << e.what() << std::endl;
+        std::cerr << "Exception: " << e.what() << '\n';
     }
 
     return ret;

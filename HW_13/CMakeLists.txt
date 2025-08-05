@@ -50,7 +50,7 @@ endif()
 
 add_library(mlp_lib STATIC lib/mlp.cpp)
 target_link_libraries(mlp_lib PUBLIC Eigen3::Eigen)
-target_include_directories(mlp_lib PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_include_directories(mlp_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 add_executable(fashio_mnist src/main.cpp)
 target_link_libraries(fashio_mnist mlp_lib)

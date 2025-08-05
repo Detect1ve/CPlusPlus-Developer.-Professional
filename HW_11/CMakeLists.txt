@@ -57,6 +57,7 @@ endif()
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set_target_properties(join_server PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
+      -altera-struct-pack-align,\
       -altera-unroll-loops,\
       -fuchsia-default-arguments-calls,\
       -llvmlibc-callee-namespace,\
@@ -64,7 +65,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
       -llvmlibc-restrict-system-libc-headers,\
       -misc-include-cleaner,\
       -misc-no-recursion,\
-      -modernize-use-trailing-return-type")
+      -modernize-use-trailing-return-type;--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
 endif()
 
 install(TARGETS join_server

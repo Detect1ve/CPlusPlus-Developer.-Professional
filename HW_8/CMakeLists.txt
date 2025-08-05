@@ -37,7 +37,7 @@ if (PROJECT_IS_TOP_LEVEL)
 endif()
 
 add_library(bayan_lib STATIC lib/bayan.cpp)
-target_include_directories(bayan_lib PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_include_directories(bayan_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(bayan_lib
   PRIVATE Boost::crc Boost::program_options Boost::uuid Boost::algorithm
   PUBLIC Boost::filesystem)
@@ -60,6 +60,7 @@ endif()
 
 add_executable(bayan_test test/bayan_test.cpp)
 target_link_libraries(bayan_test PRIVATE bayan_lib GTest::gtest_main absl::strings)
+target_include_directories(bayan_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common/test)
 if (MSVC)
   target_compile_options(bayan_test PRIVATE /W4)
 else()
@@ -98,7 +99,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
             key: readability-function-cognitive-complexity.IgnoreMacros, value: 'true'\
           }\
         ]\
-      }")
+      };--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/../common/test/.*")
 endif()
 
 enable_testing()

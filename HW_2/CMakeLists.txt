@@ -42,7 +42,7 @@ if (PROJECT_IS_TOP_LEVEL)
 endif()
 
 add_library(ip_filter_lib STATIC lib/ip_filter.cpp)
-target_include_directories(ip_filter_lib PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_include_directories(ip_filter_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 add_executable(ip_filter src/main.cpp)
 target_link_libraries(ip_filter PRIVATE ip_filter_lib)
@@ -53,6 +53,8 @@ endif()
 add_executable(ip_filter_test test/ip_filter_test.cpp)
 target_link_libraries(ip_filter_test PRIVATE ip_filter_lib GTest::gtest_main
   Boost::algorithm Boost::uuid)
+target_include_directories(ip_filter_test PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/../common/test)
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set(CLANG_TIDY_HW_2_OPTS
@@ -77,7 +79,8 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
 
   set_target_properties(ip_filter_test PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      ${CLANG_TIDY_HW_2_OPTS}")
+      -fuchsia-default-arguments-calls,\
+      ${CLANG_TIDY_HW_2_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/../common/test/.*")
 endif()
 
 enable_testing()

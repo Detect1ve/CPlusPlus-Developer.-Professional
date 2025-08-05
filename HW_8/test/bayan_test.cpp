@@ -7,6 +7,7 @@
 #include <absl/strings/match.h>
 
 #include <bayan.hpp>
+#include <capture.hpp>
 
 TEST(HW8, NoDuplicatesTest)
 {
@@ -45,14 +46,14 @@ TEST(HW8, NoDuplicatesTest)
     ASSERT_TRUE(boost::filesystem::exists(cpp_file));
     ASSERT_TRUE(boost::filesystem::exists(world_file));
 
-    testing::internal::CaptureStdout();
+    StdoutCapture::Begin();
 
     auto [status, options] = option_process(argv);
     ASSERT_EQ(status, ProcessStatus::SUCCESS);
 
     result = process_files(options);
 
-    auto capturedStdout = testing::internal::GetCapturedStdout();
+    auto capturedStdout = StdoutCapture::End();
 
     ASSERT_EQ(result, ProcessStatus::SUCCESS);
     ASSERT_EQ(capturedStdout, "No duplicate files found.\n");
@@ -126,14 +127,14 @@ TEST(HW8, FindDuplicatesTest)
     ASSERT_TRUE(boost::filesystem::exists(world_file2));
     ASSERT_TRUE(boost::filesystem::exists(world_file3));
 
-    testing::internal::CaptureStdout();
+    StdoutCapture::Begin();
 
     auto [status, options] = option_process(argv);
     ASSERT_EQ(status, ProcessStatus::SUCCESS);
 
     result = process_files(options);
 
-    auto capturedStdout = testing::internal::GetCapturedStdout();
+    auto capturedStdout = StdoutCapture::End();
 
     ASSERT_EQ(result, ProcessStatus::SUCCESS);
 
@@ -156,9 +157,9 @@ TEST(HW8, HelpOptionTest)
         "-h"
     };
 
-    testing::internal::CaptureStdout();
+    StdoutCapture::Begin();
     auto [status, options] = option_process(argv);
-    auto capturedStdout = testing::internal::GetCapturedStdout();
+    auto capturedStdout = StdoutCapture::End();
 
     ASSERT_EQ(status, ProcessStatus::HELP_REQUESTED);
     ASSERT_FALSE(capturedStdout.empty());
@@ -173,9 +174,9 @@ TEST(HW8, UnrecognisedOptionTest)
         "--dummy-option"
     };
 
-    testing::internal::CaptureStderr();
+    StderrCapture::Begin();
     auto [status, options] = option_process(argv);
-    auto capturedStderr = testing::internal::GetCapturedStderr();
+    auto capturedStderr = StderrCapture::End();
 
     ASSERT_EQ(status, ProcessStatus::OPTION_ERROR);
     ASSERT_TRUE(absl::StrContains(capturedStderr, "unrecognised option"));
@@ -190,9 +191,9 @@ TEST(HW8, MissingMandatoryOptionTest)
         "--scan_level", "0"
     };
 
-    testing::internal::CaptureStderr();
+    StderrCapture::Begin();
     auto [status, options] = option_process(argv);
-    auto capturedStderr = testing::internal::GetCapturedStderr();
+    auto capturedStderr = StderrCapture::End();
 
     ASSERT_EQ(status, ProcessStatus::OPTION_ERROR);
     ASSERT_TRUE(absl::StrContains(capturedStderr, "required"));
@@ -208,9 +209,9 @@ TEST(HW8, BadValueOptionTest)
         "--block_size", "-1"
     };
 
-    testing::internal::CaptureStderr();
+    StderrCapture::Begin();
     auto [status, options] = option_process(argv);
-    auto capturedStderr = testing::internal::GetCapturedStderr();
+    auto capturedStderr = StderrCapture::End();
 
     ASSERT_EQ(status, ProcessStatus::OPTION_ERROR);
     ASSERT_TRUE(absl::StrContains(capturedStderr, "non-negative"));
@@ -227,9 +228,9 @@ TEST(HW8, BadHashAlgorithmTest)
         "--hash_algorithm", "dummy_algorithm"
     };
 
-    testing::internal::CaptureStderr();
+    StderrCapture::Begin();
     auto [status, options] = option_process(argv);
-    auto capturedStderr = testing::internal::GetCapturedStderr();
+    auto capturedStderr = StderrCapture::End();
 
     ASSERT_EQ(status, ProcessStatus::OPTION_ERROR);
     ASSERT_TRUE(absl::StrContains(capturedStderr, "is invalid"));

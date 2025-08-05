@@ -11,13 +11,15 @@
 #include <absl/strings/match.h>
 
 #include <async.h>
+#include <capture.hpp>
 
 namespace
 {
-    void clear_log_files(
+    std::vector<std::filesystem::path> get_log_files(
         std::optional<std::chrono::system_clock::time_point> start_time,
         std::optional<std::chrono::system_clock::time_point> end_time)
     {
+        std::vector<std::filesystem::path> log_files;
         enum : unsigned char
         {
             BASE = 10
@@ -38,11 +40,10 @@ namespace
 
                 const std::string timestamp_str =
                     filename.substr(4, first_underscore - 4);
+                const std::string_view timestamp_sv = timestamp_str;
                 int64_t timestamp_val = 0;
-                auto [ptr, ec] = std::from_chars(timestamp_str.data(),
-                    std::next(timestamp_str.data(),
-                        static_cast<std::string::difference_type>(timestamp_str.size())),
-                    timestamp_val, BASE);
+                auto [ptr, ec] = std::from_chars(timestamp_sv.data(),
+                    timestamp_sv.data() + timestamp_sv.size(), timestamp_val, BASE);
                 if (ec != std::errc())
                 {
                     continue;
@@ -58,14 +59,26 @@ namespace
                     if (  timestamp_val >= start_seconds
                         && timestamp_val <= end_seconds)
                     {
-                        std::filesystem::remove(entry.path());
+                        log_files.emplace_back(entry.path());
                     }
                 }
                 else
                 {
-                    std::filesystem::remove(entry.path());
+                    log_files.emplace_back(entry.path());
                 }
             }
+        }
+
+        return log_files;
+    }
+
+    void clear_log_files(
+        std::optional<std::chrono::system_clock::time_point> start_time,
+        std::optional<std::chrono::system_clock::time_point> end_time)
+    {
+        for (const auto& path : get_log_files(start_time, end_time))
+        {
+            std::filesystem::remove(path);
         }
     }
 
@@ -100,11 +113,16 @@ protected:
     {
         clear_log_files(start_time, std::chrono::system_clock::now());
     }
+
+    [[nodiscard]] auto get_start_time() const
+    {
+        return start_time;
+    }
 };
 
 TEST_F(HW9, MainFunctionality)
 {
-    testing::internal::CaptureStdout();
+    StdoutCapture::Begin();
 
     const std::size_t bulk = 5;
     auto *handle1 = async::connect(bulk);
@@ -118,7 +136,7 @@ TEST_F(HW9, MainFunctionality)
     async::disconnect(handle1);
     async::disconnect(handle2);
 
-    const std::string output = testing::internal::GetCapturedStdout();
+    const std::string output = StdoutCapture::End();
 
     ASSERT_TRUE(absl::StrContains(output, "bulk: 1\n"));
     ASSERT_TRUE(absl::StrContains(output, "bulk: 1, 2, 3, 4, 5\n"));
@@ -127,14 +145,10 @@ TEST_F(HW9, MainFunctionality)
     ASSERT_TRUE(absl::StrContains(output, "bulk: 89\n"));
 
     std::vector<std::string> log_contents;
-    for (const auto &entry : std::filesystem::directory_iterator("."))
+    for (const auto &path :
+            get_log_files(get_start_time(), std::chrono::system_clock::now()))
     {
-        if (  entry.is_regular_file()
-           && entry.path().filename().string().starts_with("bulk")
-           && entry.path().extension() == ".log")
-        {
-            log_contents.emplace_back(read_file_content(entry.path()));
-        }
+        log_contents.emplace_back(read_file_content(path));
     }
 
     ASSERT_GE(log_contents.size(), 4);

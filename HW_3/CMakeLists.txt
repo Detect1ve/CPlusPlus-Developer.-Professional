@@ -47,7 +47,7 @@ endif()
 
 add_library(list_and_allocator INTERFACE)
 target_include_directories(list_and_allocator
-  INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+  INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(list_and_allocator INTERFACE Microsoft.GSL::GSL)
 
 add_executable(main src/main.cpp)

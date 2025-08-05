@@ -8,7 +8,7 @@
 #include <set>
 #include <sstream>
 
-#include <database.h>
+#include <database.hpp>
 
 bool Database::insert(
     std::string_view table,
