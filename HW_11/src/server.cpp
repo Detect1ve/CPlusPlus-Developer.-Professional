@@ -1,15 +1,16 @@
 #include <iostream>
 
-#include <server.h>
+#include <server.hpp>
 
 using boost::asio::ip::tcp;
 
 Session::Session(
     tcp::socket socket,
-    Database&   database)
+    Database*   database)
     :
     socket_(std::move(socket)),
-    database_(database) {}
+    database_(database),
+    buffer_(std::make_unique<boost::asio::streambuf>()) {}
 
 void Session::start()
 {
@@ -20,16 +21,19 @@ void Session::do_read()
 {
     auto self(shared_from_this());
 
-    boost::asio::async_read_until(socket_, buffer_, '\n',
+    boost::asio::async_read_until(socket_, *buffer_, '\n',
         [this, self](
-            boost::system::error_code error_code,
-            std::size_t               /*length*/)
+            const boost::system::error_code& error_code,
+            const std::size_t                length)
         {
             if (!error_code)
             {
                 std::string command;
-                std::istream input_stream(&buffer_);
-                std::getline(input_stream, command);
+
+                command.resize(length);
+                boost::asio::buffer_copy(boost::asio::buffer(command), buffer_->data(),
+                    length);
+                buffer_->consume(length);
 
                 process_command(command);
 
@@ -62,7 +66,7 @@ void Session::do_write(const std::vector<std::string>& messages)
 {
     for (const auto& message : messages)
     {
-        do_write(message + "\n");
+        do_write(message + '\n');
     }
 
     do_write("OK\n");
@@ -85,13 +89,13 @@ void Session::process_command(std::string_view command)
 
         std::getline(iss >> std::ws, name);
 
-        if (database_.insert(table, record_id, name))
+        if (database_->insert(table, record_id, name))
         {
             do_write("OK\n");
         }
         else
         {
-            do_write("ERR duplicate " + std::to_string(record_id) + "\n");
+            do_write("ERR duplicate " + std::to_string(record_id) + '\n');
         }
     }
     else if (cmd == "TRUNCATE")
@@ -100,18 +104,18 @@ void Session::process_command(std::string_view command)
 
         iss >> table;
 
-        database_.truncate(table);
+        database_->truncate(table);
         do_write("OK\n");
     }
     else if (cmd == "INTERSECTION")
     {
-        auto result = database_.intersection();
+        auto result = database_->intersection();
 
         do_write(result);
     }
     else if (cmd == "SYMMETRIC_DIFFERENCE")
     {
-        auto result = database_.symmetric_difference();
+        auto result = database_->symmetric_difference();
 
         do_write(result);
     }
@@ -139,7 +143,7 @@ void Server::do_accept()
         {
             if (!error_code)
             {
-                std::make_shared<Session>(std::move(socket), database_)->start();
+                std::make_shared<Session>(std::move(socket), &database_)->start();
             }
 
             do_accept();

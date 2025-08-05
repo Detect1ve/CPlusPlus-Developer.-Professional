@@ -1,7 +1,7 @@
 #include <iostream>
 #include <ranges>
 
-#include <server.h>
+#include <server.hpp>
 
 int main(
     const int   argc,
@@ -16,10 +16,10 @@ int main(
             BASE = 10
         };
         auto const args = std::span(argv, argc) | std::views::transform(
-        [](char const *const arg)
-        {
-            return std::string_view(arg);
-        });
+            [](char const *const arg)
+            {
+                return std::string_view(arg);
+            });
         int16_t port = 0;
 
         if (args.size() != 2)

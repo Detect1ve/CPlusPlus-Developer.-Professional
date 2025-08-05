@@ -1,4 +1,5 @@
-#pragma once
+#ifndef DATABASE_HPP
+#define DATABASE_HPP
 
 #include <mutex>
 #include <string>
@@ -14,14 +15,14 @@ struct Record
 class Database
 {
 public:
-    auto insert(
+    bool insert(
         std::string_view table,
         int              record_id,
-        std::string_view name) -> bool;
+        std::string_view name);
 
     void truncate(std::string_view table);
-    auto intersection() -> std::vector<std::string>;
-    auto symmetric_difference() -> std::vector<std::string>;
+    std::vector<std::string> intersection();
+    std::vector<std::string> symmetric_difference();
 
 private:
     std::mutex table_a_mutex_;
@@ -29,3 +30,5 @@ private:
     std::unordered_map<int, std::string> table_a_;
     std::unordered_map<int, std::string> table_b_;
 };
+
+#endif /* DATABASE_HPP */

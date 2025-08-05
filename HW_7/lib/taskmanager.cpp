@@ -142,7 +142,7 @@ namespace bulk
 
         if (!file.is_open())
         {
-            std::cerr << "Failed to open file" << '\n';
+            std::cerr << "Failed to open file\n";
             ret = -1;
 
             return ret;

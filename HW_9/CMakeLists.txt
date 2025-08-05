@@ -42,13 +42,13 @@ else()
 endif()
 
 add_library(async SHARED lib/async.cpp include/async.h)
-target_include_directories(async PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_include_directories(async PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 if (MSVC)
   set_target_properties(async PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 endif()
 
 add_library(async_static STATIC lib/async.cpp)
-target_include_directories(async_static PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_include_directories(async_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 add_executable(async_cli src/main.cpp)
 target_link_libraries(async_cli PRIVATE async_static)
@@ -58,6 +58,7 @@ endif()
 
 add_executable(async_test test/async_test.cpp)
 target_link_libraries(async_test PRIVATE async GTest::gtest_main absl::strings)
+target_include_directories(async_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common/test)
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set(CLANG_TIDY_HW_9_OPTS
@@ -101,6 +102,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
       -altera-unroll-loops,\
       -fuchsia-default-arguments-calls,\
+      -llvmlibc-inline-function-decl,\
       ${CLANG_TIDY_HW_9_OPTS};--config=\
       {\
         CheckOptions:\
@@ -109,7 +111,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
             key: readability-function-cognitive-complexity.IgnoreMacros, value: 'true'\
           }\
         ]\
-      }")
+      };--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/../common/test/.*")
 endif()
 
 enable_testing()

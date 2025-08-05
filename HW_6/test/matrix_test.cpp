@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <capture.hpp>
 #include <matrix.hpp>
 
 enum : uint16_t
@@ -26,7 +27,7 @@ TEST(HW6, Matrix)
 
     // one row will be printed
     // 100100314
-    testing::internal::CaptureStdout();
+    StdoutCapture::Begin();
     for (auto c: matrix)
     {
         int x = 0;
@@ -42,7 +43,7 @@ TEST(HW6, Matrix)
         ASSERT_EQ(TEST_VALUE_1, v);
     }
 
-    capturedStdout = testing::internal::GetCapturedStdout();
+    capturedStdout = StdoutCapture::End();
 
     ASSERT_EQ("100100314\n", capturedStdout);
 
@@ -51,7 +52,7 @@ TEST(HW6, Matrix)
     ASSERT_EQ(TEST_VALUE_2, matrix[100][100]);
     ASSERT_EQ(1, matrix.size());
 
-    testing::internal::CaptureStdout();
+    StdoutCapture::Begin();
     for (auto c: matrix)
     {
         int x = 0;
@@ -67,7 +68,7 @@ TEST(HW6, Matrix)
         ASSERT_EQ(TEST_VALUE_2, v);
     }
 
-    capturedStdout = testing::internal::GetCapturedStdout();
+    capturedStdout = StdoutCapture::End();
     ASSERT_EQ("100100217\n", capturedStdout);
 
 }

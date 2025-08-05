@@ -41,13 +41,16 @@ if (PROJECT_IS_TOP_LEVEL)
 endif()
 
 add_executable(matrix src/main.cpp)
-target_include_directories(matrix PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_include_directories(matrix PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 if (NOT MSVC)
   target_link_libraries(matrix PRIVATE -static)
 endif()
 
 add_executable(matrix_test test/matrix_test.cpp)
-target_include_directories(matrix_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_include_directories(matrix_test
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/../common/test)
 target_link_libraries(matrix_test PRIVATE GTest::gtest_main)
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
@@ -67,6 +70,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set_target_properties(matrix_test PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
       -cppcoreguidelines-avoid-magic-numbers,\
+      -fuchsia-default-arguments-calls,\
       -misc-include-cleaner,\
       -performance-avoid-endl,\
       -readability-identifier-length,\
@@ -79,7 +83,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
             key: readability-function-cognitive-complexity.IgnoreMacros, value: 'true'\
           }\
         ]\
-      }")
+      };--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/../common/test/.*")
 endif()
 
 enable_testing()

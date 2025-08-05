@@ -1,15 +1,16 @@
-#pragma once
+#ifndef SERVER_HPP
+#define SERVER_HPP
 
 #include <boost/asio.hpp>
 
-#include <database.h>
+#include <database.hpp>
 
 class Session : public std::enable_shared_from_this<Session>
 {
 public:
     Session(
         boost::asio::ip::tcp::socket socket,
-        Database&                    database);
+        Database*                    database);
 
     void start();
 
@@ -22,8 +23,8 @@ private:
     void process_command(std::string_view command);
 
     boost::asio::ip::tcp::socket socket_;
-    Database& database_;
-    boost::asio::streambuf buffer_;
+    Database* database_;
+    std::unique_ptr<boost::asio::streambuf> buffer_;
 };
 
 class Server
@@ -31,7 +32,7 @@ class Server
 public:
     Server(
         boost::asio::io_context& io_context,
-        short                    port);
+        int16_t                  port);
 
 private:
     void do_accept();
@@ -39,3 +40,5 @@ private:
     boost::asio::ip::tcp::acceptor acceptor_;
     Database database_;
 };
+
+#endif /* SERVER_HPP */

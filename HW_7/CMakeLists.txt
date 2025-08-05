@@ -41,7 +41,7 @@ if (PROJECT_IS_TOP_LEVEL)
 endif()
 
 add_library(taskmanager STATIC lib/taskmanager.cpp)
-target_include_directories(taskmanager PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_include_directories(taskmanager PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 add_executable(bulk src/main.cpp)
 target_link_libraries(bulk PRIVATE taskmanager)
@@ -51,6 +51,8 @@ endif()
 
 add_executable(taskmanager_test test/taskmanager_test.cpp)
 target_link_libraries(taskmanager_test PRIVATE taskmanager GTest::gtest_main)
+target_include_directories(taskmanager_test PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/../common/test)
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set(CLANG_TIDY_HW_7_OPTS
@@ -75,7 +77,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set_target_properties(taskmanager_test PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
       -altera-unroll-loops,\
-      ${CLANG_TIDY_HW_7_OPTS}")
+      ${CLANG_TIDY_HW_7_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/../common/test/.*")
 endif()
 
 enable_testing()
