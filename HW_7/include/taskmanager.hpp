@@ -1,6 +1,7 @@
 #ifndef TASKMANAGER_HPP
 #define TASKMANAGER_HPP
 
+#include <atomic>
 #include <chrono>
 #include <iostream>
 #if __GNUC__ < 14
@@ -26,6 +27,8 @@ namespace bulk
 
         [[nodiscard]] int run(std::istream& input);
         [[nodiscard]] int run();
+        void setup_signal_handling();
+        void stop() noexcept;
 
         ~taskmanager() noexcept;
 
@@ -37,6 +40,7 @@ namespace bulk
         int dynamic_block_nesting_level = 0;
         int task_count = 0;
         int max_static_task_count;
+        std::atomic<bool> stop_flag;
         std::chrono::system_clock::time_point dynamic_block_timestamp;
         std::chrono::system_clock::time_point static_block_timestamp;
         std::string task_manager_name;

@@ -3,7 +3,7 @@
 #include <capture.hpp>
 #include <matrix.hpp>
 
-enum : uint16_t
+enum : std::uint16_t
 {
     TEST_VALUE_1 = 314,
     TEST_VALUE_2 = 217,

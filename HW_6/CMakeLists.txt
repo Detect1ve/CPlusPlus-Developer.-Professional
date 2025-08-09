@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 4.0.3)
+cmake_minimum_required(VERSION 3.25..4.1.0)
 
 if (NOT DEFINED PATCH_VERSION)
   set(PATCH_VERSION
@@ -10,10 +10,7 @@ set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 project(matrix VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 if (PROJECT_IS_TOP_LEVEL)
-  if (MSVC)
-    set(SUPPORTED_CXX_STANDARDS 23 20 17 14 11)
-  else()
-    set(SUPPORTED_CXX_STANDARDS 26 23 20 17 14 11)
+  if (NOT MSVC)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
       add_compile_options(-fcolor-diagnostics)
     else()
@@ -21,10 +18,8 @@ if (PROJECT_IS_TOP_LEVEL)
     endif()
   endif()
 
-  include(../cxx_standard.cmake)
-  set(CMAKE_CXX_STANDARD ${CXX_STANDARD})
-  set(CMAKE_CXX_STANDARD_REQUIRED True)
-  set(CMAKE_CXX_EXTENSIONS OFF)
+  set(MINIMUM_CXX_STANDARD 11)
+  include(../cmake/cxx_standard.cmake)
   set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 endif()
 
@@ -35,8 +30,9 @@ else()
 endif()
 
 if (PROJECT_IS_TOP_LEVEL)
-  include(../clang-tidy.cmake)
-  include(../googletest.cmake)
+  include(../cmake/capture.cmake)
+  include(../cmake/clang-tidy.cmake)
+  include(../cmake/googletest.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
@@ -47,11 +43,8 @@ if (NOT MSVC)
 endif()
 
 add_executable(matrix_test test/matrix_test.cpp)
-target_include_directories(matrix_test
-  PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/../common/test)
-target_link_libraries(matrix_test PRIVATE GTest::gtest_main)
+target_include_directories(matrix_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_link_libraries(matrix_test PRIVATE capture GTest::gtest_main)
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set(CLANG_TIDY_HW_6_OPTS
@@ -83,7 +76,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
             key: readability-function-cognitive-complexity.IgnoreMacros, value: 'true'\
           }\
         ]\
-      };--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/../common/test/.*")
+      };--header-filter=${CAPTURE_INCLUDE_DIR}/.*")
 endif()
 
 enable_testing()

@@ -1,3 +1,7 @@
+#if defined(__clang__)\
+ || __GNUC__ < 14
+#include <charconv>
+#endif
 #include <iostream>
 #include <ranges>
 
@@ -20,7 +24,7 @@ int main(
             {
                 return std::string_view(arg);
             });
-        int16_t port = 0;
+        std::int16_t port = 0;
 
         if (args.size() != 2)
         {
@@ -40,13 +44,10 @@ int main(
             return ret;
         }
 
-        boost::asio::io_context io_context;
+        Server server(port);
 
-        const Server server(io_context, port);
-
-        std::cout << "Server started on port " << port << '\n';
-
-        io_context.run();
+        server.setup_signal_handling();
+        server.run();
     }
     catch (const std::exception& e)
     {

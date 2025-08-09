@@ -1,4 +1,4 @@
-find_package(absl)
+find_package(absl QUIET)
 if (NOT absl_FOUND)
   include(FetchContent)
   FetchContent_Declare(

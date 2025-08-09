@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 4.0.3)
+cmake_minimum_required(VERSION 3.25..4.1.0)
 
 if (NOT DEFINED PATCH_VERSION)
   set(PATCH_VERSION
@@ -10,10 +10,7 @@ set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 project(join_server VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 if (PROJECT_IS_TOP_LEVEL)
-  if (MSVC)
-    set(SUPPORTED_CXX_STANDARDS 23 20)
-  else()
-    set(SUPPORTED_CXX_STANDARDS 26 23 20)
+  if (NOT MSVC)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
       add_compile_options(-fcolor-diagnostics)
     else()
@@ -21,10 +18,8 @@ if (PROJECT_IS_TOP_LEVEL)
     endif()
   endif()
 
-  include(../cxx_standard.cmake)
-  set(CMAKE_CXX_STANDARD ${CXX_STANDARD})
-  set(CMAKE_CXX_STANDARD_REQUIRED True)
-  set(CMAKE_CXX_EXTENSIONS OFF)
+  set(MINIMUM_CXX_STANDARD 20)
+  include(../cmake/cxx_standard.cmake)
   set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 endif()
 
@@ -35,38 +30,61 @@ else()
 endif()
 
 if (PROJECT_IS_TOP_LEVEL)
-  include(../boost.cmake)
-  include(../clang-tidy.cmake)
+  include(../cmake/boost.cmake)
+  include(../cmake/clang-tidy.cmake)
+  include(../cmake/googletest.cmake)
+  include(../cmake/socket_wrapper.cmake)
+  list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
-include_directories(include)
-
-set(SOURCES
-    src/main.cpp
-    src/server.cpp
-    src/database.cpp
-)
-add_executable(join_server ${SOURCES})
-target_link_libraries(join_server PRIVATE Boost::asio)
+add_library(server_and_database STATIC lib/server.cpp lib/database.cpp)
+target_include_directories(server_and_database PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_link_libraries(server_and_database PRIVATE Boost::asio)
 if (MSVC)
-  target_compile_definitions(join_server PRIVATE _WIN32_WINNT=0x0A00)
-else ()
+  target_compile_definitions(server_and_database PRIVATE _WIN32_WINNT=0x0A00)
+endif()
+
+add_executable(join_server src/main.cpp)
+target_link_libraries(join_server PRIVATE server_and_database)
+if (NOT MSVC)
   target_link_libraries(join_server PRIVATE -static)
 endif()
 
+add_executable(join_server_test test/join_server_test.cpp)
+target_link_libraries(join_server_test PRIVATE GTest::gtest_main server_and_database
+  socket_wrapper)
+
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
-  set_target_properties(join_server PROPERTIES
+  set(CLANG_TIDY_HW_11_OPTS
+    "-llvmlibc-callee-namespace,\
+     -llvmlibc-implementation-in-namespace,\
+     -llvmlibc-restrict-system-libc-headers,\
+     -misc-include-cleaner,\
+     -modernize-use-trailing-return-type;--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+
+  set_target_properties(server_and_database PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
       -altera-struct-pack-align,\
       -altera-unroll-loops,\
       -fuchsia-default-arguments-calls,\
-      -llvmlibc-callee-namespace,\
-      -llvmlibc-implementation-in-namespace,\
-      -llvmlibc-restrict-system-libc-headers,\
-      -misc-include-cleaner,\
       -misc-no-recursion,\
-      -modernize-use-trailing-return-type;--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+      ${CLANG_TIDY_HW_11_OPTS}")
+
+  set_target_properties(join_server PROPERTIES
+    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
+      ${CLANG_TIDY_HW_11_OPTS}")
+
+  set_target_properties(join_server_test PROPERTIES
+    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
+      -altera-id-dependent-backward-branch,\
+      -altera-unroll-loops,\
+      -fuchsia-default-arguments-calls,\
+      -llvmlibc-inline-function-decl,\
+      ${CLANG_TIDY_HW_11_OPTS};--header-filter=${SOCKET_WRAPPER_INCLUDE_DIR}/.*")
 endif()
+
+enable_testing()
+add_test(HW_11.join_server_test join_server_test)
 
 install(TARGETS join_server
         RUNTIME DESTINATION bin

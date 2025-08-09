@@ -86,6 +86,7 @@ public:
             typename std::allocator_traits<Alloc>::template rebind_alloc<Node>;
         NodeAllocator nodeAllocator;
 
+        // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
         auto const newNode = static_cast<gsl::owner<Node*>>(nodeAllocator.allocate(1));
 
         new (newNode) Node(val);

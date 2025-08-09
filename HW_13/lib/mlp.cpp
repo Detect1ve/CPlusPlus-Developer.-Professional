@@ -1,24 +1,58 @@
-#if __GNUC__ < 15
+#if __GNUC__ < 14\
+|| __cplusplus <=  202002L
 #include <charconv>
 #endif
 #include <fstream>
 #include <iostream>
 
-#include <mlp.h>
+#include <Eigen/Dense>
+
+#include <mlp.hpp>
+
+namespace
+{
+    // NOLINTNEXTLINE(readability-identifier-length)
+    Eigen::VectorXf sigma(const Eigen::VectorXf& z)
+    {
+        return 1.0F / (1.0F + (-z).array().exp());
+    }
+
+    // NOLINTNEXTLINE(readability-identifier-length)
+    Eigen::VectorXf softmax(const Eigen::VectorXf& z)
+    {
+        Eigen::VectorXf exp_z = z.array().exp();
+
+        return exp_z.array() / exp_z.sum();
+    }
+} // namespace
+
+class MLP::Impl
+{
+public:
+    Eigen::MatrixXf W1;
+    Eigen::MatrixXf W2;
+};
 
 MLP::MLP(
     const std::string& w1_path,
     const std::string& w2_path)
+    :
+    pimpl(std::make_unique<Impl>())
 {
     if (!loadWeights(w1_path, w2_path))
     {
-        std::cerr << "Failed to load weights!" << std::endl;
+        std::cerr << "Failed to load weights!\n";
     }
 }
 
-auto MLP::loadWeights(
+MLP::~MLP() = default;
+
+MLP::MLP(MLP&&) noexcept = default;
+MLP& MLP::operator=(MLP&&) noexcept = default;
+
+bool MLP::loadWeights(
     const std::string& w1_path,
-    const std::string& w2_path) -> bool
+    const std::string& w2_path)
 {
     int row = 0;
     std::ifstream w1_file(w1_path);
@@ -27,22 +61,22 @@ auto MLP::loadWeights(
 
     if (!w1_file.is_open())
     {
-        std::cerr << "Could not open file: " << w1_path << std::endl;
+        std::cerr << "Could not open file: " << w1_path << '\n';
 
         return false;
     }
 
-    W1.resize(784, 128);
+    pimpl->W1.resize(784, 128);
 
     while (std::getline(w1_file, line) && row < 784)
     {
-        float value;
+        float value = NAN;
         int col = 0;
         std::istringstream iss(line);
 
         while (iss >> value && col < 128)
         {
-            W1(row, col) = value;
+            pimpl->W1(row, col) = value;
             col++;
         }
 
@@ -53,23 +87,23 @@ auto MLP::loadWeights(
 
     if (!w2_file.is_open())
     {
-        std::cerr << "Could not open file: " << w2_path << std::endl;
+        std::cerr << "Could not open file: " << w2_path << '\n';
 
         return false;
     }
 
-    W2.resize(128, 10);
+    pimpl->W2.resize(128, 10);
 
     row = 0;
     while (std::getline(w2_file, line) && row < 128)
     {
-        float value;
+        float value = NAN;
         int col = 0;
         std::istringstream iss(line);
 
         while (iss >> value && col < 10)
         {
-            W2(row, col) = value;
+            pimpl->W2(row, col) = value;
             col++;
         }
 
@@ -81,45 +115,36 @@ auto MLP::loadWeights(
     return true;
 }
 
-auto MLP::sigma(const Eigen::VectorXf& z) -> Eigen::VectorXf
+// NOLINTBEGIN(readability-identifier-length)
+int MLP::predict(const std::vector<float>& image)
 {
-    return 1.0F / (1.0F + (-z).array().exp());
-}
+    Eigen::VectorXf x = Eigen::Map<const Eigen::VectorXf>(image.data(),
+        static_cast<Eigen::Index>(image.size()));
 
-auto MLP::softmax(const Eigen::VectorXf& z) -> Eigen::VectorXf
-{
-    Eigen::VectorXf exp_z = z.array().exp();
-
-    return exp_z.array() / exp_z.sum();
-}
-
-auto MLP::predict(const std::vector<float>& image) -> int
-{
-    Eigen::VectorXf x = Eigen::Map<const Eigen::VectorXf>(image.data(), image.size());
-
-    x = x / 255.0F;
+    x = x / MLP::PIXEL_MAX_VALUE;
 
     // z_1 = W_1^T * x
-    Eigen::VectorXf z1 = W1.transpose() * x;
+    const Eigen::VectorXf z1 = pimpl->W1.transpose() * x;
 
     // o_1 = sigma(z_1)
-    Eigen::VectorXf o1 = sigma(z1);
+    const Eigen::VectorXf o1 = sigma(z1);
 
     // z_2 = W_2^T * o_1
-    Eigen::VectorXf z2 = W2.transpose() * o1;
+    const Eigen::VectorXf z2 = pimpl->W2.transpose() * o1;
 
     // o_2 = softmax(z_2)
-    Eigen::VectorXf o2 = softmax(z2);
+    const Eigen::VectorXf o2 = softmax(z2);
 
-    Eigen::VectorXf::Index maxIndex;
+    Eigen::VectorXf::Index maxIndex = 0;
     o2.maxCoeff(&maxIndex);
 
     return static_cast<int>(maxIndex);
 }
+// NOLINTEND(readability-identifier-length)
 
-auto MLP::evaluate_with_predictions(
+float MLP::evaluate_with_predictions(
     const std::string& test_data_path,
-    const std::string& predictions_path) -> float
+    const std::string& predictions_path)
 {
     int correct = 0;
     int total = 0;
@@ -130,13 +155,14 @@ auto MLP::evaluate_with_predictions(
 
     if (!test_file.is_open())
     {
-        std::cerr << "Could not open test file: " << test_data_path << std::endl;
+        std::cerr << "Could not open test file: " << test_data_path << '\n';
         return 0.0F;
     }
 
     if (!pred_file.is_open())
     {
-        std::cerr << "Could not open predictions file: " << predictions_path << std::endl;
+        std::cerr << "Could not open predictions file: " << predictions_path << '\n';
+
         return 0.0F;
     }
 
@@ -150,16 +176,16 @@ auto MLP::evaluate_with_predictions(
 
         if (!std::getline(test_iss, token, ','))
         {
-            std::cerr << "Error reading class label from test file" << std::endl;
+            std::cerr << "Error reading class label from test file\n";
             continue;
         }
 
-        auto [ptr, ec] = std::from_chars(token.data(), token.data() + token.size(),
-            true_label);
+        const std::string_view token_sv(token);
+        auto [ptr, ec] = std::from_chars(token_sv.data(),
+            token_sv.data() + token_sv.size(), true_label);
         if (ec != std::errc{})
         {
-            std::cerr << "Error converting class label from test file: " << token
-                << std::endl;
+            std::cerr << "Error converting class label from test file: " << token << '\n';
             continue;
         }
 
@@ -176,10 +202,10 @@ auto MLP::evaluate_with_predictions(
     test_file.close();
     pred_file.close();
 
-    return static_cast<float>(correct) / total;
+    return static_cast<float>(correct) / static_cast<float>(total);
 }
 
-auto MLP::evaluate(const std::string& test_data_path) -> float
+float MLP::evaluate(const std::string& test_data_path)
 {
     int correct = 0;
     int total = 0;
@@ -188,7 +214,7 @@ auto MLP::evaluate(const std::string& test_data_path) -> float
 
     if (!test_file.is_open())
     {
-        std::cerr << "Could not open file: " << test_data_path << std::endl;
+        std::cerr << "Could not open file: " << test_data_path << '\n';
 
         return 0.0F;
     }
@@ -203,16 +229,17 @@ auto MLP::evaluate(const std::string& test_data_path) -> float
 
         if (!std::getline(iss, token, ','))
         {
-            std::cerr << "Error reading class label" << std::endl;
+            std::cerr << "Error reading class label\n";
             continue;
         }
 
         {
-            auto [ptr, ec] = std::from_chars(token.data(), token.data() + token.size(),
-                true_label);
+            const std::string_view token_sv(token);
+            auto [ptr, ec] = std::from_chars(token_sv.data(),
+                token_sv.data() + token_sv.size(), true_label);
             if (ec != std::errc{})
             {
-                std::cerr << "Error converting class label: " << token << std::endl;
+                std::cerr << "Error converting class label: " << token << '\n';
                 continue;
             }
         }
@@ -223,23 +250,24 @@ auto MLP::evaluate(const std::string& test_data_path) -> float
 
             if (!std::getline(iss, token, ','))
             {
-                std::cerr << "Error reading pixel at position " << i << std::endl;
+                std::cerr << "Error reading pixel at position " << i << '\n';
                 break;
             }
 
-            auto [ptr, ec] = std::from_chars(token.data(), token.data() + token.size(),
-                pixel_value);
+            const std::string_view token_sv(token);
+            auto [ptr, ec] = std::from_chars(token_sv.data(),
+                token_sv.data() + token_sv.size(), pixel_value);
             if (ec != std::errc{})
             {
-                std::cerr << "Error converting pixel at position " << i << ": " << token
-                    << std::endl;
+                std::cerr << "Error converting pixel at position " << i << ": "
+                    << token_sv << '\n';
                 pixel_value = 0.0F;
             }
 
             image[i] = pixel_value;
         }
 
-        int predicted_label = predict(image);
+        const int predicted_label = predict(image);
         if (predicted_label == true_label)
         {
             correct++;
@@ -250,5 +278,5 @@ auto MLP::evaluate(const std::string& test_data_path) -> float
 
     test_file.close();
 
-    return static_cast<float>(correct) / total;
+    return static_cast<float>(correct) / static_cast<float>(total);
 }

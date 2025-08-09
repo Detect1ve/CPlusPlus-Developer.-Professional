@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 4.0.3)
+cmake_minimum_required(VERSION 3.25..4.1.0)
 
 if (NOT DEFINED PATCH_VERSION)
   set(PATCH_VERSION
@@ -10,10 +10,7 @@ set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 project(ip_filter VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 if (PROJECT_IS_TOP_LEVEL)
-  if (MSVC)
-    set(SUPPORTED_CXX_STANDARDS 23)
-  else()
-    set(SUPPORTED_CXX_STANDARDS 26 23)
+  if (NOT MSVC)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
       add_compile_options(-fcolor-diagnostics)
     else()
@@ -21,10 +18,8 @@ if (PROJECT_IS_TOP_LEVEL)
     endif()
   endif()
 
-  include(../cxx_standard.cmake)
-  set(CMAKE_CXX_STANDARD ${CXX_STANDARD})
-  set(CMAKE_CXX_STANDARD_REQUIRED True)
-  set(CMAKE_CXX_EXTENSIONS OFF)
+  set(MINIMUM_CXX_STANDARD 23)
+  include(../cmake/cxx_standard.cmake)
   set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 endif()
 
@@ -35,9 +30,10 @@ else()
 endif()
 
 if (PROJECT_IS_TOP_LEVEL)
-  include(../boost.cmake)
-  include(../clang-tidy.cmake)
-  include(../googletest.cmake)
+  include(../cmake/boost.cmake)
+  include(../cmake/capture.cmake)
+  include(../cmake/clang-tidy.cmake)
+  include(../cmake/googletest.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
@@ -51,10 +47,8 @@ if (NOT MSVC)
 endif()
 
 add_executable(ip_filter_test test/ip_filter_test.cpp)
-target_link_libraries(ip_filter_test PRIVATE ip_filter_lib GTest::gtest_main
-  Boost::algorithm Boost::uuid)
-target_include_directories(ip_filter_test PRIVATE
-  ${CMAKE_CURRENT_SOURCE_DIR}/../common/test)
+target_link_libraries(ip_filter_test PRIVATE Boost::algorithm Boost::uuid capture
+  GTest::gtest_main ip_filter_lib)
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set(CLANG_TIDY_HW_2_OPTS
@@ -80,7 +74,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set_target_properties(ip_filter_test PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
       -fuchsia-default-arguments-calls,\
-      ${CLANG_TIDY_HW_2_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/../common/test/.*")
+      ${CLANG_TIDY_HW_2_OPTS};--header-filter=${CAPTURE_INCLUDE_DIR}/.*")
 endif()
 
 enable_testing()

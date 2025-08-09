@@ -1,12 +1,9 @@
-cmake_minimum_required(VERSION 4.0.3)
+cmake_minimum_required(VERSION 3.25..4.1.0)
 
 project(HW_3 LANGUAGES CXX)
 
 if (PROJECT_IS_TOP_LEVEL)
-  if (MSVC)
-    set(SUPPORTED_CXX_STANDARDS 23 20 17 14 11 98)
-  else()
-    set(SUPPORTED_CXX_STANDARDS 26 23 20 17 14 11 98)
+  if (NOT MSVC)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
       add_compile_options(-fcolor-diagnostics)
     else()
@@ -14,10 +11,8 @@ if (PROJECT_IS_TOP_LEVEL)
     endif()
   endif()
 
-  include(../cxx_standard.cmake)
-  set(CMAKE_CXX_STANDARD ${CXX_STANDARD})
-  set(CMAKE_CXX_STANDARD_REQUIRED True)
-  set(CMAKE_CXX_EXTENSIONS OFF)
+  set(MINIMUM_CXX_STANDARD 98)
+  include(../cmake/cxx_standard.cmake)
   set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 endif()
 
@@ -28,8 +23,8 @@ else()
 endif()
 
 if (PROJECT_IS_TOP_LEVEL)
-  include(../clang-tidy.cmake)
-  include(../googletest.cmake)
+  include(../cmake/clang-tidy.cmake)
+  include(../cmake/googletest.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
@@ -81,6 +76,10 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
 
   set_target_properties(my_allocator_test PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
+      -cert-err58-cpp,\
+      -cppcoreguidelines-owning-memory,\
+      -fuchsia-default-arguments-calls,\
+      -fuchsia-statically-constructed-objects,\
       -llvmlibc-implementation-in-namespace,\
       -misc-include-cleaner,\
       ${CLANG_TIDY_HW_3_OPTS}")

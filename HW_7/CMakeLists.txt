@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 4.0.3)
+cmake_minimum_required(VERSION 3.25..4.1.0)
 
 if (NOT DEFINED PATCH_VERSION)
   set(PATCH_VERSION
@@ -10,10 +10,7 @@ set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 project(bulk VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 if (PROJECT_IS_TOP_LEVEL)
-  if (MSVC)
-    set(SUPPORTED_CXX_STANDARDS 23 20)
-  else()
-    set(SUPPORTED_CXX_STANDARDS 26 23 20)
+  if (NOT MSVC)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
       add_compile_options(-fcolor-diagnostics)
     else()
@@ -21,10 +18,8 @@ if (PROJECT_IS_TOP_LEVEL)
     endif()
   endif()
 
-  include(../cxx_standard.cmake)
-  set(CMAKE_CXX_STANDARD ${CXX_STANDARD})
-  set(CMAKE_CXX_STANDARD_REQUIRED True)
-  set(CMAKE_CXX_EXTENSIONS OFF)
+  set(MINIMUM_CXX_STANDARD 20)
+  include(../cmake/cxx_standard.cmake)
   set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 endif()
 
@@ -35,8 +30,8 @@ else()
 endif()
 
 if (PROJECT_IS_TOP_LEVEL)
-  include(../clang-tidy.cmake)
-  include(../googletest.cmake)
+  include(../cmake/clang-tidy.cmake)
+  include(../cmake/googletest.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
@@ -50,9 +45,7 @@ if (NOT MSVC)
 endif()
 
 add_executable(taskmanager_test test/taskmanager_test.cpp)
-target_link_libraries(taskmanager_test PRIVATE taskmanager GTest::gtest_main)
-target_include_directories(taskmanager_test PRIVATE
-  ${CMAKE_CURRENT_SOURCE_DIR}/../common/test)
+target_link_libraries(taskmanager_test PRIVATE capture GTest::gtest_main taskmanager)
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set(CLANG_TIDY_HW_7_OPTS
@@ -77,7 +70,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set_target_properties(taskmanager_test PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
       -altera-unroll-loops,\
-      ${CLANG_TIDY_HW_7_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/../common/test/.*")
+      ${CLANG_TIDY_HW_7_OPTS};--header-filter=${CAPTURE_INCLUDE_DIR}/.*")
 endif()
 
 enable_testing()

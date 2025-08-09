@@ -1,7 +1,9 @@
-#pragma once
+#ifndef QUEUE_HPP
+#define QUEUE_HPP
 
 #include <condition_variable>
-#if __GNUC__ < 15
+#if __GNUC__ < 14\
+ || __cplusplus <=  202002L
 #include <optional>
 #endif
 #include <queue>
@@ -11,7 +13,7 @@ namespace pc_queue
     /**
     * @brief Queue operating modes
     */
-    enum class QueueMode
+    enum class QueueMode : std::uint8_t
     {
         SINGLE_PRODUCER_SINGLE_CONSUMER,
         MULTI_PRODUCER_SINGLE_CONSUMER,
@@ -41,10 +43,10 @@ namespace pc_queue
             * @param[in] priority_ Priority
             */
             PriorityItem(
-                const T&           data_,
+                T                  data_,
                 const PriorityType priority_)
                 :
-                data(data_),
+                data(std::move(data_)),
                 priority(priority_) {}
 
             /**
@@ -52,7 +54,7 @@ namespace pc_queue
             *
             * @return Data
             */
-            auto getData() const -> const T&
+            [[nodiscard]] const T& getData() const
             {
                 return data;
             }
@@ -61,7 +63,7 @@ namespace pc_queue
             * @brief Comparison operator for sorting by priority
             * (lower priority = higher element)
             */
-            auto operator<(const PriorityItem& other) const -> bool
+            bool operator<(const PriorityItem& other) const
             {
                 return priority < other.priority;
             }
@@ -77,15 +79,31 @@ namespace pc_queue
         * @param[in] mode        Queue operating mode
         * @param[in] maxSize     Maximum queue size (0 - unlimited)
         */
-        Queue(
-            const bool        usePriority = false,
-            const QueueMode   mode = QueueMode::MULTI_PRODUCER_MULTI_CONSUMER,
-            const std::size_t maxSize = 0)
+        Queue() : Queue(false, QueueMode::MULTI_PRODUCER_MULTI_CONSUMER, 0) {}
+
+        explicit Queue(const bool usePriority)
+            :
+            Queue(usePriority, QueueMode::MULTI_PRODUCER_MULTI_CONSUMER, 0) {}
+
+        explicit Queue(
+            const bool      usePriority,
+            const QueueMode mode)
+            :
+            Queue(usePriority, mode, 0) {}
+
+        explicit Queue(
+            const bool        usePriority,
+            const QueueMode   mode,
+            const std::size_t maxSize)
             :
             usePriority_(usePriority),
-            closed_(false),
             mode_(mode),
             maxSize_(maxSize) {}
+
+        Queue(const Queue&) = delete;
+        Queue& operator=(const Queue&) = delete;
+        Queue(Queue&&) = delete;
+        Queue& operator=(Queue&&) = delete;
 
         /**
         * @brief Destructor
@@ -105,9 +123,9 @@ namespace pc_queue
         * @return true if the item was placed in the queue,
         *         false if a timeout occurred or the queue was closed
         */
-        auto push(
+        bool push(
             const T&  item,
-            const int timeout = -1) -> bool
+            const int timeout = -1)
         {
             return pushImpl(item, PriorityType{}, timeout);
         }
@@ -123,10 +141,10 @@ namespace pc_queue
         * @return true if the item was placed in the queue,
         *         false if a timeout occurred or the queue was closed
         */
-        auto push(
+        bool push(
             const T&           item,
             const PriorityType priority,
-            const int          timeout = -1) -> bool
+            const int          timeout = -1)
         {
             return pushImpl(item, priority, timeout);
         }
@@ -140,37 +158,23 @@ namespace pc_queue
         * @return An element from the queue,
         *         or std::nullopt if the queue is empty or closed
         */
-        auto pop(const int timeout = -1) -> std::optional<T>
+        std::optional<T> pop()
         {
-            bool success;
-            std::unique_lock<std::mutex> lock(mutex_);
-            T item;
+            return popImpl(-1);
+        }
 
-            if (closed_ && empty())
-            {
-                return std::nullopt;
-            }
-
-            success = waitForNonEmpty(lock, timeout);
-            if (!success)
-            {
-                return std::nullopt;
-            }
-
-            if (usePriority_)
-            {
-                item = priorityQueue_.top().getData();
-                priorityQueue_.pop();
-            }
-            else
-            {
-                item = queue_.front();
-                queue_.pop();
-            }
-
-            notFull_.notify_one();
-
-            return item;
+        /**
+        * @brief Removes an element from the queue
+        *
+        * @param[in] timeout Wait timeout in milliseconds
+        *                    (0 - no wait, -1 - infinite wait)
+        *
+        * @return An element from the queue,
+        *         or std::nullopt if the queue is empty or closed
+        */
+        std::optional<T> pop(const int timeout)
+        {
+            return popImpl(timeout);
         }
 
         /**
@@ -178,7 +182,7 @@ namespace pc_queue
         *
         * @return true if the queue is empty, false otherwise
         */
-        auto empty() const -> bool
+        bool empty() const
         {
             return (usePriority_ ? priorityQueue_.empty() : queue_.empty());
         }
@@ -188,7 +192,7 @@ namespace pc_queue
         *
         * @return Current queue size
         */
-        auto size() const -> std::size_t
+        std::size_t size() const
         {
             return (usePriority_ ? priorityQueue_.size() : queue_.size());
         }
@@ -201,7 +205,7 @@ namespace pc_queue
         */
         void close()
         {
-            std::lock_guard<std::mutex> lock(mutex_);
+            const std::lock_guard<std::mutex> lock(mutex_);
 
             closed_ = true;
             notEmpty_.notify_all();
@@ -213,9 +217,9 @@ namespace pc_queue
         *
         * @return true if the queue is closed, false otherwise
         */
-        auto isClosed() const -> bool
+        bool isClosed() const
         {
-            std::lock_guard<std::mutex> lock(mutex_);
+            const std::lock_guard<std::mutex> lock(mutex_);
 
             return closed_;
         }
@@ -225,7 +229,7 @@ namespace pc_queue
         */
         void clear()
         {
-            std::lock_guard<std::mutex> lock(mutex_);
+            const std::lock_guard<std::mutex> lock(mutex_);
 
             while (!queue_.empty())
             {
@@ -252,10 +256,10 @@ namespace pc_queue
         * @return true if the item was placed in the queue,
         *         false if a timeout occurred or the queue was closed
         */
-        inline auto pushImpl(
+        bool pushImpl(
             const T&           item,
             const PriorityType priority,
-            const int          timeout) -> bool
+            const int          timeout)
         {
             bool isProducerActive = false;
             bool success = true;
@@ -282,7 +286,7 @@ namespace pc_queue
 
             if (maxSize_ > 0)
             {
-                std::size_t currentSize = size();
+                const std::size_t currentSize = size();
 
                 if (currentSize >= maxSize_)
                 {
@@ -316,6 +320,47 @@ namespace pc_queue
         }
 
         /**
+         * @brief Implementing the pop method
+         *
+         * @param[in] timeout Wait timeout in milliseconds
+         *
+         * @return An element from the queue,
+         *         or std::nullopt if the queue is empty or closed
+         */
+        std::optional<T> popImpl(const int timeout)
+        {
+            bool success = false;
+            std::unique_lock<std::mutex> lock(mutex_);
+            T item;
+
+            if (closed_ && empty())
+            {
+                return std::nullopt;
+            }
+
+            success = waitForNonEmpty(lock, timeout);
+            if (!success)
+            {
+                return std::nullopt;
+            }
+
+            if (usePriority_)
+            {
+                item = priorityQueue_.top().getData();
+                priorityQueue_.pop();
+            }
+            else
+            {
+                item = queue_.front();
+                queue_.pop();
+            }
+
+            notFull_.notify_one();
+
+            return item;
+        }
+
+        /**
         * @brief Waits until the queue is not empty or is closed.
         *
         * @param[in,out] lock    Mutex lock
@@ -324,12 +369,12 @@ namespace pc_queue
         * @return true if the queue is not empty,
         *         false if timeout or the queue is closed and empty
         */
-        auto waitForNonEmpty(
+        bool waitForNonEmpty(
             std::unique_lock<std::mutex>& lock,
-            const int                     timeout) -> bool
+            const int                     timeout)
         {
             bool isConsumerActive = false;
-            bool queueEmpty;
+            bool queueEmpty = false;
             bool success = true;
 
             if (  (  mode_ == QueueMode::SINGLE_PRODUCER_SINGLE_CONSUMER
@@ -395,12 +440,12 @@ namespace pc_queue
         *
         * @return true if there is space in the queue, false if timeout or queue is closed
         */
-        auto waitForNotFull(
+        bool waitForNotFull(
             std::unique_lock<std::mutex>& lock,
-            const int                     timeout) -> bool
+            const int                     timeout)
         {
-            std::size_t currentSize = size();
-            bool queueFull = currentSize >= maxSize_;
+            const std::size_t currentSize = size();
+            const bool queueFull = currentSize >= maxSize_;
 
             if (  queueFull
                && !closed_)
@@ -432,7 +477,7 @@ namespace pc_queue
         ///< Should use priorities
         bool usePriority_;
         ///< Queue close flag
-        bool closed_;
+        bool closed_{false};
         ///< Active Producer Flag
         bool producerActive_{false};
         ///< Active Consumer Flag
@@ -453,3 +498,5 @@ namespace pc_queue
         std::queue<T> queue_;
     };
 } // namespace pc_queue
+
+#endif /* QUEUE_HPP */

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 4.0.3)
+cmake_minimum_required(VERSION 3.25..4.1.0)
 
 if (NOT DEFINED PATCH_VERSION)
   set(PATCH_VERSION
@@ -10,10 +10,7 @@ set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 project(fashio_mnist VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 if (PROJECT_IS_TOP_LEVEL)
-  if (MSVC)
-    set(CMAKE_CXX_STANDARD 23)
-  else()
-    set(CMAKE_CXX_STANDARD 26)
+  if (NOT MSVC)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
       add_compile_options(-fcolor-diagnostics)
     else()
@@ -21,8 +18,9 @@ if (PROJECT_IS_TOP_LEVEL)
     endif()
   endif()
 
-  set(CMAKE_CXX_STANDARD_REQUIRED True)
-  set(CMAKE_CXX_EXTENSIONS OFF)
+  set(MINIMUM_CXX_STANDARD 14)
+  include(../cmake/cxx_standard.cmake)
+  set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 endif()
 
 if (MSVC)
@@ -32,10 +30,12 @@ else()
 endif()
 
 if (PROJECT_IS_TOP_LEVEL)
-    include(../googletest.cmake)
+    include(../cmake/clang-tidy.cmake)
+    include(../cmake/googletest.cmake)
+    list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
-find_package(Eigen3 3.4.0)
+find_package(Eigen3 3.4.0 QUIET)
 if (NOT Eigen_FOUND)
   include(FetchContent)
   set(BUILD_TESTING OFF CACHE BOOL "Disable Eigen tests" FORCE)
@@ -49,22 +49,62 @@ if (NOT Eigen_FOUND)
 endif()
 
 add_library(mlp_lib STATIC lib/mlp.cpp)
-target_link_libraries(mlp_lib PUBLIC Eigen3::Eigen)
+target_link_libraries(mlp_lib PRIVATE Eigen3::Eigen)
 target_include_directories(mlp_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+if (MSVC)
+  target_compile_options(mlp_lib PRIVATE /W4)
+else()
+  target_compile_options(mlp_lib PRIVATE -Wall -Wextra -pedantic)
+endif()
 
 add_executable(fashio_mnist src/main.cpp)
 target_link_libraries(fashio_mnist mlp_lib)
-if (NOT MSVC)
+if (MSVC)
+  target_compile_options(fashio_mnist PRIVATE /W4)
+else()
   target_link_libraries(fashio_mnist -static)
+  target_compile_options(fashio_mnist PRIVATE -Wall -Wextra -pedantic)
 endif()
 
-enable_testing()
 add_executable(fashio_mnist_test test/mlp_test.cpp)
 target_link_libraries(fashio_mnist_test mlp_lib GTest::gtest_main)
+if (MSVC)
+  target_compile_options(fashio_mnist_test PRIVATE /W4)
+else()
+  target_compile_options(fashio_mnist_test PRIVATE -Wall -Wextra -pedantic)
+endif()
 
 target_compile_definitions(fashio_mnist_test PRIVATE
   PROJECT_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
+if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
+  set(CLANG_TIDY_HW_13_OPTS
+    "-fuchsia-default-arguments-calls,\
+     -llvmlibc-callee-namespace,\
+     -llvmlibc-restrict-system-libc-headers,\
+     -misc-include-cleaner,\
+     -modernize-use-trailing-return-type;--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+
+  set_target_properties(mlp_lib PROPERTIES
+    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
+      -altera-id-dependent-backward-branch,\
+      -altera-unroll-loops,\
+      -cppcoreguidelines-avoid-magic-numbers,\
+      -llvmlibc-implementation-in-namespace,\
+      -readability-magic-numbers,\
+      ${CLANG_TIDY_HW_13_OPTS}")
+
+  set_target_properties(fashio_mnist PROPERTIES
+    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
+      -llvmlibc-implementation-in-namespace,\
+      ${CLANG_TIDY_HW_13_OPTS}")
+
+  set_target_properties(fashio_mnist_test PROPERTIES
+    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
+      ${CLANG_TIDY_HW_13_OPTS}")
+endif()
+
+enable_testing()
 add_test(HW_13.fashio_mnist_test fashio_mnist_test)
 
 install(TARGETS fashio_mnist
