@@ -1,4 +1,4 @@
-#ifndef SOCKET_WRAPPER_HPP
+#ifndef SOCKET_WRAPPER_HPP // NOLINT(llvm-header-guard)
 #define SOCKET_WRAPPER_HPP
 
 #ifdef _WIN32
@@ -6,6 +6,8 @@
 #else
 #include <netdb.h>
 #endif
+
+#include <absl/strings/match.h>
 
 namespace test_util
 {
@@ -94,6 +96,49 @@ namespace test_util
             {
                 throw std::runtime_error("shutdown failed");
             }
+        }
+
+        [[nodiscard]] std::string receive_data() const
+        {
+            constexpr std::size_t buffer_size = 4096;
+            std::string result;
+            std::string buffer(buffer_size, '\0');
+
+            while (true)
+            {
+#ifdef _WIN32
+                const int bytes_received = recv(sock_, &buffer[0],
+                    static_cast<int>(buffer.size()), 0);
+#else
+                const ssize_t bytes_received = recv(sock_, buffer.data(), buffer.size(),
+                    0);
+#endif
+                if (bytes_received < 0)
+                {
+                    throw std::runtime_error("recv failed");
+                }
+
+                if (bytes_received == 0)
+                {
+                    break;
+                }
+
+                result.append(buffer.c_str(), bytes_received);
+
+                if (result.length() >= 3 && result.substr(result.length() - 3) == "OK\n")
+                {
+                    break;
+                }
+
+                if (  result.length() >= 4
+                   && result.starts_with("ERR")
+                   && absl::StrContains(result, '\n'))
+                {
+                    break;
+                }
+            }
+
+            return result;
         }
 
     private:

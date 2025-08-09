@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 4.0.3)
+cmake_minimum_required(VERSION 3.25..4.1.0)
 
 if (NOT DEFINED PATCH_VERSION)
   set(PATCH_VERSION
@@ -6,14 +6,14 @@ if (NOT DEFINED PATCH_VERSION)
       CACHE INTERNAL "Patch version")
 endif()
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(PATCH_COMPILE_COMMANDS FALSE)
+
 set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 project(print_ip VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 if (PROJECT_IS_TOP_LEVEL)
-  if (MSVC)
-    set(SUPPORTED_CXX_STANDARDS 23 20)
-  else()
-    set(SUPPORTED_CXX_STANDARDS 26 23 20)
+  if (NOT MSVC)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
       add_compile_options(-fcolor-diagnostics)
     else()
@@ -21,10 +21,8 @@ if (PROJECT_IS_TOP_LEVEL)
     endif()
   endif()
 
-  include(../cxx_standard.cmake)
-  set(CMAKE_CXX_STANDARD ${CXX_STANDARD})
-  set(CMAKE_CXX_STANDARD_REQUIRED True)
-  set(CMAKE_CXX_EXTENSIONS OFF)
+  set(MINIMUM_CXX_STANDARD 20)
+  include(../cmake/cxx_standard.cmake)
   set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 endif()
 
@@ -35,13 +33,20 @@ else()
 endif()
 
 if (PROJECT_IS_TOP_LEVEL)
-  include(../clang-tidy.cmake)
-  include(../googletest.cmake)
+  include(../cmake/capture.cmake)
+  include(../cmake/clang-tidy.cmake)
+  include(../cmake/googletest.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
 add_library(ip_address INTERFACE)
 target_include_directories(ip_address INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS_EQUAL 9.4)
+    target_compile_options(ip_address INTERFACE -fconcepts)
+    set(PATCH_COMPILE_COMMANDS TRUE)
+  endif()
+endif()
 
 add_executable(print_ip src/main.cpp)
 target_link_libraries(print_ip PRIVATE ip_address)
@@ -50,19 +55,19 @@ if (NOT MSVC)
 endif()
 
 add_executable(print_ip_test test/sfinae_ip_address_test.cpp)
-target_link_libraries(print_ip_test PRIVATE GTest::gtest_main ip_address)
-target_include_directories(print_ip_test PRIVATE
-  ${CMAKE_CURRENT_SOURCE_DIR}/../common/test)
+target_link_libraries(print_ip_test PRIVATE capture GTest::gtest_main ip_address)
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set(CLANG_TIDY_HW_4_OPTS
     "-altera-unroll-loops,\
+     -cppcoreguidelines-avoid-magic-numbers,\
      -fuchsia-default-arguments-calls,\
      -google-runtime-int,\
      -llvmlibc-callee-namespace,\
      -llvmlibc-restrict-system-libc-headers,\
      -misc-include-cleaner,\
-     -modernize-use-trailing-return-type;--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+     -modernize-use-trailing-return-type,\
+     -readability-magic-numbers;-p;${CMAKE_BINARY_DIR};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
 
   set_target_properties(print_ip PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
@@ -71,10 +76,17 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
 
   set_target_properties(print_ip_test PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      -cppcoreguidelines-avoid-magic-numbers,\
-      -llvmlibc-inline-function-decl,\
-      -readability-magic-numbers,\
-      ${CLANG_TIDY_HW_4_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/../common/test/.*")
+      ${CLANG_TIDY_HW_4_OPTS}")
+
+  if (PATCH_COMPILE_COMMANDS)
+    add_custom_target(patch_compile_commands ALL
+      COMMAND sed -i 's/-fconcepts//g' ${CMAKE_BINARY_DIR}/compile_commands.json
+      DEPENDS ${CMAKE_BINARY_DIR}/compile_commands.json
+      COMMENT "Patching compile_commands.json for clang-tidy")
+
+    add_dependencies(print_ip patch_compile_commands)
+    add_dependencies(print_ip_test patch_compile_commands)
+  endif()
 endif()
 
 enable_testing()
@@ -114,11 +126,14 @@ set(DOXYGEN_NUM_PROC_THREADS 0)
 set(DOXYGEN_WARN_AS_ERROR YES)
 set(DOXYGEN_USE_MDFILE_AS_MAINPAGE README.md)
 
-doxygen_add_docs(
-  docs
-  ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/include README.md
-  COMMENT "Generating API documentation with Doxygen"
-)
+if (Doxygen_FOUND)
+  doxygen_add_docs(
+    docs
+    ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/include README.md
+    COMMENT "Generating API documentation with Doxygen")
+else()
+  message(WARNING "Doxygen not found. Building documentation is disabled.")
+endif()
 
 if (PROJECT_IS_TOP_LEVEL)
   set(CPACK_GENERATOR DEB)

@@ -44,7 +44,7 @@ namespace
                 }
 
                 const std::string_view timestamp_sv = timestamp_str;
-                int64_t timestamp_seconds = 0;
+                std::int64_t timestamp_seconds = 0;
                 auto [ptr, ec] = std::from_chars(timestamp_sv.data(),
                     timestamp_sv.data() + timestamp_sv.size(), timestamp_seconds, BASE);
                 if (ec != std::errc())

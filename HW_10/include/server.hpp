@@ -25,6 +25,7 @@ namespace async
         ~Server();
 
         void run();
+        void setup_signal_handling();
         void stop();
 
     private:

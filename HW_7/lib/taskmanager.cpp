@@ -1,3 +1,6 @@
+#if !defined(_WIN32) && !defined(_MSC_VER)
+#include <csignal>
+#endif
 #include <filesystem>
 #include <fstream>
 #include <ranges>
@@ -53,6 +56,26 @@ namespace bulk::io
         std::ostream& s2;
     };
 } // namespace bulk::io
+
+namespace
+{
+    [[nodiscard]] bulk::taskmanager*& get_task_manager_instance() noexcept
+    {
+        static bulk::taskmanager* instance = nullptr;
+
+        return instance;
+    }
+
+#if !defined(_WIN32) && !defined(_MSC_VER)
+    void signal_handler(const int /*signal*/)
+    {
+        if (auto* instance = get_task_manager_instance(); instance)
+        {
+            instance->stop();
+        }
+    }
+#endif
+} // namespace
 
 namespace bulk
 {
@@ -191,11 +214,18 @@ namespace bulk
 
         try
         {
-            while (std::getline(input, line))
+            while (!stop_flag)
             {
-                if (this->add_task(line) != 0)
+                if (std::getline(input, line))
                 {
-                    std::cerr << "Error processing command: " << line << '\n';
+                    if (this->add_task(line) != 0)
+                    {
+                        std::cerr << "Error processing command: " << line << '\n';
+                    }
+                }
+                else if (input.eof() || input.fail())
+                {
+                    break;
                 }
             }
         }
@@ -206,6 +236,42 @@ namespace bulk
         }
 
         return ret;
+    }
+
+    void taskmanager::stop() noexcept
+    {
+        stop_flag = true;
+    }
+
+    void taskmanager::setup_signal_handling()
+    {
+        get_task_manager_instance() = this;
+#if !defined(_WIN32) && !defined(_MSC_VER)
+        struct sigaction sigaction_info {};
+
+        sigaction_info.sa_handler = signal_handler;
+        sigemptyset(&sigaction_info.sa_mask);
+        sigaction_info.sa_flags = 0;
+        if (sigaction(SIGHUP, &sigaction_info, nullptr) == -1)
+        {
+            std::cerr << "Failed to register SIGHUP handler, but continue anyway\n";
+        }
+
+        if (sigaction(SIGINT, &sigaction_info, nullptr) == -1)
+        {
+            std::cerr << "Failed to register SIGINT handler, but continue anyway\n";
+        }
+
+        if (sigaction(SIGQUIT, &sigaction_info, nullptr) == -1)
+        {
+            std::cerr << "Failed to register SIGQUIT handler, but continue anyway\n";
+        }
+
+        if (sigaction(SIGTERM, &sigaction_info, nullptr) == -1)
+        {
+            std::cerr << "Failed to register SIGTERM handler, but continue anyway\n";
+        }
+#endif
     }
 
     taskmanager::~taskmanager() noexcept

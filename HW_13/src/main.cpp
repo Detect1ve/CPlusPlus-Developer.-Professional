@@ -1,47 +1,56 @@
 #include <iostream>
+#if defined(__clang__)\
+ || defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)\
+ || __GNUC__ < 14
+#include <span>
+#endif
 
-#include <mlp.h>
+#include <mlp.hpp>
 
-void printUsage(const char *const programName)
+namespace
 {
-    std::cout << "Usage: " << programName << " <test_data_path> <model_dir>" << std::endl;
-    std::cout << "Example: " << programName << " test.csv model" << std::endl;
-}
+    void printUsage(const char *const programName)
+    {
+        std::cout << "Usage: " << programName << " <test_data_path> <model_dir>\n";
+        std::cout << "Example: " << programName << " test.csv model\n";
+    }
+} // namespace
 
-auto main(
+int main(
     const int   argc,
-    const char* argv[]) -> int
+    const char* argv[])
 {
+    const std::span<const char*> args(argv, argc);
     int ret = 0;
 
-    if (argc != 3)
+    if (args.size() != 3)
     {
-        std::cerr << "Error: Invalid number of arguments!" << std::endl;
-        printUsage(argv[0]);
+        std::cerr << "Error: Invalid number of arguments!\n";
+        printUsage(args[0]);
         ret = -1;
 
         return ret;
     }
 
-    std::string test_data_path = argv[1];
-    std::string model_dir = argv[2];
+    const std::string test_data_path(args[1]);
+    const std::string model_dir(args[2]);
 
-    std::string w1_path = model_dir + "/w1.txt";
-    std::string w2_path = model_dir + "/w2.txt";
+    const std::string w1_path = model_dir + "/w1.txt";
+    const std::string w2_path = model_dir + "/w2.txt";
 
     try
     {
         MLP model(w1_path, w2_path);
 
-        float accuracy = model.evaluate(test_data_path);
+        const float accuracy = model.evaluate(test_data_path);
 
         std::cout.precision(3);
-        std::cout << std::fixed << accuracy << std::endl;
+        std::cout << std::fixed << accuracy << '\n';
 
     }
     catch (const std::exception& e)
     {
-        std::cerr << "Error: " << e.what() << std::endl;
+        std::cerr << "Error: " << e.what() << '\n';
         ret = -2;
     }
 

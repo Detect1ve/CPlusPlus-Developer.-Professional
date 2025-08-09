@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 4.0.3)
+cmake_minimum_required(VERSION 3.25..4.1.0)
 
 if (NOT DEFINED PATCH_VERSION)
   set(PATCH_VERSION
@@ -10,19 +10,18 @@ set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 project(mapreduce VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 if (PROJECT_IS_TOP_LEVEL)
+  include(../cmake/clang-tidy.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
 if (MSVC OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   if (PROJECT_IS_TOP_LEVEL)
-    if (MSVC)
-      set(CMAKE_CXX_STANDARD 23)
-    else ()
-      set(CMAKE_CXX_STANDARD 26)
+    if (NOT MSVC)
       add_compile_options(-fcolor-diagnostics)
     endif()
-    set(CMAKE_CXX_STANDARD_REQUIRED True)
-    set(CMAKE_CXX_EXTENSIONS OFF)
+
+    set(MINIMUM_CXX_STANDARD 17)
+    include(../cmake/cxx_standard.cmake)
   endif()
 
   if (MSVC)
@@ -37,6 +36,46 @@ if (MSVC OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   add_executable(reducer reducer.cpp)
   add_executable(mapper_variance mapper_variance.cpp)
   add_executable(reducer_variance reducer_variance.cpp)
+
+  if (NOT MSVC)
+    target_link_libraries(mapper PRIVATE -static)
+    target_link_libraries(reducer PRIVATE -static)
+    target_link_libraries(mapper_variance PRIVATE -static)
+    target_link_libraries(reducer_variance PRIVATE -static)
+  endif()
+
+  if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
+    set(CLANG_TIDY_HW_12_OPTS
+      "-altera-unroll-loops,\
+       -fuchsia-default-arguments-calls,\
+       -llvmlibc-callee-namespace,\
+       -llvmlibc-implementation-in-namespace,\
+       -llvmlibc-restrict-system-libc-headers,\
+       -misc-include-cleaner,\
+       -modernize-use-trailing-return-type")
+
+    set_target_properties(mapper PROPERTIES
+      CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
+        -clang-diagnostic-unused-parameter,\
+        -misc-unused-parameters,\
+        -performance-avoid-endl,\
+        ${CLANG_TIDY_HW_12_OPTS}")
+
+    set_target_properties(reducer PROPERTIES
+      CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
+        -clang-diagnostic-unused-parameter,\
+        -misc-unused-parameters,\
+        -performance-avoid-endl,\
+        ${CLANG_TIDY_HW_12_OPTS}")
+
+    set_target_properties(mapper_variance PROPERTIES
+      CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
+        ${CLANG_TIDY_HW_12_OPTS}")
+
+    set_target_properties(reducer_variance PROPERTIES
+      CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
+        ${CLANG_TIDY_HW_12_OPTS}")
+  endif()
 else()
   add_custom_target(mapreduce_all ALL
     COMMAND make -f ${CMAKE_CURRENT_SOURCE_DIR}/Makefile all
@@ -88,8 +127,13 @@ else()
     "cat ${CMAKE_CURRENT_SOURCE_DIR}/input/AB_NYC_2019.csv | \
     ${CMAKE_CURRENT_SOURCE_DIR}/bin/mapper | \
     sort -k1 | \
-    ${CMAKE_CURRENT_SOURCE_DIR}/bin/reducer > ${CMAKE_CURRENT_BINARY_DIR}/output_mean && \
-    grep -q 'Mean price: 152.696' ${CMAKE_CURRENT_BINARY_DIR}/output_mean"
+    ${CMAKE_CURRENT_SOURCE_DIR}/bin/reducer > ${CMAKE_CURRENT_BINARY_DIR}/output_mean ; \
+    if ! grep -q 'Mean price: 152.696' ${CMAKE_CURRENT_BINARY_DIR}/output_mean; then \
+      echo 'ERROR: Pattern not found: Mean price: 152.696' ; \
+      echo '--- Output file content:' ; \
+      cat ${CMAKE_CURRENT_BINARY_DIR}/output_mean ; \
+      exit 1 ; \
+    fi"
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
   add_test(
@@ -99,8 +143,13 @@ else()
     ${CMAKE_CURRENT_SOURCE_DIR}/bin/mapper_variance | \
     sort -k1 | \
     ${CMAKE_CURRENT_SOURCE_DIR}/bin/reducer_variance > \
-      ${CMAKE_CURRENT_BINARY_DIR}/output_variance && \
-    grep -q 'Variance: 57673.5' ${CMAKE_CURRENT_BINARY_DIR}/output_variance"
+      ${CMAKE_CURRENT_BINARY_DIR}/output_variance ; \
+    if ! grep -q 'Variance: 57673.5' ${CMAKE_CURRENT_BINARY_DIR}/output_variance; then \
+      echo 'ERROR: Pattern not found: Variance: 57673.5' ; \
+      echo '--- Output file content:' ; \
+      cat ${CMAKE_CURRENT_BINARY_DIR}/output_variance ; \
+      exit 1 ; \
+    fi"
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endif()
 

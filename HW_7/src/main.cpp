@@ -49,6 +49,7 @@ int main(
 
     bulk::taskmanager my_task_manager(command_number, args[0]);
 
+    my_task_manager.setup_signal_handling();
     ret = my_task_manager.run();
     if (ret != 0)
     {

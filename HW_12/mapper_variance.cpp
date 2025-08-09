@@ -1,62 +1,81 @@
 #include <charconv>
 #include <iostream>
 #include <map>
-#include <sstream>
-#include <vector>
+#if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
+#include <string>
+#endif
 
-auto extract_price_field(
-    std::string_view s,
-    const char       delimiter,
-    const int        field_index) -> std::string
+namespace
 {
-    bool in_quotes = false;
-    int current_index = 0;
-    std::string current_field;
+    constexpr int PRICE_FIELD_INDEX = 9;
 
-    for (char c : s)
+    struct Delimiter
     {
-        if (c == '"')
+        char value;
+    };
+
+    struct FieldIndex
+    {
+        int value;
+    };
+
+    std::string extract_price_field(
+        std::string_view str_view,
+        const Delimiter  delimiter,
+        const FieldIndex field_index)
+    {
+        bool in_quotes = false;
+        int current_index = 0;
+        std::string current_field;
+
+        for (const char chr : str_view)
         {
-            in_quotes = !in_quotes;
-        }
-        else if (c == delimiter && !in_quotes)
-        {
-            if (current_index == field_index)
+            if (chr == '"')
             {
-                return current_field;
+                in_quotes = !in_quotes;
             }
+            else if (chr == delimiter.value && !in_quotes)
+            {
+                if (current_index == field_index.value)
+                {
+                    return current_field;
+                }
 
-            current_field.clear();
-            current_index++;
+                current_field.clear();
+                current_index++;
+            }
+            else if (current_index == field_index.value)
+            {
+                current_field += chr;
+            }
         }
-        else if (current_index == field_index)
+
+        if (current_index == field_index.value)
         {
-            current_field += c;
+            return current_field;
         }
+
+        return "";
     }
+} // namespace
 
-    if (current_index == field_index)
-    {
-        return current_field;
-    }
-
-    return "";
-}
-
-auto main() -> int
+int main()
 {
     std::map<double, int> price_counts;
     std::string line;
 
     while (std::getline(std::cin, line))
     {
-        std::string price_field = extract_price_field(line, ',', 9);
+        const std::string price_field =
+            extract_price_field(line, {','}, {PRICE_FIELD_INDEX});
 
         if (!price_field.empty())
         {
+            const std::string_view price_field_sv(price_field);
             double price = 0.0;
-            auto [ptr, ec] = std::from_chars(price_field.data(),
-                price_field.data() + price_field.size(), price);
+            auto [ptr, ec] = std::from_chars(price_field_sv.data(),
+                price_field_sv.data() + price_field_sv.size(), price,
+                std::chars_format::general);
             if (ec == std::errc())
             {
                 price_counts[price]++;
@@ -66,10 +85,9 @@ auto main() -> int
 
     for (const auto& [price, count] : price_counts)
     {
-        double price_squared = price * price;
+        const double price_squared = price * price;
 
-        std::cout << "price\t" << price << "\t" << price_squared << "\t" << count
-            << std::endl;
+        std::cout << "price\t" << price << "\t" << price_squared << "\t" << count << '\n';
     }
 
     return 0;

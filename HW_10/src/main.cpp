@@ -21,7 +21,7 @@ int main(
             {
                 return std::string_view(arg);
             });
-        uint16_t port = 0;
+        std::uint16_t port = 0;
         std::size_t bulk_size = 0;
 
         if (args.size() != 3)
@@ -58,6 +58,7 @@ int main(
 
         async::Server server(port, bulk_size);
 
+        server.setup_signal_handling();
         server.run();
     }
     catch (std::exception& e)

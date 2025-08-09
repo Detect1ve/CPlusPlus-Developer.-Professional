@@ -9,8 +9,7 @@
 
 #include <capture.hpp>
 #include <server.hpp>
-
-#include "socket_wrapper.hpp"
+#include <socket_wrapper.hpp>
 
 namespace
 {
@@ -63,7 +62,7 @@ namespace
                 const std::string timestamp_str =
                     filename.substr(4, first_underscore - 4);
                 const std::string_view timestamp_sv = timestamp_str;
-                int64_t timestamp_val = 0;
+                std::int64_t timestamp_val = 0;
                 auto [ptr, ec] = std::from_chars(timestamp_sv.data(),
                     timestamp_sv.data() + timestamp_sv.size(), timestamp_val, BASE);
                 if (ec != std::errc())

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 4.0.3)
+cmake_minimum_required(VERSION 3.25..4.1.0)
 
 if (NOT DEFINED PATCH_VERSION)
   set(PATCH_VERSION
@@ -10,10 +10,7 @@ set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 project(bulk_server VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 if (PROJECT_IS_TOP_LEVEL)
-  if (MSVC)
-    set(SUPPORTED_CXX_STANDARDS 23 20)
-  else()
-    set(SUPPORTED_CXX_STANDARDS 26 23 20)
+  if (NOT MSVC)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
       add_compile_options(-fcolor-diagnostics)
     else()
@@ -21,18 +18,17 @@ if (PROJECT_IS_TOP_LEVEL)
     endif()
   endif()
 
-  include(../cxx_standard.cmake)
-  set(CMAKE_CXX_STANDARD ${CXX_STANDARD})
-  set(CMAKE_CXX_STANDARD_REQUIRED True)
-  set(CMAKE_CXX_EXTENSIONS OFF)
+  set(MINIMUM_CXX_STANDARD 20)
+  include(../cmake/cxx_standard.cmake)
   set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 endif()
 
 if (PROJECT_IS_TOP_LEVEL)
-  include(../absl.cmake)
-  include(../boost.cmake)
-  include(../clang-tidy.cmake)
-  include(../googletest.cmake)
+  include(../cmake/boost.cmake)
+  include(../cmake/capture.cmake)
+  include(../cmake/clang-tidy.cmake)
+  include(../cmake/googletest.cmake)
+  include(../cmake/socket_wrapper.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
@@ -61,15 +57,14 @@ if (MSVC)
 target_compile_options(bulk_server PRIVATE /W4)
   target_compile_definitions(server PRIVATE _WIN32_WINNT=0x0A00)
   target_compile_definitions(bulk_server PRIVATE _WIN32_WINNT=0x0A00)
-else ()
+else()
   target_compile_options(bulk_server PRIVATE -Wall -Wextra -pedantic)
   target_link_libraries(bulk_server PRIVATE -static)
 endif()
 
 add_executable(bulk_server_test test/bulk_server_test.cpp)
-target_link_libraries(bulk_server_test PRIVATE server absl::strings GTest::gtest_main)
-target_include_directories(bulk_server_test PRIVATE
-  ${CMAKE_CURRENT_SOURCE_DIR}/../common/test)
+target_link_libraries(bulk_server_test PRIVATE capture GTest::gtest_main server
+  socket_wrapper)
 
 if (MSVC)
   target_compile_options(bulk_server_test PRIVATE /W4)
@@ -88,7 +83,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
      -modernize-use-trailing-return-type;--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
 
   set_target_properties(server_async PROPERTIES
-    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS}\,
+    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
       -altera-id-dependent-backward-branch,\
       -altera-struct-pack-align,\
       -altera-unroll-loops,\
@@ -113,7 +108,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
       -altera-unroll-loops,\
       -fuchsia-default-arguments-calls,\
       -llvmlibc-inline-function-decl,\
-      ${CLANG_TIDY_HW_10_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/test/.*;--config=\
+      ${CLANG_TIDY_HW_10_OPTS};--config=\
       {\
         CheckOptions:\
         [\
@@ -121,7 +116,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
             key: readability-function-cognitive-complexity.IgnoreMacros, value: 'true'\
           }\
         ]\
-      };--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/../common/test/.*")
+      };--header-filter=${CAPTURE_INCLUDE_DIR}/.*;--header-filter=${SOCKET_WRAPPER_INCLUDE_DIR}/.*")
 endif()
 
 enable_testing()
