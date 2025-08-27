@@ -38,9 +38,11 @@ endif()
 
 add_library(taskmanager STATIC lib/taskmanager.cpp)
 target_include_directories(taskmanager PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_compile_options(taskmanager
-  PRIVATE ${GCC_FLAGS} -Wno-strict-overflow
-  PUBLIC -Wno-effc++)
+if (NOT MSVC)
+  target_compile_options(taskmanager
+    PRIVATE ${GCC_FLAGS} -Wno-strict-overflow
+    PUBLIC -Wno-effc++)
+endif()
 
 add_executable(bulk src/main.cpp)
 target_link_libraries(bulk PRIVATE taskmanager)

@@ -34,8 +34,8 @@ add_executable(editor ${SOURCES})
 target_include_directories(editor PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 if (NOT MSVC)
   target_link_libraries(editor PRIVATE -static)
+  target_compile_options(editor PRIVATE ${GCC_FLAGS} -Wno-effc++)
 endif()
-target_compile_options(editor PRIVATE ${GCC_FLAGS} -Wno-effc++)
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set_target_properties(editor PROPERTIES

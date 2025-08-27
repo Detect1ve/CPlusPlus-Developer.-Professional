@@ -21,11 +21,21 @@ struct FileInfo
 
     ~FileInfo() noexcept;
 
-    [[nodiscard]] uintmax_t get_size() const __attribute__((pure));
+    [[nodiscard]] uintmax_t get_size() const
+#if !defined(_MSC_VER)
+        __attribute__((pure))
+#endif
+        ;
     [[nodiscard]] const std::vector<std::string>& get_hashes() const
-        __attribute__((const));
-    const boost::filesystem::path& get_path() const __attribute__((const));
-
+#if !defined(_MSC_VER)
+        __attribute__((const))
+#endif
+        ;
+    const boost::filesystem::path& get_path() const
+#if !defined(_MSC_VER)
+        __attribute__((const))
+#endif
+        ;
     std::string compute_block_hash(
         std::size_t          block_index,
         const HashAlgorithm& hash_algo) const;

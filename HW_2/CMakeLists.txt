@@ -39,7 +39,9 @@ endif()
 
 add_library(ip_filter_lib STATIC lib/ip_filter.cpp)
 target_include_directories(ip_filter_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_compile_options(ip_filter_lib PRIVATE ${GCC_FLAGS} -Wno-strict-overflow)
+if (NOT MSVC)
+  target_compile_options(ip_filter_lib PRIVATE ${GCC_FLAGS} -Wno-strict-overflow)
+endif()
 
 add_executable(ip_filter src/main.cpp)
 target_link_libraries(ip_filter PRIVATE ip_filter_lib)

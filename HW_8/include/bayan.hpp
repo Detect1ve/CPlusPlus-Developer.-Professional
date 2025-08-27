@@ -5,6 +5,9 @@
  || __GNUC__ < 14
 #include <cstdint>
 #endif
+#if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
+#include <functional>
+#endif
 #include <fstream>
 #include <regex>
 #if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)\

@@ -8,6 +8,10 @@ namespace editor::view
 {
     class DocumentView
     {
+        const model::Document* document_;
+        std::vector<std::unique_ptr<PrimitiveView>> primitiveViews_;
+
+        void createPrimitiveViews();
     public:
         explicit DocumentView(const model::Document* document);
         ~DocumentView() = default;
@@ -20,13 +24,11 @@ namespace editor::view
         void render() const;
         void update();
 
-        [[nodiscard]] const model::Document* getDocument() const __attribute__((pure));
-
-    private:
-        const model::Document* document_;
-        std::vector<std::unique_ptr<PrimitiveView>> primitiveViews_;
-
-        void createPrimitiveViews();
+        [[nodiscard]] const model::Document* getDocument() const
+#if !defined(_MSC_VER)
+            __attribute__((pure))
+#endif
+            ;
     };
 } // namespace editor::view
 

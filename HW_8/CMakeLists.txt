@@ -46,8 +46,8 @@ target_link_libraries(bayan_lib
 if (MSVC)
   target_compile_options(bayan_lib PRIVATE /W4)
 else()
-  target_compile_options(bayan_lib PRIVATE ${GCC_FLAGS} -Wno-alloc-zero -Wno-effc++
-    -Wno-strict-overflow)
+  target_compile_options(bayan_lib
+    PRIVATE ${GCC_FLAGS} -Wno-alloc-zero -Wno-effc++ -Wno-strict-overflow)
 endif()
 
 add_executable(bayan src/main.cpp)

@@ -28,7 +28,9 @@ endif()
 
 add_library(data_queue INTERFACE)
 target_include_directories(data_queue INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_compile_options(data_queue INTERFACE -Wno-effc++ -Wno-strict-overflow)
+if (NOT MSVC)
+  target_compile_options(data_queue INTERFACE -Wno-effc++ -Wno-strict-overflow)
+endif()
 
 add_executable(queue_test test/queue_test.cpp)
 target_link_libraries(queue_test PRIVATE data_queue GTest::gtest_main)
