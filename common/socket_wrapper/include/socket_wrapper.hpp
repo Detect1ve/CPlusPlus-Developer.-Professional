@@ -1,4 +1,4 @@
-#ifndef SOCKET_WRAPPER_HPP // NOLINT(llvm-header-guard)
+#ifndef SOCKET_WRAPPER_HPP
 #define SOCKET_WRAPPER_HPP
 
 #ifdef _WIN32
@@ -7,7 +7,7 @@
 #include <netdb.h>
 #endif
 
-#include <absl/strings/match.h>
+#include <absl_strings_match.hpp>
 
 namespace test_util
 {
@@ -25,9 +25,9 @@ namespace test_util
                 throw std::runtime_error("WSAStartup failed");
             }
 #endif
-            const std::string port_str = std::to_string(port);
-            struct addrinfo hints = {};
-            struct addrinfo *res = nullptr;
+            const std::string port_str = std::to_string(static_cast<unsigned int>(port));
+            addrinfo hints = {};
+            addrinfo *res = nullptr;
 
             hints.ai_family = AF_UNSPEC;
             hints.ai_socktype = SOCK_STREAM;
@@ -101,8 +101,8 @@ namespace test_util
         [[nodiscard]] std::string receive_data() const
         {
             constexpr std::size_t buffer_size = 4096;
-            std::string result;
             std::string buffer(buffer_size, '\0');
+            std::string result;
 
             while (true)
             {
@@ -123,7 +123,8 @@ namespace test_util
                     break;
                 }
 
-                result.append(buffer.c_str(), bytes_received);
+                result.append(buffer.c_str(),
+                    static_cast<std::string::size_type>(bytes_received));
 
                 if (result.length() >= 3 && result.substr(result.length() - 3) == "OK\n")
                 {

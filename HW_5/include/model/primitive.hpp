@@ -29,4 +29,4 @@ namespace editor::model
     };
 } // namespace editor::model
 
-#endif /* MODEL_PRIMITIVE_HPP */
+#endif // MODEL_PRIMITIVE_HPP

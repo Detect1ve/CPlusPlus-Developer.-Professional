@@ -23,17 +23,16 @@ if (PROJECT_IS_TOP_LEVEL)
   set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 endif()
 
-if (MSVC)
-  add_compile_options(/W4)
-else()
-  add_compile_options(-Wall -Wextra -pedantic)
+if (PROJECT_IS_TOP_LEVEL)
+  include(../common/capture.cmake)
+  include(../cmake/clang-tidy.cmake)
+  include(../cmake/fetch_googletest.cmake)
+  include(../cmake/gcc_warnings.cmake)
+  list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
-if (PROJECT_IS_TOP_LEVEL)
-  include(../cmake/capture.cmake)
-  include(../cmake/clang-tidy.cmake)
-  include(../cmake/googletest.cmake)
-  list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
+if (MSVC)
+  add_compile_options(/W4)
 endif()
 
 add_executable(matrix src/main.cpp)
@@ -41,10 +40,12 @@ target_include_directories(matrix PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 if (NOT MSVC)
   target_link_libraries(matrix PRIVATE -static)
 endif()
+target_compile_options(matrix PRIVATE ${GCC_FLAGS})
 
 add_executable(matrix_test test/matrix_test.cpp)
 target_include_directories(matrix_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(matrix_test PRIVATE capture GTest::gtest_main)
+target_compile_options(matrix_test PRIVATE ${GCC_FLAGS})
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set(CLANG_TIDY_HW_6_OPTS
@@ -54,11 +55,11 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
      -llvmlibc-implementation-in-namespace,\
      -llvmlibc-inline-function-decl,\
      -llvmlibc-restrict-system-libc-headers,\
-     -modernize-use-trailing-return-type;--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+     -modernize-use-trailing-return-type")
 
   set_target_properties(matrix PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      ${CLANG_TIDY_HW_6_OPTS}")
+      ${CLANG_TIDY_HW_6_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
 
   set_target_properties(matrix_test PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
@@ -76,7 +77,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
             key: readability-function-cognitive-complexity.IgnoreMacros, value: 'true'\
           }\
         ]\
-      };--header-filter=${CAPTURE_INCLUDE_DIR}/.*")
+      };--header-filter=(${CMAKE_CURRENT_SOURCE_DIR}/include/.*|${CAPTURE_INCLUDE_DIR}/.*)")
 endif()
 
 enable_testing()
@@ -89,7 +90,13 @@ if (PROJECT_IS_TOP_LEVEL)
   set(CPACK_PACKAGE_CONTACT Nikolai_Grin@Mail.Ru)
   include(CPack)
 else()
-  set(HW_6_DEB_NAME
+  string(TOUPPER "${PROJECT_NAME}" PROJECT_NAME_UPPER)
+
+  set(CPACK_DEBIAN_${PROJECT_NAME_UPPER}_FILE_NAME
+      "${PROJECT_NAME}-${PROJECT_VERSION}-Linux.deb"
+      PARENT_SCOPE)
+
+  set(CPACK_DEBIAN_${PROJECT_NAME_UPPER}_PACKAGE_NAME
       "${PROJECT_NAME}-${PROJECT_VERSION}-Linux.deb"
       PARENT_SCOPE)
 endif()

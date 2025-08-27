@@ -5,7 +5,7 @@
 
 namespace editor::view
 {
-    class LineView : public PrimitiveView
+    class LineView final : public PrimitiveView
     {
     public:
         explicit LineView(const model::Primitive* primitive) : PrimitiveView(primitive) {}

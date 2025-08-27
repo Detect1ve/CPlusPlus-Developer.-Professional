@@ -1,11 +1,13 @@
+#include <iostream>
+
 #include <controller/document_controller.hpp>
 #include <view/document_view.hpp>
 
 int main()
 {
     constexpr int kThickness = 1;
-    struct Point const start {.x = 10, .y = 10};
-    struct Point const end {.x = 100, .y = 100};
+    Point const start {.x = 10, .y = 10};
+    Point const end {.x = 100, .y = 100};
 
     auto documentController = std::make_unique<editor::controller::DocumentController>();
 
@@ -18,7 +20,11 @@ int main()
 
     documentController->getPrimitiveController()->removePrimitive(0);
 
-    documentController->saveDocument("document.vec");
+    if (!documentController->saveDocument("document.vec"))
+    {
+        std::cerr << "Cannot save the document\n";
+    }
+
     documentController->loadDocument("document.vec");
 
     documentView = std::make_unique<editor::view::DocumentView>(

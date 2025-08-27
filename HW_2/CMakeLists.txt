@@ -23,32 +23,38 @@ if (PROJECT_IS_TOP_LEVEL)
   set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 endif()
 
-if (MSVC)
-  add_compile_options(/W4)
-else()
-  add_compile_options(-Wall -Wextra -pedantic)
+if (PROJECT_IS_TOP_LEVEL)
+  include(../common/boost_algorithm.cmake)
+  include(../common/boost_uuid.cmake)
+  include(../common/capture.cmake)
+  include(../cmake/clang-tidy.cmake)
+  include(../cmake/fetch_googletest.cmake)
+  include(../cmake/gcc_warnings.cmake)
+  list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
-if (PROJECT_IS_TOP_LEVEL)
-  include(../cmake/boost.cmake)
-  include(../cmake/capture.cmake)
-  include(../cmake/clang-tidy.cmake)
-  include(../cmake/googletest.cmake)
-  list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
+if (MSVC)
+  add_compile_options(/W4)
 endif()
 
 add_library(ip_filter_lib STATIC lib/ip_filter.cpp)
 target_include_directories(ip_filter_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+if (NOT MSVC)
+  target_compile_options(ip_filter_lib PRIVATE ${GCC_FLAGS} -Wno-strict-overflow)
+endif()
 
 add_executable(ip_filter src/main.cpp)
 target_link_libraries(ip_filter PRIVATE ip_filter_lib)
 if (NOT MSVC)
   target_link_libraries(ip_filter PRIVATE -static)
 endif()
+target_compile_options(ip_filter PRIVATE ${GCC_FLAGS})
 
 add_executable(ip_filter_test test/ip_filter_test.cpp)
-target_link_libraries(ip_filter_test PRIVATE Boost::algorithm Boost::uuid capture
-  GTest::gtest_main ip_filter_lib)
+target_link_libraries(ip_filter_test
+  PRIVATE capture GTest::gtest_main ip_filter_lib wrapper_boost_algorithm
+    wrapper_boost_uuid)
+target_compile_options(ip_filter_test PRIVATE ${GCC_FLAGS})
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set(CLANG_TIDY_HW_2_OPTS
@@ -59,24 +65,24 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
      -llvmlibc-inline-function-decl,\
      -llvmlibc-restrict-system-libc-headers,\
      -misc-include-cleaner,\
-     -modernize-use-trailing-return-type;--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+     -modernize-use-trailing-return-type")
 
   set_target_properties(ip_filter_lib PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
       -fuchsia-default-arguments-calls,\
       -llvm-prefer-static-over-anonymous-namespace,\
-      ${CLANG_TIDY_HW_2_OPTS}")
+      ${CLANG_TIDY_HW_2_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
 
   set_target_properties(ip_filter PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
       -google-readability-todo,\
-      ${CLANG_TIDY_HW_2_OPTS}")
+      ${CLANG_TIDY_HW_2_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
 
   set_target_properties(ip_filter_test PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
       -fuchsia-default-arguments-calls,\
       -llvm-prefer-static-over-anonymous-namespace,\
-      ${CLANG_TIDY_HW_2_OPTS};--header-filter=${CAPTURE_INCLUDE_DIR}/.*")
+      ${CLANG_TIDY_HW_2_OPTS};--header-filter=(${CMAKE_CURRENT_SOURCE_DIR}/include/.*|${CAPTURE_INCLUDE_DIR}/.*)")
 endif()
 
 enable_testing()
@@ -94,7 +100,13 @@ if (PROJECT_IS_TOP_LEVEL)
   set(CPACK_PACKAGE_CONTACT Nikolai_Grin@Mail.Ru)
   include(CPack)
 else()
-  set(HW_2_DEB_NAME
+  string(TOUPPER "${PROJECT_NAME}" PROJECT_NAME_UPPER)
+
+  set(CPACK_DEBIAN_${PROJECT_NAME_UPPER}_FILE_NAME
+      "${PROJECT_NAME}-${PROJECT_VERSION}-Linux.deb"
+      PARENT_SCOPE)
+
+  set(CPACK_DEBIAN_${PROJECT_NAME_UPPER}_PACKAGE_NAME
       "${PROJECT_NAME}-${PROJECT_VERSION}-Linux.deb"
       PARENT_SCOPE)
 endif()

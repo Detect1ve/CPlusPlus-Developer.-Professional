@@ -99,7 +99,9 @@ namespace pc_queue
             :
             usePriority_(usePriority),
             mode_(mode),
-            maxSize_(maxSize) {}
+            maxSize_(maxSize),
+            priorityQueue_(),
+            queue_() {}
 
         Queue(const Queue&) = delete;
         Queue& operator=(const Queue&) = delete;
@@ -500,4 +502,4 @@ namespace pc_queue
     };
 } // namespace pc_queue
 
-#endif /* QUEUE_HPP */
+#endif // QUEUE_HPP

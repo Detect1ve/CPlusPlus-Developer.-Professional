@@ -37,4 +37,4 @@ private:
     int predict(const std::vector<float>& image);
 };
 
-#endif /* MLP_HPP */
+#endif // MLP_HPP

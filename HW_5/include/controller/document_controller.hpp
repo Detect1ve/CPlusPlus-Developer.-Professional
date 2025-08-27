@@ -7,6 +7,8 @@ namespace editor::controller
 {
     class DocumentController
     {
+        std::unique_ptr<model::Document> document_;
+        std::unique_ptr<PrimitiveController> primitiveController_;
     public:
         DocumentController();
         ~DocumentController() = default;
@@ -18,16 +20,24 @@ namespace editor::controller
 
         // NOLINTNEXTLINE(fuchsia-default-arguments-declarations)
         void createNewDocument(const std::string& name = "Untitled");
-        bool saveDocument(const std::string& filename);
+        bool saveDocument(const std::string& filename)
+#ifndef _MSC_VER
+            __attribute__((pure))
+#endif
+            ;
         bool loadDocument(const std::string& filename);
 
-        [[nodiscard]] model::Document* getDocument() const;
-        [[nodiscard]] PrimitiveController* getPrimitiveController() const;
-
-    private:
-        std::unique_ptr<model::Document> document_;
-        std::unique_ptr<PrimitiveController> primitiveController_;
+        [[nodiscard]] model::Document* getDocument() const
+#ifndef _MSC_VER
+            __attribute__((pure))
+#endif
+            ;
+        [[nodiscard]] PrimitiveController* getPrimitiveController() const
+#ifndef _MSC_VER
+            __attribute__((pure))
+#endif
+            ;
     };
 } // namespace editor::controller
 
-#endif /* CONTROLLER_DOCUMENT_CONTROLLER_HPP */
+#endif // CONTROLLER_DOCUMENT_CONTROLLER_HPP

@@ -17,9 +17,9 @@ namespace editor::controller
         PrimitiveController& operator=(PrimitiveController&&) = delete;
 
         void createLine(
-            struct Point start,
-            struct Point end,
-            int          thickness);
+            Point start,
+            Point end,
+            int   thickness);
 
         void removePrimitive(std::size_t index);
 
@@ -28,4 +28,4 @@ namespace editor::controller
     };
 } // namespace editor::controller
 
-#endif /* CONTROLLER_PRIMITIVE_CONTROLLER_HPP */
+#endif // CONTROLLER_PRIMITIVE_CONTROLLER_HPP

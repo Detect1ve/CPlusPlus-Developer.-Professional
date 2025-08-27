@@ -5,13 +5,13 @@
 
 namespace editor::model
 {
-    class Line : public Primitive
+    class Line final : public Primitive
     {
     public:
         Line(
-            struct Point start,
-            struct Point end,
-            int thickness)
+            Point start,
+            Point end,
+            int   thickness)
             :
             x1_(start.x),
             y1_(start.y),
@@ -58,4 +58,4 @@ namespace editor::model
     };
 } // namespace editor::model
 
-#endif /* MODEL_PRIMITIVES_LINE_HPP */
+#endif // MODEL_PRIMITIVES_LINE_HPP

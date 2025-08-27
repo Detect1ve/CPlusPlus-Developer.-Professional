@@ -16,16 +16,15 @@ if (PROJECT_IS_TOP_LEVEL)
   set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 endif()
 
-if (MSVC)
-  add_compile_options(/W4)
-else()
-  add_compile_options(-Wall -Wextra -pedantic)
-endif()
-
 if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
-  include(../cmake/googletest.cmake)
+  include(../cmake/fetch_googletest.cmake)
+  include(../cmake/gcc_warnings.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
+endif()
+
+if (MSVC)
+  add_compile_options(/W4)
 endif()
 
 find_package(Microsoft.GSL 4.2.0 CONFIG)
@@ -50,12 +49,15 @@ target_link_libraries(main PRIVATE list_and_allocator)
 if (NOT MSVC)
   target_link_libraries(main PRIVATE -static)
 endif()
+target_compile_options(main PRIVATE ${GCC_FLAGS})
 
 add_executable(my_allocator_test test/my_allocator_test.cpp)
 target_link_libraries(my_allocator_test PRIVATE GTest::gtest_main list_and_allocator)
+target_compile_options(my_allocator_test PRIVATE ${GCC_FLAGS})
 
 add_executable(my_list_test test/my_list_test.cpp)
 target_link_libraries(my_list_test PRIVATE GTest::gtest_main list_and_allocator)
+target_compile_options(my_list_test PRIVATE ${GCC_FLAGS})
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set(CLANG_TIDY_HW_3_OPTS

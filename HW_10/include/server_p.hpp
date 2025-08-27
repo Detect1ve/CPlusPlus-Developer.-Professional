@@ -3,9 +3,8 @@
 
 #include <iostream>
 
-#include <boost/asio.hpp>
-
 #include <server.hpp>
+#include <wrapper_boost_asio.hpp>
 
 namespace async
 {
@@ -76,7 +75,7 @@ namespace async
             bulk_size_(bulk_size),
             server_(server),
             session_(session),
-            buffer_(std::make_unique<boost::asio::streambuf>()) { }
+            buffer_(std::make_unique<boost::asio::streambuf>()) {}
 
         ~SessionImpl()
         {
@@ -118,10 +117,10 @@ namespace async
                 receive(handle_, data.c_str(), data.size());
                 boost::asio::async_read_until(socket_, *buffer_, '\n',
                     [this](
-                        const boost::system::error_code& error,
-                        const std::size_t                bytes_transferred)
+                        const boost::system::error_code& new_error,
+                        const std::size_t                new_bytes_transferred)
                     {
-                        handle_read(error, bytes_transferred);
+                        handle_read(new_error, new_bytes_transferred);
                     });
             }
             else if (error == boost::asio::error::eof)

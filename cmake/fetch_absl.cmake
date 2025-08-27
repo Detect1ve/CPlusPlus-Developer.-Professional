@@ -7,6 +7,5 @@ if (NOT absl_FOUND)
     GIT_TAG 20250512.1
     GIT_SHALLOW ON
     EXCLUDE_FROM_ALL)
-
   FetchContent_MakeAvailable(absl)
 endif()

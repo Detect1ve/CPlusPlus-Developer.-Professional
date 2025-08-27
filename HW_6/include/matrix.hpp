@@ -19,22 +19,22 @@ class Matrix
 
     class ProxyRow
     {
-        Matrix* matrix;
-        int row;
+        Matrix* matrix_;
+        int row_;
 
     public:
         ProxyRow(
             Matrix*   matrix,
             int const row)
             :
-            matrix(matrix),
-            row(row) {}
+            matrix_(matrix),
+            row_(row) {}
 
         class ProxyCell
         {
-            Matrix* matrix;
-            int row;
-            int col;
+            Matrix* matrix_;
+            int row_;
+            int col_;
 
         public:
             ProxyCell(
@@ -42,9 +42,9 @@ class Matrix
                 int const row, // NOLINT(bugprone-easily-swappable-parameters)
                 int const col)
                 :
-                matrix(matrix),
-                row(row),
-                col(col) {}
+                matrix_(matrix),
+                row_(row),
+                col_(col) {}
 
             ProxyCell(const ProxyCell&) = delete;
             ProxyCell(ProxyCell&&) = delete;
@@ -53,15 +53,15 @@ class Matrix
 
             ProxyCell& operator=(const T& value)
             {
-                const std::pair<int, int> key{row, col};
+                const std::pair<int, int> key{row_, col_};
 
                 if (value == DefaultValue)
                 {
-                    matrix->data.erase(key);
+                    matrix_->data.erase(key);
                 }
                 else
                 {
-                    matrix->data[key] = value;
+                    matrix_->data[key] = value;
                 }
 
                 return *this;
@@ -70,10 +70,10 @@ class Matrix
             // NOLINTNEXTLINE(google-explicit-constructor,hicpp-explicit-conversions)
             operator T() const
             {
-                const std::pair<int, int> key{row, col};
-                auto iter = matrix->data.find(key);
+                const std::pair<int, int> key{row_, col_};
+                auto iter = matrix_->data.find(key);
 
-                if (iter != matrix->data.end())
+                if (iter != matrix_->data.end())
                 {
                     return iter->second;
                 }
@@ -95,11 +95,13 @@ class Matrix
 
         ProxyCell operator[](int col)
         {
-            return ProxyCell(matrix, row, col);
+            return ProxyCell(matrix_, row_, col);
         }
     };
 
 public:
+    Matrix() : data() {}
+
     ProxyRow operator[](int row)
     {
         return ProxyRow(this, row);
@@ -149,4 +151,4 @@ public:
     }
 };
 
-#endif /* MATRIX_HPP */
+#endif // MATRIX_HPP

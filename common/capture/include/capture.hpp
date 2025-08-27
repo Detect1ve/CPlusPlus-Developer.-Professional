@@ -1,4 +1,4 @@
-#ifndef CAPTURE_HPP // NOLINT(llvm-header-guard)
+#ifndef CAPTURE_HPP
 #define CAPTURE_HPP
 
 class StdoutCapture

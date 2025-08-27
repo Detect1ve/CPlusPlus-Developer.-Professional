@@ -5,7 +5,9 @@
 
 namespace editor::view
 {
-    class PrimitiveView {
+    class PrimitiveView
+    {
+        const model::Primitive* primitive_;
     public:
         explicit PrimitiveView(const model::Primitive* primitive);
         virtual ~PrimitiveView() = default;
@@ -17,17 +19,19 @@ namespace editor::view
 
         virtual void render() const = 0;
 
-        [[nodiscard]] const model::Primitive* getPrimitive() const;
-
-    private:
-        const model::Primitive* primitive_;
+        [[nodiscard]] const model::Primitive* getPrimitive() const
+#ifndef _MSC_VER
+        __attribute__((pure))
+#endif
+        ;
     };
 
-    class PrimitiveViewFactory {
+    class PrimitiveViewFactory
+    {
     public:
         static std::unique_ptr<PrimitiveView> createView(
             const model::Primitive* primitive);
     };
 } // namespace editor::view
 
-#endif /* VIEW_PRIMITIVE_VIEW_HPP */
+#endif // VIEW_PRIMITIVE_VIEW_HPP
