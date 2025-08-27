@@ -26,17 +26,16 @@ if (PROJECT_IS_TOP_LEVEL)
   set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 endif()
 
-if (MSVC)
-  add_compile_options(/W4)
-else()
-  add_compile_options(-Wall -Wextra -pedantic)
+if (PROJECT_IS_TOP_LEVEL)
+  include(../common/capture.cmake)
+  include(../cmake/clang-tidy.cmake)
+  include(../cmake/fetch_googletest.cmake)
+  include(../cmake/gcc_warnings.cmake)
+  list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
-if (PROJECT_IS_TOP_LEVEL)
-  include(../cmake/capture.cmake)
-  include(../cmake/clang-tidy.cmake)
-  include(../cmake/googletest.cmake)
-  list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
+if (MSVC)
+  add_compile_options(/W4)
 endif()
 
 add_library(ip_address INTERFACE)
@@ -53,9 +52,11 @@ target_link_libraries(print_ip PRIVATE ip_address)
 if (NOT MSVC)
   target_link_libraries(print_ip PRIVATE -static)
 endif()
+target_compile_options(print_ip PRIVATE ${GCC_FLAGS})
 
 add_executable(print_ip_test test/sfinae_ip_address_test.cpp)
 target_link_libraries(print_ip_test PRIVATE capture GTest::gtest_main ip_address)
+target_compile_options(print_ip_test PRIVATE ${GCC_FLAGS})
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set(CLANG_TIDY_HW_4_OPTS
@@ -67,16 +68,17 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
      -llvmlibc-restrict-system-libc-headers,\
      -misc-include-cleaner,\
      -modernize-use-trailing-return-type,\
-     -readability-magic-numbers;-p;${CMAKE_BINARY_DIR};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+     -readability-magic-numbers;-p;${CMAKE_BINARY_DIR}")
 
   set_target_properties(print_ip PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
       -llvmlibc-implementation-in-namespace,\
-      ${CLANG_TIDY_HW_4_OPTS}")
+      ${CLANG_TIDY_HW_4_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
 
   set_target_properties(print_ip_test PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      ${CLANG_TIDY_HW_4_OPTS}")
+      -llvmlibc-inline-function-decl,\
+      ${CLANG_TIDY_HW_4_OPTS};--header-filter=(${CMAKE_CURRENT_SOURCE_DIR}/include/.*|${CAPTURE_INCLUDE_DIR}/.*)")
 
   if (PATCH_COMPILE_COMMANDS)
     add_custom_target(patch_compile_commands ALL
@@ -121,7 +123,8 @@ if (NOT Doxygen_FOUND)
   include(FindDoxygen)
 endif()
 
-set(DOXYGEN_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/docs CACHE PATH "Path to Doxygen output directory")
+set(DOXYGEN_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/docs CACHE
+  PATH "Path to Doxygen output directory")
 set(DOXYGEN_NUM_PROC_THREADS 0)
 set(DOXYGEN_WARN_AS_ERROR YES)
 set(DOXYGEN_USE_MDFILE_AS_MAINPAGE README.md)
@@ -140,7 +143,13 @@ if (PROJECT_IS_TOP_LEVEL)
   set(CPACK_PACKAGE_CONTACT Nikolai_Grin@Mail.Ru)
   include(CPack)
 else()
-  set(HW_4_DEB_NAME
+  string(TOUPPER "${PROJECT_NAME}" PROJECT_NAME_UPPER)
+
+  set(CPACK_DEBIAN_${PROJECT_NAME_UPPER}_FILE_NAME
+      "${PROJECT_NAME}-${PROJECT_VERSION}-Linux.deb"
+      PARENT_SCOPE)
+
+  set(CPACK_DEBIAN_${PROJECT_NAME_UPPER}_PACKAGE_NAME
       "${PROJECT_NAME}-${PROJECT_VERSION}-Linux.deb"
       PARENT_SCOPE)
 endif()

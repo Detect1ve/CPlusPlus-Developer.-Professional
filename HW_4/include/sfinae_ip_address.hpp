@@ -159,4 +159,4 @@ void print_ip(T const &ip_address)
     std::cout << '\n';
 }
 
-#endif /* SFINAE_IP_ADDRESS_HPP */
+#endif // SFINAE_IP_ADDRESS_HPP

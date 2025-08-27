@@ -24,12 +24,6 @@ if (MSVC OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     include(../cmake/cxx_standard.cmake)
   endif()
 
-  if (MSVC)
-    add_compile_options(/W4)
-  else()
-    add_compile_options(-Wall -Wextra -pedantic)
-  endif()
-
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
   add_executable(mapper mapper.cpp)
@@ -42,6 +36,15 @@ if (MSVC OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_link_libraries(reducer PRIVATE -static)
     target_link_libraries(mapper_variance PRIVATE -static)
     target_link_libraries(reducer_variance PRIVATE -static)
+  endif()
+
+  if (MSVC)
+    add_compile_options(/W4)
+  else()
+    target_compile_options(mapper PRIVATE ${GCC_FLAGS})
+    target_compile_options(reducer PRIVATE ${GCC_FLAGS})
+    target_compile_options(mapper_variance PRIVATE ${GCC_FLAGS})
+    target_compile_options(reducer_variance PRIVATE ${GCC_FLAGS})
   endif()
 
   if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
@@ -162,7 +165,13 @@ if (PROJECT_IS_TOP_LEVEL)
   set(CPACK_PACKAGE_CONTACT Nikolai_Grin@Mail.Ru)
   include(CPack)
 else()
-  set(HW_12_DEB_NAME
+  string(TOUPPER "${PROJECT_NAME}" PROJECT_NAME_UPPER)
+
+  set(CPACK_DEBIAN_${PROJECT_NAME_UPPER}_FILE_NAME
+      "${PROJECT_NAME}-${PROJECT_VERSION}-Linux.deb"
+      PARENT_SCOPE)
+
+  set(CPACK_DEBIAN_${PROJECT_NAME_UPPER}_PACKAGE_NAME
       "${PROJECT_NAME}-${PROJECT_VERSION}-Linux.deb"
       PARENT_SCOPE)
 endif()

@@ -9,6 +9,7 @@ class Database;
 
 class Server
 {
+    std::unique_ptr<ServerImpl> pimpl_;
 public:
     explicit Server(std::int16_t port);
     explicit Server(
@@ -24,9 +25,6 @@ public:
     void run();
     void setup_signal_handling();
     void stop();
-
-private:
-    std::unique_ptr<ServerImpl> pimpl_;
 };
 
-#endif /* SERVER_HPP */
+#endif // SERVER_HPP

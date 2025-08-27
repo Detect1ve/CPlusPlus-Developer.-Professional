@@ -14,6 +14,7 @@ namespace editor::view
         if (document_ == nullptr)
         {
             std::cout << "No document to render\n";
+
             return;
         }
 

@@ -8,11 +8,11 @@ class MyList
 {
     struct Node
     {
-        explicit Node(T const val): next(nullptr), val(val) { }
+        explicit Node(T const val): next(nullptr), val_(val) {}
 
         [[nodiscard]] T getValue() const
         {
-            return val;
+            return val_;
         }
 
         [[nodiscard]] Node* getNext() const
@@ -27,7 +27,7 @@ class MyList
 
     private:
         Node *next;
-        T val;
+        T val_;
     };
 
 public:
@@ -134,4 +134,4 @@ private:
     std::size_t size_ = 0;
 };
 
-#endif /* MY_LIST_HPP */
+#endif // MY_LIST_HPP

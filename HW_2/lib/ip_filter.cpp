@@ -28,7 +28,7 @@ std::expected<unsigned char, std::error_code> from_chars(std::string_view chars)
     return value;
 }
 
-constexpr std::vector<std::string> split(
+std::vector<std::string> split(
     const std::string& str,
     const char         d) // NOLINT(readability-identifier-length)
 {
@@ -61,7 +61,7 @@ namespace
         for (const auto& [idx, ip_part] : first_view | std::views::enumerate)
         {
             auto first_result = from_chars(ip_part);
-            auto second_result = from_chars(second_ip[idx]);
+            auto second_result = from_chars(second_ip[static_cast<std::size_t>(idx)]);
 
             if (!first_result || !second_result)
             {
@@ -69,9 +69,9 @@ namespace
             }
 
             if (auto result = first_result.value() <=> second_result.value();
-                result != 0)
+                result != std::strong_ordering::equal)
             {
-                return result > 0;
+                return result == std::strong_ordering::greater;
             }
         }
 

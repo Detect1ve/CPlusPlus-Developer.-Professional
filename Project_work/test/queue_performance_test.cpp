@@ -23,7 +23,7 @@ using std::chrono::seconds;
 
 namespace
 {
-    constexpr double kMillisecondsInSecond = 1000.0;
+    constexpr float kMillisecondsInSecond = 1000.0;
 
     std::string formatDuration(const nanoseconds nanos)
     {
@@ -59,12 +59,12 @@ namespace
     }
 
     void testSingleProducerSingleConsumer(
-        const int numItems,
-        const int queueSize)
+        const int         numItems,
+        const std::size_t queueSize)
     {
         bool consumerReady(false);
         bool producerDone(false);
-        double itemsPerSecond = NAN;
+        float itemsPerSecond = NAN;
         Queue<int> queue(false, QueueMode::SINGLE_PRODUCER_SINGLE_CONSUMER, queueSize);
         std::atomic<int> consumed(0);
 
@@ -104,8 +104,8 @@ namespace
         auto end = high_resolution_clock::now();
 
         auto duration = end - start;
-        itemsPerSecond = static_cast<double>(numItems)
-            / (static_cast<double>(duration_cast<milliseconds>(duration).count())
+        itemsPerSecond = static_cast<float>(numItems)
+            / (static_cast<float>(duration_cast<milliseconds>(duration).count())
             / kMillisecondsInSecond);
 
         std::cout << "Lead time: " << formatDuration(duration) << '\n';
@@ -117,15 +117,16 @@ namespace
     }
 
     void testMultiProducerMultiConsumer(
-        const int numItems,
-        const int queueSize,
-        const int numProducers,
-        const int numConsumers)
+        const std::size_t numItems,
+        const std::size_t queueSize,
+        const std::size_t numProducers,
+        const std::size_t numConsumers)
     {
         bool producersDone(false);
-        const int itemsPerProducer = numItems / numProducers;
-        double itemsPerSecond = NAN;
-        Queue<int> queue(false, QueueMode::MULTI_PRODUCER_MULTI_CONSUMER, queueSize);
+        const std::size_t itemsPerProducer = numItems / numProducers;
+        float itemsPerSecond = NAN;
+        Queue<std::size_t> queue(false, QueueMode::MULTI_PRODUCER_MULTI_CONSUMER,
+            queueSize);
         std::atomic<int> produced(0);
         std::atomic<int> consumed(0);
         std::vector<std::thread> consumers;
@@ -141,7 +142,7 @@ namespace
 
         consumers.reserve(numConsumers);
 
-        for (auto i = 0; i < numConsumers; ++i)
+        for (std::size_t i = 0; i < numConsumers; ++i)
         {
             consumers.emplace_back([&]()
             {
@@ -161,11 +162,11 @@ namespace
 
         producers.reserve(numProducers);
 
-        for (auto i = 0; i < numProducers; ++i)
+        for (std::size_t i = 0; i < numProducers; ++i)
         {
             producers.emplace_back([&, i]()
             {
-                for (auto j = 0; j < itemsPerProducer; ++j)
+                for (std::size_t j = 0; j < itemsPerProducer; ++j)
                 {
                     queue.push((i * itemsPerProducer) + j);
                     produced++;
@@ -188,8 +189,8 @@ namespace
         auto end = high_resolution_clock::now();
 
         auto duration = end - start;
-        itemsPerSecond = static_cast<double>(produced)
-            / (static_cast<double>(duration_cast<milliseconds>(duration).count())
+        itemsPerSecond = static_cast<float>(produced)
+            / (static_cast<float>(duration_cast<milliseconds>(duration).count())
             / kMillisecondsInSecond);
 
         std::cout << "Lead time: " << formatDuration(duration) << '\n';
@@ -204,9 +205,9 @@ namespace
         const int numItems,
         const int numPriorities)
     {
-        double popPerSecond = NAN;
-        double pushPerSecond = NAN;
         int consumed = 0;
+        float popPerSecond = NAN;
+        float pushPerSecond = NAN;
         Queue<int, int> queue(true, QueueMode::MULTI_PRODUCER_MULTI_CONSUMER, 0);
 
         std::cout << "=== Performance Test: Priority Queue ===\n";
@@ -243,11 +244,11 @@ namespace
         auto durationPop = endPop - startPop;
         auto durationTotal = durationPush + durationPop;
 
-        pushPerSecond = static_cast<double>(numItems)
-            / (static_cast<double>(duration_cast<milliseconds>(durationPush).count())
+        pushPerSecond = static_cast<float>(numItems)
+            / (static_cast<float>(duration_cast<milliseconds>(durationPush).count())
             / kMillisecondsInSecond);
-        popPerSecond = static_cast<double>(consumed)
-            / (static_cast<double>(duration_cast<milliseconds>(durationPop).count())
+        popPerSecond = static_cast<float>(consumed)
+            / (static_cast<float>(duration_cast<milliseconds>(durationPop).count())
             / kMillisecondsInSecond);
 
         std::cout << "Add time: " << formatDuration(durationPush) << '\n';
@@ -262,12 +263,12 @@ namespace
 
     void compareQueueTypes(const int numItems)
     {
-        double priorityPopPerSecond = NAN;
-        double priorityPushPerSecond = NAN;
-        double regularPopPerSecond = NAN;
-        double regularPushPerSecond = NAN;
         int priorityConsumed = 0;
         int regularConsumed = 0;
+        float priorityPopPerSecond = NAN;
+        float priorityPushPerSecond = NAN;
+        float regularPopPerSecond = NAN;
+        float regularPushPerSecond = NAN;
         Queue<int> regularQueue;
         Queue<int, int> priorityQueue(true, QueueMode::MULTI_PRODUCER_MULTI_CONSUMER, 0);
 
@@ -338,17 +339,17 @@ namespace
         std::cout << "  Total time: " << formatDuration(durPriorityPush + durPriorityPop)
             << '\n';
 
-        regularPushPerSecond = static_cast<double>(numItems)
-            / (static_cast<double>(duration_cast<milliseconds>(durRegularPush).count())
+        regularPushPerSecond = static_cast<float>(numItems)
+            / (static_cast<float>(duration_cast<milliseconds>(durRegularPush).count())
             / kMillisecondsInSecond);
-        regularPopPerSecond = static_cast<double>(regularConsumed)
-            / (static_cast<double>(duration_cast<milliseconds>(durRegularPop).count())
+        regularPopPerSecond = static_cast<float>(regularConsumed)
+            / (static_cast<float>(duration_cast<milliseconds>(durRegularPop).count())
             / kMillisecondsInSecond);
-        priorityPushPerSecond = static_cast<double>(numItems)
-            / (static_cast<double>(duration_cast<milliseconds>(durPriorityPush).count())
+        priorityPushPerSecond = static_cast<float>(numItems)
+            / (static_cast<float>(duration_cast<milliseconds>(durPriorityPush).count())
             / kMillisecondsInSecond);
-        priorityPopPerSecond = static_cast<double>(priorityConsumed)
-            / (static_cast<double>(duration_cast<milliseconds>(durPriorityPop).count())
+        priorityPopPerSecond = static_cast<float>(priorityConsumed)
+            / (static_cast<float>(duration_cast<milliseconds>(durPriorityPop).count())
             / kMillisecondsInSecond);
 
         std::cout << "Comparison of append performance:\n";
@@ -377,9 +378,9 @@ int main()
     {
         constexpr int kNumPriorities = 5;
         const int largeNumItems = 1000000;
-        const int largeQueueSize = 10000;
         const int smallNumItems = 100000;
-        const int smallQueueSize = 100;
+        const std::size_t largeQueueSize = 10000;
+        const std::size_t smallQueueSize = 100;
 
         testSingleProducerSingleConsumer(smallNumItems, smallQueueSize);
         testSingleProducerSingleConsumer(largeNumItems, largeQueueSize);

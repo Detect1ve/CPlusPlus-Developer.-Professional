@@ -3,6 +3,9 @@
 namespace editor::controller
 {
     DocumentController::DocumentController()
+    :
+    document_(nullptr),
+    primitiveController_(nullptr)
     {
         createNewDocument();
     }

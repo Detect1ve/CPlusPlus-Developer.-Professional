@@ -38,9 +38,9 @@ namespace async
     {
     public:
         Session(
-            void*             socket,
-            class ServerImpl& server,
-            std::size_t       bulk_size);
+            void*       socket,
+            ServerImpl& server,
+            std::size_t bulk_size);
         ~Session();
 
         Session(const Session&) = delete;
@@ -55,4 +55,4 @@ namespace async
     };
 } // namespace async
 
-#endif /* SERVER_HPP */
+#endif // SERVER_HPP
