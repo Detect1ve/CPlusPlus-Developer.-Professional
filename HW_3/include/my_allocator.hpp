@@ -50,4 +50,4 @@ private:
     std::size_t memory_alloc = 0;
 };
 
-#endif /* MY_ALLOCATOR_HPP */
+#endif // MY_ALLOCATOR_HPP

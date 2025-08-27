@@ -24,23 +24,30 @@ if (PROJECT_IS_TOP_LEVEL)
 endif()
 
 if (PROJECT_IS_TOP_LEVEL)
-  include(../cmake/absl.cmake)
-  include(../cmake/boost.cmake)
-  include(../cmake/capture.cmake)
+  include(../common/absl.cmake)
+  include(../common/boost_algorithm.cmake)
+  include(../common/boost_uuid.cmake)
+  include(../common/capture.cmake)
   include(../cmake/clang-tidy.cmake)
-  include(../cmake/googletest.cmake)
+  include(../cmake/fetch_googletest.cmake)
+  include(../cmake/gcc_warnings.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
+
+include(../common/boost_crc.cmake)
+include(../common/boost_filesystem.cmake)
+include(../common/boost_program_options.cmake)
 
 add_library(bayan_lib STATIC lib/bayan.cpp)
 target_include_directories(bayan_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(bayan_lib
-  PRIVATE Boost::crc Boost::program_options Boost::uuid Boost::algorithm
-  PUBLIC Boost::filesystem)
+  PRIVATE wrapper_boost_algorithm wrapper_boost_crc wrapper_boost_filesystem
+    wrapper_boost_program_options wrapper_boost_uuid)
 if (MSVC)
   target_compile_options(bayan_lib PRIVATE /W4)
 else()
-  target_compile_options(bayan_lib PRIVATE -Wall -Wextra -pedantic)
+  target_compile_options(bayan_lib PRIVATE ${GCC_FLAGS} -Wno-alloc-zero -Wno-effc++
+    -Wno-strict-overflow)
 endif()
 
 add_executable(bayan src/main.cpp)
@@ -51,16 +58,17 @@ endif()
 if (MSVC)
   target_compile_options(bayan PRIVATE /W4)
 else()
-  target_compile_options(bayan PRIVATE -Wall -Wextra -pedantic)
+  target_compile_options(bayan PRIVATE ${GCC_FLAGS})
 endif()
 
 add_executable(bayan_test test/bayan_test.cpp)
-target_link_libraries(bayan_test PRIVATE absl::strings bayan_lib capture
-  GTest::gtest_main)
+target_link_libraries(bayan_test
+  PRIVATE bayan_lib capture GTest::gtest_main wrapper_absl_strings
+    wrapper_boost_filesystem)
 if (MSVC)
   target_compile_options(bayan_test PRIVATE /W4)
 else()
-  target_compile_options(bayan_test PRIVATE -Wall -Wextra -pedantic)
+  target_compile_options(bayan_test PRIVATE ${GCC_FLAGS})
 endif()
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
@@ -71,19 +79,19 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
      -llvmlibc-inline-function-decl,\
      -llvmlibc-restrict-system-libc-headers,\
      -misc-include-cleaner,\
-     -modernize-use-trailing-return-type;--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+     -modernize-use-trailing-return-type")
 
   set_target_properties(bayan_lib PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
       -altera-id-dependent-backward-branch,\
       -altera-unroll-loops,\
       -llvmlibc-implementation-in-namespace,\
-      ${CLANG_TIDY_HW_8_OPTS}")
+      ${CLANG_TIDY_HW_8_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
 
   set_target_properties(bayan PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
       -llvmlibc-implementation-in-namespace,\
-      ${CLANG_TIDY_HW_8_OPTS}")
+      ${CLANG_TIDY_HW_8_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
 
   set_target_properties(bayan_test PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
@@ -95,7 +103,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
             key: readability-function-cognitive-complexity.IgnoreMacros, value: 'true'\
           }\
         ]\
-      };--header-filter=${CAPTURE_INCLUDE_DIR}/.*")
+      };--header-filter=(${CMAKE_CURRENT_SOURCE_DIR}/include/.*|${CAPTURE_INCLUDE_DIR}/.*)")
 endif()
 
 enable_testing()
@@ -108,7 +116,13 @@ if (PROJECT_IS_TOP_LEVEL)
   set(CPACK_PACKAGE_CONTACT Nikolai_Grin@Mail.Ru)
   include(CPack)
 else()
-  set(HW_8_DEB_NAME
+  string(TOUPPER "${PROJECT_NAME}" PROJECT_NAME_UPPER)
+
+  set(CPACK_DEBIAN_${PROJECT_NAME_UPPER}_FILE_NAME
+      "${PROJECT_NAME}-${PROJECT_VERSION}-Linux.deb"
+      PARENT_SCOPE)
+
+  set(CPACK_DEBIAN_${PROJECT_NAME_UPPER}_PACKAGE_NAME
       "${PROJECT_NAME}-${PROJECT_VERSION}-Linux.deb"
       PARENT_SCOPE)
 endif()

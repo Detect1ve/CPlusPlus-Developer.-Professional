@@ -20,7 +20,7 @@ int main(
     const int   argc,
     const char* argv[])
 {
-    const std::span<const char*> args(argv, argc);
+    const std::span<const char*> args(argv, static_cast<std::size_t>(argc));
     int ret = 0;
 
     if (args.size() != 3)

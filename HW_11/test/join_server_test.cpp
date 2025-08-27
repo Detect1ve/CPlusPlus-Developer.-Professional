@@ -8,6 +8,9 @@
 
 class HW11 : public ::testing::Test
 {
+    std::thread server_thread_;
+    std::uint16_t port_ = 0;
+    std::unique_ptr<Server> server_;
 protected:
     void SetUp() override
     {
@@ -39,7 +42,7 @@ protected:
         }
     }
 
-    [[nodiscard]] std::string communicate(const std::string& message) const 
+    [[nodiscard]] std::string communicate(const std::string& message) const
     {
         const test_util::ClientSocket socket("127.0.0.1", port_);
 
@@ -47,11 +50,6 @@ protected:
 
         return socket.receive_data();
     }
-
-private:
-    std::uint16_t port_ = 0;
-    std::thread server_thread_;
-    std::unique_ptr<Server> server_;
 };
 
 TEST_F(HW11, InsertDuplicate)

@@ -23,15 +23,16 @@ namespace editor::model
 
         void addPrimitive(std::unique_ptr<Primitive> primitive);
         void removePrimitive(std::size_t index);
-        [[nodiscard]] const Primitive* getPrimitive(std::size_t index) const;
-        [[nodiscard]] std::size_t getPrimitiveCount() const;
+        [[nodiscard]] const Primitive* getPrimitive(std::size_t index) const
+            __attribute__((pure));
+        [[nodiscard]] std::size_t getPrimitiveCount() const __attribute__((pure));
 
-        [[nodiscard]] const std::string& getName() const;
+        [[nodiscard]] const std::string& getName() const __attribute__((const));
         void setName(const std::string& name);
 
         [[nodiscard]] static bool saveToFile(
             const Document&    document,
-            const std::string& filename);
+            const std::string& filename) __attribute__((const));
 
         static std::unique_ptr<Document> loadFromFile(const std::string& filename);
 
@@ -41,4 +42,4 @@ namespace editor::model
     };
 } // namespace editor::model
 
-#endif /* MODEL_DOCUMENT_HPP */
+#endif // MODEL_DOCUMENT_HPP

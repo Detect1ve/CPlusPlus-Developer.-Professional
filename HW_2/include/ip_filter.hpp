@@ -1,6 +1,10 @@
 #ifndef IP_FILTER_HPP
 #define IP_FILTER_HPP
 
+#if defined(__clang__)\
+ || __GNUC__ < 14
+#include <cstdint>
+#endif
 #if __GNUC__ < 14
 #include <array>
 #include <charconv>
@@ -23,6 +27,9 @@ namespace std
     public:
         explicit unexpected(const E& /*unused*/) {} // NOLINT(cert-dcl58-cpp)
     };
+
+    template <class E>
+    unexpected(E) -> unexpected<E>; // NOLINT(cert-dcl58-cpp)
 
     template <class T, class E>
     class expected // NOLINT(cert-dcl58-cpp)
@@ -56,9 +63,10 @@ namespace std
 #endif
 
 [[nodiscard]]
-std::expected<unsigned char, std::error_code> from_chars(std::string_view chars);
+std::expected<std::uint8_t, std::error_code> from_chars(std::string_view chars)
+    __attribute__((pure));
 
-[[nodiscard]] constexpr std::vector<std::string> split(
+[[nodiscard]] std::vector<std::string> split(
     const std::string& str,
     char               d); // NOLINT(readability-identifier-length)
 
@@ -73,7 +81,7 @@ std::expected<std::vector<std::vector<std::string>>, std::error_code> filter(
     const First&   ip_pool,
     const Rest&... octet)
 {
-    for (const auto& val : std::initializer_list<int>{static_cast<int>(octet)...})
+    for (const auto& val : std::initializer_list<int>{octet...})
     {
         if (  std::cmp_less(val, std::numeric_limits<unsigned char>::min())
            || std::cmp_greater(val, std::numeric_limits<unsigned char>::max()))
@@ -93,7 +101,7 @@ std::expected<std::vector<std::vector<std::string>>, std::error_code> filter(
         for (const auto& [idx, ip_part] : ip_view | std::views::enumerate)
         {
             auto result = from_chars(ip_part);
-            if (!result || result.value() != a_octet.at(idx))
+            if (!result || result.value() != a_octet.at(static_cast<std::size_t>(idx)))
             {
                 return false;
             }
@@ -137,4 +145,4 @@ std::expected<std::vector<std::vector<std::string>>, std::error_code> filter_any
 [[nodiscard]]
 std::expected<std::vector<std::vector<std::string>>, std::error_code> stdin_to_vector();
 
-#endif /* IP_FILTER_HPP */
+#endif // IP_FILTER_HPP

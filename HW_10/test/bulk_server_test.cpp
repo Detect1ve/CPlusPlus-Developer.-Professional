@@ -5,8 +5,6 @@
 
 #include <gtest/gtest.h>
 
-#include <absl/strings/match.h>
-
 #include <capture.hpp>
 #include <server.hpp>
 #include <socket_wrapper.hpp>
@@ -109,6 +107,12 @@ namespace
 
 class HW10 : public ::testing::Test
 {
+    std::uint16_t port_{};
+    std::size_t bulk_size_{};
+    std::thread server_thread_;
+    std::unique_ptr<async::Server> server_;
+    std::exception_ptr server_exception_{nullptr};
+    std::chrono::system_clock::time_point start_time_;
 protected:
     void SetUp() override
     {
@@ -165,14 +169,6 @@ protected:
     {
         return port_;
     }
-
-private:
-    std::uint16_t port_{};
-    std::size_t bulk_size_{};
-    std::thread server_thread_;
-    std::unique_ptr<async::Server> server_;
-    std::exception_ptr server_exception_{nullptr};
-    std::chrono::system_clock::time_point start_time_;
 };
 
 TEST_F(HW10, CombinedConnectionTest)
@@ -191,14 +187,14 @@ TEST_F(HW10, CombinedConnectionTest)
         std::vector<std::string> file_contents;
 
         StdoutCapture::Begin();
-        
+
         for (int i = 0; i < COMMAND_COUNT; ++i)
         {
             commands_stream << i << '\n';
         }
 
         run_client_task(commands_stream.str(), get_port());
-        
+
         std::this_thread::sleep_for(THREAD_SLEEP_DURATION);
 
         const std::string output = StdoutCapture::End();
@@ -266,7 +262,6 @@ TEST_F(HW10, CombinedConnectionTest)
             all_logs_content += buffer.str();
         }
 
-  
         auto words_begin = std::sregex_iterator(all_logs_content.begin(),
             all_logs_content.end(), num_regex);
         auto words_end = std::sregex_iterator();

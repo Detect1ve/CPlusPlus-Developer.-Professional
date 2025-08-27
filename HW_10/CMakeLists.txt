@@ -24,11 +24,12 @@ if (PROJECT_IS_TOP_LEVEL)
 endif()
 
 if (PROJECT_IS_TOP_LEVEL)
-  include(../cmake/boost.cmake)
-  include(../cmake/capture.cmake)
+  include(../common/boost_asio.cmake)
+  include(../common/capture.cmake)
+  include(../common/socket_wrapper.cmake)
   include(../cmake/clang-tidy.cmake)
-  include(../cmake/googletest.cmake)
-  include(../cmake/socket_wrapper.cmake)
+  include(../cmake/fetch_googletest.cmake)
+  include(../cmake/gcc_warnings.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
@@ -38,17 +39,17 @@ target_include_directories(server_async PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/incl
 if (MSVC)
   target_compile_options(server_async PRIVATE /W4)
 else()
-  target_compile_options(server_async PRIVATE -Wall -Wextra -pedantic)
+  target_compile_options(server_async PRIVATE ${GCC_FLAGS} -Wno-effc++)
 endif()
 
 add_library(server STATIC lib/server.cpp)
 target_include_directories(server PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(server PRIVATE Boost::asio server_async)
+target_link_libraries(server PRIVATE server_async wrapper_boost_asio)
 
 if (MSVC)
   target_compile_options(server PRIVATE /W4)
 else()
-  target_compile_options(server PRIVATE -Wall -Wextra -pedantic)
+  target_compile_options(server PRIVATE ${GCC_FLAGS} -Wno-effc++ -Wno-null-dereference)
 endif()
 
 add_executable(bulk_server src/main.cpp)
@@ -58,7 +59,7 @@ target_compile_options(bulk_server PRIVATE /W4)
   target_compile_definitions(server PRIVATE _WIN32_WINNT=0x0A00)
   target_compile_definitions(bulk_server PRIVATE _WIN32_WINNT=0x0A00)
 else()
-  target_compile_options(bulk_server PRIVATE -Wall -Wextra -pedantic)
+  target_compile_options(bulk_server PRIVATE ${GCC_FLAGS})
   target_link_libraries(bulk_server PRIVATE -static)
 endif()
 
@@ -69,7 +70,8 @@ target_link_libraries(bulk_server_test PRIVATE capture GTest::gtest_main server
 if (MSVC)
   target_compile_options(bulk_server_test PRIVATE /W4)
 else()
-  target_compile_options(bulk_server_test PRIVATE -Wall -Wextra -pedantic)
+  target_compile_options(bulk_server_test PRIVATE ${GCC_FLAGS} -Wno-alloc-zero
+    -Wno-strict-overflow)
 endif()
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
@@ -80,7 +82,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
      -llvmlibc-implementation-in-namespace,\
      -llvmlibc-restrict-system-libc-headers,\
      -misc-include-cleaner,\
-     -modernize-use-trailing-return-type;--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+     -modernize-use-trailing-return-type")
 
   set_target_properties(server_async PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
@@ -88,7 +90,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
       -altera-struct-pack-align,\
       -altera-unroll-loops,\
       -fuchsia-default-arguments-calls,\
-      ${CLANG_TIDY_HW_10_OPTS}")
+      ${CLANG_TIDY_HW_10_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
 
   set_target_properties(server PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
@@ -96,11 +98,11 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
       -fuchsia-default-arguments-calls,\
       -llvmlibc-inline-function-decl,\
       -misc-no-recursion,\
-      ${CLANG_TIDY_HW_10_OPTS}")
+      ${CLANG_TIDY_HW_10_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
 
   set_target_properties(bulk_server PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      ${CLANG_TIDY_HW_10_OPTS}")
+      ${CLANG_TIDY_HW_10_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
 
   set_target_properties(bulk_server_test PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
@@ -116,7 +118,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
             key: readability-function-cognitive-complexity.IgnoreMacros, value: 'true'\
           }\
         ]\
-      };--header-filter=${CAPTURE_INCLUDE_DIR}/.*;--header-filter=${SOCKET_WRAPPER_INCLUDE_DIR}/.*")
+      };--header-filter=(${CMAKE_CURRENT_SOURCE_DIR}/include/.*|${CAPTURE_INCLUDE_DIR}/.*|${SOCKET_WRAPPER_INCLUDE_DIR}/.*)")
 endif()
 
 enable_testing()
@@ -130,7 +132,13 @@ if (PROJECT_IS_TOP_LEVEL)
   set(CPACK_PACKAGE_CONTACT Nikolai_Grin@Mail.Ru)
   include(CPack)
 else()
-  set(HW_10_DEB_NAME
+  string(TOUPPER "${PROJECT_NAME}" PROJECT_NAME_UPPER)
+
+  set(CPACK_DEBIAN_${PROJECT_NAME_UPPER}_FILE_NAME
+      "${PROJECT_NAME}-${PROJECT_VERSION}-Linux.deb"
+      PARENT_SCOPE)
+
+  set(CPACK_DEBIAN_${PROJECT_NAME_UPPER}_PACKAGE_NAME
       "${PROJECT_NAME}-${PROJECT_VERSION}-Linux.deb"
       PARENT_SCOPE)
 endif()

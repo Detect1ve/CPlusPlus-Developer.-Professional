@@ -40,16 +40,18 @@ if (NOT MSVC)
 endif()
 
 if (PROJECT_IS_TOP_LEVEL)
-    include(../cmake/boost.cmake)
     include(../cmake/clang-tidy.cmake)
-    include(../cmake/googletest.cmake)
+    include(../cmake/fetch_googletest.cmake)
+    include(../cmake/gcc_warnings.cmake)
     list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
+
+include(../common/boost_test.cmake)
 
 add_executable(test_version test_version.cpp)
 
 target_link_libraries(test_version
-    PRIVATE Boost::unit_test_framework
+    PRIVATE wrapper_boost_unit_test_framework
     helloworld
 )
 
@@ -125,17 +127,21 @@ if (MSVC)
         /W4
     )
 else ()
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 15)
+        set(HW_1_GCC_FLAGS -Wleading-whitespace=none)
+    endif()
+
     target_compile_options(helloworld_cli PRIVATE
-        -Wall -Wextra -pedantic -Werror
+        ${GCC_FLAGS} ${HW_1_GCC_FLAGS}
     )
     target_compile_options(helloworld PRIVATE
-        -Wall -Wextra -pedantic -Werror
+        ${GCC_FLAGS} -Wno-suggest-attribute=const ${HW_1_GCC_FLAGS}
     )
     target_compile_options(test_version PRIVATE
-        -Wall -Wextra -pedantic -Werror
+        ${GCC_FLAGS} ${HW_1_GCC_FLAGS}
     )
     target_compile_options(g_test_version PRIVATE
-        -Wall -Wextra -pedantic -Werror
+        ${GCC_FLAGS} ${HW_1_GCC_FLAGS}
     )
 endif()
 
@@ -148,7 +154,13 @@ if (PROJECT_IS_TOP_LEVEL)
     set(CPACK_PACKAGE_CONTACT Nikolai_Grin@Mail.Ru)
     include(CPack)
 else ()
-    set(HW_1_DEB_NAME
+    string(TOUPPER "${PROJECT_NAME}" PROJECT_NAME_UPPER)
+
+    set(CPACK_DEBIAN_${PROJECT_NAME_UPPER}_FILE_NAME
+        "${PROJECT_NAME}-${PROJECT_VERSION}-Linux.deb"
+        PARENT_SCOPE
+    )
+    set(CPACK_DEBIAN_${PROJECT_NAME_UPPER}_PACKAGE_NAME
         "${PROJECT_NAME}-${PROJECT_VERSION}-Linux.deb"
         PARENT_SCOPE
     )

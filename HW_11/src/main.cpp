@@ -19,8 +19,8 @@ int main(
         {
             BASE = 10
         };
-        auto const args = std::span(argv, argc) | std::views::transform(
-            [](char const *const arg)
+        auto const args = std::span(argv, static_cast<std::size_t>(argc))
+            | std::views::transform([](char const *const arg) noexcept
             {
                 return std::string_view(arg);
             });

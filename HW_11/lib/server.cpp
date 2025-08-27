@@ -32,13 +32,6 @@ class Session;
 
 class SessionImpl
 {
-public:
-    SessionImpl(
-        tcp::socket socket,
-        Database*   database);
-    void start(std::shared_ptr<Session> self);
-
-private:
     void do_read();
     void do_write(std::string_view message);
     void do_write(const std::vector<std::string>& messages);
@@ -48,10 +41,22 @@ private:
     Database* database_;
     std::unique_ptr<boost::asio::streambuf> buffer_;
     std::shared_ptr<Session> self_;
+public:
+    SessionImpl(
+        tcp::socket socket,
+        Database*   database);
+    ~SessionImpl() = default;
+    SessionImpl(const SessionImpl&) = delete;
+    SessionImpl& operator=(const SessionImpl&) = delete;
+    SessionImpl(SessionImpl&&) = delete;
+    SessionImpl& operator=(SessionImpl&&) = delete;
+
+    void start(std::shared_ptr<Session> self);
 };
 
 class Session : public std::enable_shared_from_this<Session>
 {
+    std::unique_ptr<SessionImpl> pimpl_;
 public:
     Session(
         tcp::socket socket,
@@ -63,9 +68,6 @@ public:
     {
         pimpl_->start(shared_from_this());
     }
-
-private:
-    std::unique_ptr<SessionImpl> pimpl_;
 };
 
 SessionImpl::SessionImpl(
@@ -181,18 +183,20 @@ void SessionImpl::process_command(std::string_view command)
     }
 }
 
-ServerImpl::ServerImpl(const std::int16_t port)
+ServerImpl::ServerImpl(const std::uint16_t port)
     :
-    acceptor_(io_context_, tcp::endpoint(tcp::v4(), port))
+    acceptor_(io_context_, tcp::endpoint(tcp::v4(), port)),
+    database_()
 {
     do_accept();
 }
 
 ServerImpl::ServerImpl(
     std::promise<std::uint16_t>& port_promise,
-    const std::int16_t           port)
+    const std::uint16_t          port)
     :
-    acceptor_(io_context_, tcp::endpoint(tcp::v4(), port))
+    acceptor_(io_context_, tcp::endpoint(tcp::v4(), port)),
+    database_()
 {
     port_promise.set_value(acceptor_.local_endpoint().port());
 
@@ -225,13 +229,13 @@ void ServerImpl::stop()
     io_context_.stop();
 }
 
-Server::Server(const std::int16_t port) : pimpl_(std::make_unique<ServerImpl>(port)) { }
+Server::Server(const std::int16_t port) : pimpl_(std::make_unique<ServerImpl>(port)) {}
 
 Server::Server(
     std::promise<std::uint16_t>& port_promise,
     const std::int16_t           port)
     :
-    pimpl_(std::make_unique<ServerImpl>(port_promise, port)) { }
+    pimpl_(std::make_unique<ServerImpl>(port_promise, port)) {}
 
 void Server::run()
 {

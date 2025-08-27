@@ -2,7 +2,7 @@
 
 #include "lib.h"
 
-#include <boost/test/unit_test.hpp>
+#include <wrapper_boost_test_unit_test.hpp>
 
 BOOST_AUTO_TEST_SUITE(test_version)
 

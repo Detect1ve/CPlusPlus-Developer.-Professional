@@ -2,8 +2,6 @@
 #include <csignal>
 #endif
 
-#include <boost/asio.hpp>
-
 #include <server_p.hpp>
 
 namespace
@@ -90,7 +88,7 @@ namespace async
             *static_cast<boost::asio::ip::tcp::socket*>(socket),
             server,
             bulk_size,
-            *this)) { }
+            *this)) {}
 
     Session::~Session() = default;
 

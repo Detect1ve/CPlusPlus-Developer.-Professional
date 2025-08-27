@@ -7,9 +7,9 @@ namespace editor::controller
         : document_(document) {}
 
     void PrimitiveController::createLine(
-        struct Point const start,
-        struct Point const end,
-        int const          thickness)
+        Point const start,
+        Point const end,
+        int const   thickness)
     {
         if (document_ == nullptr)
         {

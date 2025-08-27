@@ -101,8 +101,7 @@ namespace
 
 class HW7 : public ::testing::Test
 {
-std::chrono::system_clock::time_point start_time_;
-
+    std::chrono::system_clock::time_point start_time_;
 protected:
     void SetUp() override
     {

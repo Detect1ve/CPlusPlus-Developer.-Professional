@@ -18,7 +18,8 @@ namespace bulk
             std::string_view name)
             :
             max_static_task_count(max_task_count),
-            task_manager_name(name) { };
+            stop_flag(false),
+            task_manager_name(name) {}
 
         taskmanager(const taskmanager&) = delete;
         taskmanager& operator=(const taskmanager&) = delete;
@@ -34,7 +35,7 @@ namespace bulk
 
     private:
         int add_task(std::string_view task);
-        [[nodiscard]] bool is_dynamic_block_active() const noexcept;
+        [[nodiscard]] bool is_dynamic_block_active() const noexcept __attribute__((pure));
         int process_tasks(std::vector<std::string>& block_task);
 
         int dynamic_block_nesting_level = 0;
@@ -49,4 +50,4 @@ namespace bulk
     };
 } // namespace bulk
 
-#endif /* TASKMANAGER_HPP */
+#endif // TASKMANAGER_HPP

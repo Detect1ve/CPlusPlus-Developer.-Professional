@@ -17,7 +17,7 @@ namespace editor::view
 
         virtual void render() const = 0;
 
-        [[nodiscard]] const model::Primitive* getPrimitive() const;
+        [[nodiscard]] const model::Primitive* getPrimitive() const __attribute__((pure));
 
     private:
         const model::Primitive* primitive_;
@@ -30,4 +30,4 @@ namespace editor::view
     };
 } // namespace editor::view
 
-#endif /* VIEW_PRIMITIVE_VIEW_HPP */
+#endif // VIEW_PRIMITIVE_VIEW_HPP

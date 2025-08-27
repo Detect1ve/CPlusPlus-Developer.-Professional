@@ -20,7 +20,7 @@ namespace editor::view
         void render() const;
         void update();
 
-        [[nodiscard]] const model::Document* getDocument() const;
+        [[nodiscard]] const model::Document* getDocument() const __attribute__((pure));
 
     private:
         const model::Document* document_;
@@ -30,4 +30,4 @@ namespace editor::view
     };
 } // namespace editor::view
 
-#endif /* VIEW_DOCUMENT_VIEW_HPP */
+#endif // VIEW_DOCUMENT_VIEW_HPP

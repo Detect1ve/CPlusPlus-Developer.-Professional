@@ -5,8 +5,7 @@
 #include <fstream>
 #include <iostream>
 
-#include <Eigen/Dense>
-
+#include <eigen_dense.hpp>
 #include <mlp.hpp>
 
 namespace
@@ -244,7 +243,7 @@ float MLP::evaluate(const std::string& test_data_path)
             }
         }
 
-        for (int i = 0; i < 784; ++i)
+        for (std::size_t i = 0; i < 784; ++i)
         {
             float pixel_value = 0.0F;
 

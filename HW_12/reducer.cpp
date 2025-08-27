@@ -14,12 +14,12 @@ int main(int argc, char ** argv)
     {
         std::istringstream iss(line);
         std::string key;
-        double price = NAN;
+        float price = NAN;
         std::int64_t value_count = 0;
 
         if (iss >> key >> price >> value_count)
         {
-            sum += price * static_cast<double>(value_count);
+            sum += price * static_cast<float>(value_count);
             count += value_count;
         }
     }

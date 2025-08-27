@@ -23,38 +23,22 @@ if (PROJECT_IS_TOP_LEVEL)
   set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 endif()
 
-if (MSVC)
-  add_compile_options(/W4)
-else()
-  add_compile_options(-Wall -Wextra -pedantic)
-endif()
-
 if (PROJECT_IS_TOP_LEVEL)
     include(../cmake/clang-tidy.cmake)
-    include(../cmake/googletest.cmake)
+    include(../cmake/fetch_googletest.cmake)
+    include(../cmake/gcc_warnings.cmake)
     list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
-find_package(Eigen3 3.4.0 QUIET)
-if (NOT Eigen_FOUND)
-  include(FetchContent)
-  set(BUILD_TESTING OFF CACHE BOOL "Disable Eigen tests" FORCE)
-  FetchContent_Declare(
-    Eigen3
-    GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
-    GIT_TAG 3.4.0
-    GIT_SHALLOW ON
-    EXCLUDE_FROM_ALL)
-  FetchContent_MakeAvailable(Eigen3)
-endif()
+include(../common/eigen3.cmake)
 
 add_library(mlp_lib STATIC lib/mlp.cpp)
-target_link_libraries(mlp_lib PRIVATE Eigen3::Eigen)
+target_link_libraries(mlp_lib PRIVATE eigen3_eigen)
 target_include_directories(mlp_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 if (MSVC)
   target_compile_options(mlp_lib PRIVATE /W4)
 else()
-  target_compile_options(mlp_lib PRIVATE -Wall -Wextra -pedantic)
+  target_compile_options(mlp_lib PRIVATE ${GCC_FLAGS} -Wno-effc++)
 endif()
 
 add_executable(fashio_mnist src/main.cpp)
@@ -63,7 +47,7 @@ if (MSVC)
   target_compile_options(fashio_mnist PRIVATE /W4)
 else()
   target_link_libraries(fashio_mnist -static)
-  target_compile_options(fashio_mnist PRIVATE -Wall -Wextra -pedantic)
+  target_compile_options(fashio_mnist PRIVATE ${GCC_FLAGS})
 endif()
 
 add_executable(fashio_mnist_test test/mlp_test.cpp)
@@ -71,7 +55,7 @@ target_link_libraries(fashio_mnist_test mlp_lib GTest::gtest_main)
 if (MSVC)
   target_compile_options(fashio_mnist_test PRIVATE /W4)
 else()
-  target_compile_options(fashio_mnist_test PRIVATE -Wall -Wextra -pedantic)
+  target_compile_options(fashio_mnist_test PRIVATE ${GCC_FLAGS})
 endif()
 
 target_compile_definitions(fashio_mnist_test PRIVATE
@@ -115,7 +99,13 @@ if (PROJECT_IS_TOP_LEVEL)
   set(CPACK_PACKAGE_CONTACT Nikolai_Grin@Mail.Ru)
   include(CPack)
 else()
-  set(HW_13_DEB_NAME
+  string(TOUPPER "${PROJECT_NAME}" PROJECT_NAME_UPPER)
+
+  set(CPACK_DEBIAN_${PROJECT_NAME_UPPER}_FILE_NAME
+      "${PROJECT_NAME}-${PROJECT_VERSION}-Linux.deb"
+      PARENT_SCOPE)
+
+  set(CPACK_DEBIAN_${PROJECT_NAME_UPPER}_PACKAGE_NAME
       "${PROJECT_NAME}-${PROJECT_VERSION}-Linux.deb"
       PARENT_SCOPE)
 endif()

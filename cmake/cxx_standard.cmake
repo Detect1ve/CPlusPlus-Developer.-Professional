@@ -14,13 +14,14 @@ function(determine_max_compiler_standard)
   endforeach()
 endfunction()
 
-function(add_subdirectory_if_compatible subdir)
+function(check_subdirectory_compatibility subdir)
   determine_max_compiler_standard()
 
   set(SUBDIR_CMAKE_FILE "${CMAKE_CURRENT_SOURCE_DIR}/${subdir}/CMakeLists.txt")
   if (NOT EXISTS ${SUBDIR_CMAKE_FILE})
     message(WARNING "CMakeLists.txt not found for subdirectory ${subdir}")
-    return()
+    set(IS_COMPATIBLE FALSE)
+    return(PROPAGATE IS_COMPATIBLE)
   endif()
 
   file(READ ${SUBDIR_CMAKE_FILE} CMAKE_CONTENT)
@@ -30,19 +31,21 @@ function(add_subdirectory_if_compatible subdir)
 
   if (MINIMUM_REQUIRED_STANDARD)
     if (MINIMUM_REQUIRED_STANDARD EQUAL 98)
-      add_subdirectory(${subdir})
+      set(IS_COMPATIBLE TRUE)
     elseif (MINIMUM_REQUIRED_STANDARD GREATER MAX_SUPPORTED_COMPILER_STANDARD)
       message(WARNING "Skipping project ${subdir}: requires at least "
         "C++${MINIMUM_REQUIRED_STANDARD}, but compiler's maximum is "
         "C++${MAX_SUPPORTED_COMPILER_STANDARD}.")
+      set(IS_COMPATIBLE FALSE)
     else()
-      add_subdirectory(${subdir})
+      set(IS_COMPATIBLE TRUE)
     endif()
   else()
     message(WARNING "Could not determine minimum required C++ standard for ${subdir}. "
       "Adding it anyway.")
-    add_subdirectory(${subdir})
+    set(IS_COMPATIBLE TRUE)
   endif()
+  return(PROPAGATE IS_COMPATIBLE)
 endfunction()
 
 determine_max_compiler_standard()
