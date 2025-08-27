@@ -74,12 +74,14 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
       -altera-id-dependent-backward-branch,\
       -altera-unroll-loops,\
       -cppcoreguidelines-avoid-magic-numbers,\
+      -llvm-prefer-static-over-anonymous-namespace,\
       -llvmlibc-implementation-in-namespace,\
       -readability-magic-numbers,\
       ${CLANG_TIDY_HW_13_OPTS}")
 
   set_target_properties(fashio_mnist PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
+      -llvm-prefer-static-over-anonymous-namespace,\
       -llvmlibc-implementation-in-namespace,\
       ${CLANG_TIDY_HW_13_OPTS}")
 

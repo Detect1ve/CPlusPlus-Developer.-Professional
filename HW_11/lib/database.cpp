@@ -17,7 +17,7 @@ bool Database::insert(
 {
     if (table == "A")
     {
-        const std::lock_guard<std::mutex> lock(table_a_mutex_);
+        const std::scoped_lock<std::mutex> lock(table_a_mutex_);
         if (table_a_.contains(record_id))
         {
             return false;
@@ -30,7 +30,7 @@ bool Database::insert(
 
     if (table == "B")
     {
-        const std::lock_guard<std::mutex> lock(table_b_mutex_);
+        const std::scoped_lock<std::mutex> lock(table_b_mutex_);
 
         if (table_b_.contains(record_id))
         {
@@ -49,13 +49,13 @@ void Database::truncate(std::string_view table)
 {
     if (table == "A")
     {
-        const std::lock_guard<std::mutex> lock(table_a_mutex_);
+        const std::scoped_lock<std::mutex> lock(table_a_mutex_);
 
         table_a_.clear();
     }
     else if (table == "B")
     {
-        const std::lock_guard<std::mutex> lock(table_b_mutex_);
+        const std::scoped_lock<std::mutex> lock(table_b_mutex_);
 
         table_b_.clear();
     }
@@ -66,8 +66,7 @@ std::vector<std::string> Database::intersection()
     std::set<int> common_ids;
     std::vector<std::string> result;
 
-    const std::lock_guard<std::mutex> lock_a(table_a_mutex_);
-    const std::lock_guard<std::mutex> lock_b(table_b_mutex_);
+    const std::scoped_lock<std::mutex, std::mutex> lock(table_a_mutex_, table_b_mutex_);
 
     for (const auto& [record_id, unused_value] : table_a_)
     {
@@ -94,8 +93,7 @@ std::vector<std::string> Database::symmetric_difference()
     std::set<int> common_ids;
     std::vector<std::string> result;
 
-    const std::lock_guard<std::mutex> lock_a(table_a_mutex_);
-    const std::lock_guard<std::mutex> lock_b(table_b_mutex_);
+    const std::scoped_lock<std::mutex, std::mutex> lock(table_a_mutex_, table_b_mutex_);
 
     for (const auto& [record_id, unused_value] : table_a_)
     {
@@ -138,17 +136,15 @@ std::vector<std::string> Database::symmetric_difference()
         std::string_view string_a,
         std::string_view string_b)
     {
-        enum : unsigned char
-        {
-            BASE = 10
-        };
         auto substring_a = string_a.substr(0, string_a.find(','));
         auto substring_b = string_b.substr(0, string_b.find(','));
+        constexpr int BASE = 10;
         int id_a = 0;
         int id_b = 0;
 
         {
             auto [ptr, ec] = std::from_chars(substring_a.data(),
+                // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
                 substring_a.data() + substring_a.size(), id_a, BASE);
             if (ec != std::errc())
             {
@@ -158,6 +154,7 @@ std::vector<std::string> Database::symmetric_difference()
 
         {
             auto [ptr, ec] = std::from_chars(substring_b.data(),
+                // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
                 substring_b.data() + substring_b.size(), id_b, BASE);
             if (ec != std::errc())
             {

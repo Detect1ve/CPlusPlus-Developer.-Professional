@@ -68,6 +68,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set_target_properties(ip_filter_lib PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
       -fuchsia-default-arguments-calls,\
+      -llvm-prefer-static-over-anonymous-namespace,\
       ${CLANG_TIDY_HW_2_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
 
   set_target_properties(ip_filter PROPERTIES
@@ -78,6 +79,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set_target_properties(ip_filter_test PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
       -fuchsia-default-arguments-calls,\
+      -llvm-prefer-static-over-anonymous-namespace,\
       ${CLANG_TIDY_HW_2_OPTS};--header-filter=(${CMAKE_CURRENT_SOURCE_DIR}/include/.*|${CAPTURE_INCLUDE_DIR}/.*)")
 endif()
 

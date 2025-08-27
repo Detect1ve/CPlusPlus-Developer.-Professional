@@ -71,6 +71,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
 
   set_target_properties(main PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
+      -llvm-prefer-static-over-anonymous-namespace,\
       -llvmlibc-callee-namespace,\
       -llvmlibc-implementation-in-namespace,\
       -misc-include-cleaner,\

@@ -145,7 +145,7 @@ TEST(ProjectWork, SingleProducerSingleConsumer)
 
             if (item.has_value())
             {
-                const std::lock_guard<std::mutex> lock(consumedMutex);
+                const std::scoped_lock<std::mutex> lock(consumedMutex);
 
                 consumed.emplace_back(item.value());
             }

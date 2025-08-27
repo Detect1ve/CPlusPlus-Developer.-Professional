@@ -67,7 +67,8 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
      -llvmlibc-implementation-in-namespace,\
      -llvmlibc-restrict-system-libc-headers,\
      -misc-include-cleaner,\
-     -modernize-use-trailing-return-type")
+     -modernize-use-trailing-return-type,\
+     -portability-avoid-pragma-once")
 
   set_target_properties(async PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
@@ -75,6 +76,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
       -altera-struct-pack-align,\
       -altera-unroll-loops,\
       -fuchsia-default-arguments-calls,\
+      -llvm-prefer-static-over-anonymous-namespace,\
       ${CLANG_TIDY_HW_9_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
 
   set_target_properties(async_static PROPERTIES
@@ -83,6 +85,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
       -altera-struct-pack-align,\
       -altera-unroll-loops,\
       -fuchsia-default-arguments-calls,\
+      -llvm-prefer-static-over-anonymous-namespace,\
       ${CLANG_TIDY_HW_9_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
 
   set_target_properties(async_cli PROPERTIES
@@ -101,6 +104,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
       -altera-unroll-loops,\
       -fuchsia-default-arguments-calls,\
+      -llvm-prefer-static-over-anonymous-namespace,\
       -llvmlibc-inline-function-decl,\
       ${CLANG_TIDY_HW_9_OPTS};--config=\
       {\

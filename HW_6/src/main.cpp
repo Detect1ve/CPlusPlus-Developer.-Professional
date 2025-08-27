@@ -2,10 +2,7 @@
 
 #include <matrix.hpp>
 
-enum : unsigned char
-{
-    CONTAINER_SIZE = 10,
-};
+constexpr int CONTAINER_SIZE = 10;
 
 int main()
 {

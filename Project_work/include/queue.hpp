@@ -6,6 +6,7 @@
  || __cplusplus <=  202002L
 #include <optional>
 #endif
+#include <mutex>
 #include <queue>
 
 namespace pc_queue
@@ -207,7 +208,7 @@ namespace pc_queue
         */
         void close()
         {
-            const std::lock_guard<std::mutex> lock(mutex_);
+            const std::scoped_lock<std::mutex> lock(mutex_);
 
             closed_ = true;
             notEmpty_.notify_all();
@@ -221,7 +222,7 @@ namespace pc_queue
         */
         bool isClosed() const
         {
-            const std::lock_guard<std::mutex> lock(mutex_);
+            const std::scoped_lock<std::mutex> lock(mutex_);
 
             return closed_;
         }
@@ -231,7 +232,7 @@ namespace pc_queue
         */
         void clear()
         {
-            const std::lock_guard<std::mutex> lock(mutex_);
+            const std::scoped_lock<std::mutex> lock(mutex_);
 
             while (!queue_.empty())
             {

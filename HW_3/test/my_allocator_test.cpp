@@ -2,10 +2,7 @@
 
 #include <my_allocator.hpp>
 
-enum : unsigned char
-{
-    CONTAINER_SIZE = 10,
-};
+constexpr int CONTAINER_SIZE = 10;
 
 TEST(HW3, MyAllocator)
 {

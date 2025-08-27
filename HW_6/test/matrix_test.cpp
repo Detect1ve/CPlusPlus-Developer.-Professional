@@ -3,11 +3,8 @@
 #include <capture.hpp>
 #include <matrix.hpp>
 
-enum : std::uint16_t
-{
-    TEST_VALUE_1 = 314,
-    TEST_VALUE_2 = 217,
-};
+constexpr int TEST_VALUE_1 = 314;
+constexpr int TEST_VALUE_2 = 217;
 
 TEST(HW6, Matrix)
 {

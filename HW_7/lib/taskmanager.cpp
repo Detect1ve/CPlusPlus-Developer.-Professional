@@ -61,7 +61,7 @@ namespace
 {
     [[nodiscard]] bulk::taskmanager*& get_task_manager_instance() noexcept
     {
-        static bulk::taskmanager* instance = nullptr;
+        static bulk::taskmanager* instance = nullptr; // NOLINT(misc-const-correctness)
 
         return instance;
     }
@@ -176,7 +176,7 @@ namespace bulk
         output << std::filesystem::path(task_manager_name).filename().string() << ": ";
 
         const std::string_view delimiter = ", ";
-#if defined(__cpp_lib_ranges_to_container)
+#ifdef __cpp_lib_ranges_to_container
         const std::string result = block_task | std::views::join_with(delimiter)
             | std::ranges::to<std::string>();
 #else

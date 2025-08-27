@@ -119,8 +119,8 @@ std::function<std::string(std::string_view)> HashAlgorithm::get_hash_function(
     static const std::unordered_map<hash_algorithm,
         std::function<std::string(std::string_view)>> enum_to_func_map =
         {
-            {crc32, compute_crc32},
-            {md5, compute_md5}
+            {hash_algorithm::crc32, compute_crc32},
+            {hash_algorithm::md5, compute_md5}
         };
     const auto iterator = enum_to_func_map.find(value);
 
@@ -135,7 +135,7 @@ std::function<std::string(std::string_view)> HashAlgorithm::get_hash_function(
 
 HashAlgorithm::HashAlgorithm()
     :
-    value_(crc32),
+    value_(hash_algorithm::crc32),
     hash_function(get_hash_function(value_)) {}
 
 HashAlgorithm::HashAlgorithm(const hash_algorithm value)

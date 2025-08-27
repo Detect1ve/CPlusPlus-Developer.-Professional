@@ -15,15 +15,12 @@ int main(
 
     try
     {
-        enum : unsigned char
-        {
-            BASE = 10
-        };
         auto const args = std::span(argv, static_cast<std::size_t>(argc))
             | std::views::transform([](char const *const arg) noexcept
             {
                 return std::string_view(arg);
             });
+        constexpr int BASE = 10;
         std::int16_t port = 0;
 
         if (args.size() != 2)
@@ -33,7 +30,7 @@ int main(
 
             return ret;
         }
-
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
         auto [ptr, ec] = std::from_chars(args[1].data(), args[1].data() + args[1].size(),
             port, BASE);
         if (ec != std::errc{})

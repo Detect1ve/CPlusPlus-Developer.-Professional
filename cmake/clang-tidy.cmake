@@ -7,6 +7,7 @@ if (ENABLE_CLANG_TIDY)
     find_program(CLANG_TIDY_BIN_FOUND
       NAMES
         clang-tidy
+        clang-tidy-21
         clang-tidy-20
         clang-tidy-19
         clang-tidy-18

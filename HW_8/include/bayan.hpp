@@ -17,7 +17,7 @@
 std::string compute_crc32(std::string_view input);
 std::string compute_md5(std::string_view input);
 
-enum hash_algorithm : std::uint8_t
+enum class hash_algorithm : std::uint8_t
 {
     crc32,
     md5,
@@ -40,8 +40,8 @@ private:
 
     std::unordered_map<std::string, hash_algorithm> name_to_enum_map =
     {
-        {"crc32", crc32},
-        {"md5", md5}
+        {"crc32", hash_algorithm::crc32},
+        {"md5", hash_algorithm::md5}
     };
 };
 

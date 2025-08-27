@@ -4,10 +4,7 @@
 #include <my_allocator.hpp>
 #include <my_list.hpp>
 
-enum : unsigned char
-{
-    CONTAINER_SIZE = 10,
-};
+constexpr int CONTAINER_SIZE = 10;
 
 namespace
 {

@@ -15,12 +15,9 @@
 
 std::expected<unsigned char, std::error_code> from_chars(std::string_view chars)
 {
-    enum : unsigned char
-    {
-        BASE = 10
-    };
-
+    constexpr int BASE = 10;
     unsigned char value = 0;
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
     auto [ptr, ec] = std::from_chars(chars.data(), chars.data() + chars.size(), value,
         BASE);
     if (ec != std::errc())
@@ -91,7 +88,7 @@ std::expected<std::vector<std::vector<std::string>>, std::error_code> filter_any
     const std::vector<std::vector<std::string>>& ip_pool,
     const unsigned char                any_octet)
 {
-#if defined(__cpp_lib_ranges_to_container)
+#ifdef __cpp_lib_ranges_to_container
     return ip_pool | std::ranges::views::filter([any_octet](const auto& ip_address)
     {
         return std::ranges::any_of(ip_address, [any_octet](const std::string_view ip_part)
@@ -135,7 +132,7 @@ std::expected<std::vector<std::vector<std::string>>, std::error_code> filter_any
 
 void print(std::span<const std::vector<std::string>> ip_pool)
 {
-#if defined(__cpp_lib_ranges_to_container)
+#ifdef __cpp_lib_ranges_to_container
     for (const auto& ip_address : ip_pool)
     {
         std::cout << std::format("{}\n", ip_address

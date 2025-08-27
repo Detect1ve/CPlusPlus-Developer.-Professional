@@ -12,7 +12,7 @@ namespace
 {
     [[nodiscard]] Server*& get_server_instance() noexcept
     {
-        static Server* instance = nullptr;
+        static Server* instance = nullptr; // NOLINT(misc-const-correctness)
 
         return instance;
     }

@@ -9,6 +9,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <mutex>
 #include <queue>
 #include <sstream>
 
@@ -114,7 +115,7 @@ public:
             std::move(block_task));
 
         {
-            const std::lock_guard<std::mutex> lock(queue_mutex());
+            const std::scoped_lock<std::mutex> lock(queue_mutex());
             log_queue().push(task);
             file_queue().push(task);
         }
@@ -317,7 +318,7 @@ handle_t connect(std::size_t bulk) {
     auto context = std::make_unique<taskmanager>(bulk, context_id);
     auto *handle = static_cast<handle_t>(context.get());
 
-    const std::lock_guard<std::mutex> lock(contexts_mutex());
+    const std::scoped_lock<std::mutex> lock(contexts_mutex());
     contexts()[handle] = std::move(context);
 
     return handle;
@@ -330,7 +331,7 @@ void receive(handle_t handle, const char *data, std::size_t size) {
 
     taskmanager* context = nullptr;
     {
-        const std::lock_guard<std::mutex> lock(contexts_mutex());
+        const std::scoped_lock<std::mutex> lock(contexts_mutex());
         auto context_iterator = contexts().find(handle);
         if (context_iterator != contexts().end()) {
             context = context_iterator->second.get();
@@ -359,7 +360,7 @@ void disconnect(handle_t handle) {
 
     std::unique_ptr<taskmanager> context;
     {
-        const std::lock_guard<std::mutex> lock(contexts_mutex());
+        const std::scoped_lock<std::mutex> lock(contexts_mutex());
         auto context_iterator = contexts().find(handle);
         if (context_iterator != contexts().end()) {
             context_iterator->second->finish();

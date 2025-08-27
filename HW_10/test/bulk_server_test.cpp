@@ -38,11 +38,8 @@ namespace
         std::optional<std::chrono::system_clock::time_point> start_time,
         std::optional<std::chrono::system_clock::time_point> end_time)
     {
+        constexpr int BASE = 10;
         std::vector<std::filesystem::path> log_files;
-        enum : unsigned char
-        {
-            BASE = 10
-        };
 
         for (const auto &entry : std::filesystem::directory_iterator("."))
         {
@@ -62,6 +59,7 @@ namespace
                 const std::string_view timestamp_sv = timestamp_str;
                 std::int64_t timestamp_val = 0;
                 auto [ptr, ec] = std::from_chars(timestamp_sv.data(),
+                    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
                     timestamp_sv.data() + timestamp_sv.size(), timestamp_val, BASE);
                 if (ec != std::errc())
                 {
@@ -273,6 +271,7 @@ TEST_F(HW10, CombinedConnectionTest)
             int value{};
 
             if (const auto [ptr, ec] = std::from_chars(number_sv.data(),
+                // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
                 number_sv.data() + number_sv.size(), value); ec == std::errc())
             {
                 received_nums.insert(value);
@@ -297,6 +296,7 @@ TEST_F(HW10, CombinedConnectionTest)
             int value{};
 
             if (const auto [ptr, ec] = std::from_chars(number_sv.data(),
+                // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
                 number_sv.data() + number_sv.size(), value); ec == std::errc())
             {
                 received_nums_from_stdout.insert(value);

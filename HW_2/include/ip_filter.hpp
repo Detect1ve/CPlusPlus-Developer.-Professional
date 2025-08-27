@@ -92,7 +92,7 @@ std::expected<std::vector<std::vector<std::string>>, std::error_code> filter(
 
     std::array<int, sizeof...(octet)> a_octet = {octet...};
 
-#if defined(__cpp_lib_ranges_to_container)
+#ifdef __cpp_lib_ranges_to_container
     return ip_pool | std::ranges::views::filter([&a_octet](const auto& ip_address)
     {
         auto common_range = std::min(a_octet.size(), ip_address.size());

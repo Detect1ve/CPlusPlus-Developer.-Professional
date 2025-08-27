@@ -8,7 +8,7 @@ namespace
 {
     [[nodiscard]] async::Server*& get_server_instance() noexcept
     {
-        static async::Server* instance = nullptr;
+        static async::Server* instance = nullptr; // NOLINT(misc-const-correctness)
 
         return instance;
     }

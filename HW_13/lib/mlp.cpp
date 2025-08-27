@@ -181,6 +181,7 @@ float MLP::evaluate_with_predictions(
 
         const std::string_view token_sv(token);
         auto [ptr, ec] = std::from_chars(token_sv.data(),
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
             token_sv.data() + token_sv.size(), true_label);
         if (ec != std::errc{})
         {
@@ -235,6 +236,7 @@ float MLP::evaluate(const std::string& test_data_path)
         {
             const std::string_view token_sv(token);
             auto [ptr, ec] = std::from_chars(token_sv.data(),
+                // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
                 token_sv.data() + token_sv.size(), true_label);
             if (ec != std::errc{})
             {
@@ -255,6 +257,7 @@ float MLP::evaluate(const std::string& test_data_path)
 
             const std::string_view token_sv(token);
             auto [ptr, ec] = std::from_chars(token_sv.data(),
+                // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
                 token_sv.data() + token_sv.size(), pixel_value);
             if (ec != std::errc{})
             {

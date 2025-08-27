@@ -74,6 +74,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
       -altera-struct-pack-align,\
       -altera-unroll-loops,\
       -fuchsia-default-arguments-calls,\
+      -llvm-prefer-static-over-anonymous-namespace,\
       -misc-no-recursion,\
       ${CLANG_TIDY_HW_11_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
 
@@ -86,6 +87,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
       -altera-id-dependent-backward-branch,\
       -altera-unroll-loops,\
       -fuchsia-default-arguments-calls,\
+      -llvm-prefer-static-over-anonymous-namespace,\
       -llvmlibc-inline-function-decl,\
       ${CLANG_TIDY_HW_11_OPTS};--header-filter=(${CMAKE_CURRENT_SOURCE_DIR}/include/.*|${SOCKET_WRAPPER_INCLUDE_DIR}/.*)")
 endif()

@@ -8,10 +8,7 @@ int main(
     const int   argc,
     const char *argv[])
 {
-    enum : unsigned char
-    {
-        BASE = 10
-    };
+    constexpr int BASE = 10;
     int ret = 0;
 
     try
@@ -34,6 +31,7 @@ int main(
 
         {
             auto [ptr, ec] = std::from_chars(args[1].data(),
+                // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
                 args[1].data() + args[1].size(), port, BASE);
             if (ec != std::errc{})
             {
@@ -46,6 +44,7 @@ int main(
 
         {
             auto [ptr, ec] = std::from_chars(args[2].data(),
+                // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
                 args[2].data() + args[2].size(), bulk_size, BASE);
             if (ec != std::errc{})
             {

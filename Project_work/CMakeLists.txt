@@ -70,5 +70,6 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
 
   set_target_properties(queue_performance_test PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
+      -llvm-prefer-static-over-anonymous-namespace,\
       ${CLANG_TIDY_PROJECT_WORK_OPTS}")
 endif()
