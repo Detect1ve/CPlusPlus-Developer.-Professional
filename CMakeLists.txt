@@ -108,8 +108,8 @@ set(CPACK_GENERATOR DEB)
 set(CPACK_PACKAGE_CONTACT Nikolai_Grin@Mail.Ru)
 set(CPACK_DEB_COMPONENT_INSTALL ON)
 
-# For some known reason, FetchContent_Declare for Eigen3 adds extra components.
+# For some known reason, FetchContent_Declare for Eigen3 adds extra component.
 # Report the issue and remove this workaround when it is fixed.
 get_cmake_property(CPACK_COMPONENTS_ALL COMPONENTS)
-list(REMOVE_ITEM CPACK_COMPONENTS_ALL "Devel" "Unspecified")
+list(REMOVE_ITEM CPACK_COMPONENTS_ALL "Devel")
 include(CPack)

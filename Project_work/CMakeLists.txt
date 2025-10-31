@@ -34,14 +34,17 @@ endif()
 
 add_executable(queue_test test/queue_test.cpp)
 target_link_libraries(queue_test PRIVATE data_queue GTest::gtest_main)
-target_compile_options(queue_test PRIVATE ${GCC_FLAGS})
+if (NOT MSVC)
+  target_compile_options(queue_test
+    PRIVATE ${COMPILE_WARNING_FLAGS} -Wno-global-constructors)
+endif()
 
 enable_testing()
 add_test(Project_work.queue_test queue_test)
 
 add_executable(queue_performance_test test/queue_performance_test.cpp)
 target_link_libraries(queue_performance_test PRIVATE data_queue)
-target_compile_options(queue_performance_test PRIVATE ${GCC_FLAGS})
+target_compile_options(queue_performance_test PRIVATE ${COMPILE_WARNING_FLAGS})
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set(CLANG_TIDY_PROJECT_WORK_OPTS

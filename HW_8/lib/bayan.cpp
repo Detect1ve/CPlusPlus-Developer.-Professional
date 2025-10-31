@@ -113,12 +113,9 @@ std::string compute_md5(std::string_view input)
 
     hash.process_bytes(input.data(), input.length());
     hash.get_digest(digest);
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-    const auto *const char_digest = reinterpret_cast<const char*>(&digest);
     std::string result;
 
-    boost::algorithm::hex(std::span(char_digest, sizeof(digest)),
-        std::back_inserter(result));
+    boost::algorithm::hex(std::span(digest), std::back_inserter(result));
 
     return result;
 }
@@ -126,15 +123,15 @@ std::string compute_md5(std::string_view input)
 std::function<std::string(std::string_view)> HashAlgorithm::get_hash_function(
     const hash_algorithm value)
 {
-    static const std::unordered_map<hash_algorithm,
-        std::function<std::string(std::string_view)>> enum_to_func_map =
+    static const auto* enum_to_func_map = new std::unordered_map<hash_algorithm,
+        std::function<std::string(std::string_view)>>
         {
             {hash_algorithm::crc32, compute_crc32},
             {hash_algorithm::md5, compute_md5}
         };
-    const auto iterator = enum_to_func_map.find(value);
+    const auto iterator = enum_to_func_map->find(value);
 
-    if (iterator == enum_to_func_map.end())
+    if (iterator == enum_to_func_map->end())
     {
         throw std::invalid_argument("Invalid hash algorithm enum value: "
             + std::to_string(static_cast<int>(value)));

@@ -40,12 +40,15 @@ target_include_directories(matrix PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 if (NOT MSVC)
   target_link_libraries(matrix PRIVATE -static)
 endif()
-target_compile_options(matrix PRIVATE ${GCC_FLAGS})
+target_compile_options(matrix PRIVATE ${COMPILE_WARNING_FLAGS})
 
 add_executable(matrix_test test/matrix_test.cpp)
 target_include_directories(matrix_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(matrix_test PRIVATE capture GTest::gtest_main)
-target_compile_options(matrix_test PRIVATE ${GCC_FLAGS})
+if (NOT MSVC)
+  target_compile_options(matrix_test
+    PRIVATE ${COMPILE_WARNING_FLAGS} -Wno-global-constructors)
+endif()
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set(CLANG_TIDY_HW_6_OPTS

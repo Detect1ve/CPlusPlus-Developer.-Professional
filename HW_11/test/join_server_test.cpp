@@ -50,7 +50,16 @@ protected:
 
         return socket.receive_data();
     }
+public:
+    HW11() = default;
+    HW11(const HW11&) = delete;
+    HW11(HW11&&) = delete;
+    HW11& operator=(const HW11&) = delete;
+    HW11& operator=(HW11&&) = delete;
+    ~HW11() override;
 };
+
+HW11::~HW11() = default;
 
 TEST_F(HW11, InsertDuplicate)
 {

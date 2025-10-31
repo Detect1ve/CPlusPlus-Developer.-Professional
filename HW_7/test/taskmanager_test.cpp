@@ -111,7 +111,16 @@ protected:
     {
         clear_log_files(start_time_, std::chrono::system_clock::now());
     }
+public:
+    HW7() = default;
+    HW7(const HW7&) = delete;
+    HW7(HW7&&) = delete;
+    HW7& operator=(const HW7&) = delete;
+    HW7& operator=(HW7&&) = delete;
+    ~HW7() override;
 };
+
+HW7::~HW7() = default;
 
 TEST_F(HW7, StaticBlocks)
 {

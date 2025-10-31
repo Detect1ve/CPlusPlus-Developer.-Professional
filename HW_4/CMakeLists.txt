@@ -52,11 +52,14 @@ target_link_libraries(print_ip PRIVATE ip_address)
 if (NOT MSVC)
   target_link_libraries(print_ip PRIVATE -static)
 endif()
-target_compile_options(print_ip PRIVATE ${GCC_FLAGS})
+target_compile_options(print_ip PRIVATE ${COMPILE_WARNING_FLAGS})
 
 add_executable(print_ip_test test/sfinae_ip_address_test.cpp)
 target_link_libraries(print_ip_test PRIVATE capture GTest::gtest_main ip_address)
-target_compile_options(print_ip_test PRIVATE ${GCC_FLAGS})
+if (NOT MSVC)
+  target_compile_options(print_ip_test
+    PRIVATE ${COMPILE_WARNING_FLAGS} -Wno-global-constructors)
+endif()
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set(CLANG_TIDY_HW_4_OPTS
@@ -97,14 +100,14 @@ add_test(HW_4.print_ip_test print_ip_test)
 install(TARGETS print_ip RUNTIME DESTINATION bin
                                  COMPONENT "${PROJECT_NAME}")
 
-find_package(Doxygen 1.14.0)
+find_package(Doxygen 1.15.0)
 if (NOT Doxygen_FOUND)
   if (WIN32)
-    set(DOXYGEN_URL https://github.com/doxygen/doxygen/releases/download/Release_1_14_0/doxygen-1.14.0.windows.x64.bin.zip)
-    set(DOXYGEN_MD5 d7bd7814898ea345c2ee004c57ae0177)
+    set(DOXYGEN_URL https://github.com/doxygen/doxygen/releases/download/Release_1_15_0/doxygen-1.15.0.windows.x64.bin.zip)
+    set(DOXYGEN_MD5 8eb901df75b2b4dfc102a3b44f29b4cf)
   else()
-    set(DOXYGEN_URL https://github.com/doxygen/doxygen/releases/download/Release_1_14_0/doxygen-1.14.0.linux.bin.tar.gz)
-    set(DOXYGEN_MD5 e761a5097ae20ecccfd02041925f102a)
+    set(DOXYGEN_URL https://github.com/doxygen/doxygen/releases/download/Release_1_15_0/doxygen-1.15.0.linux.bin.tar.gz)
+    set(DOXYGEN_MD5 72f0b4d9b5280f28be54745a815d8a74)
   endif()
   include(FetchContent)
   FetchContent_Declare(
