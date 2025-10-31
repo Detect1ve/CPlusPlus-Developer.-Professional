@@ -5,18 +5,18 @@
 
 int main()
 {
-    std::string line;
-    double sum = 0.0;
     double sum_squared = 0.0;
+    double sum = 0.0;
+    std::string line;
     std::int64_t count = 0;
 
     while (std::getline(std::cin, line))
     {
-        double price = NAN;
-        double price_squared = NAN;
-        std::int64_t value_count = 0;
+        double price = std::nan("");
+        double price_squared = std::nan("");
         std::istringstream iss(line);
         std::string key;
+        std::uint16_t value_count = 0;
 
         if (iss >> key >> price >> price_squared >> value_count)
         {

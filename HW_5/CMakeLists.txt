@@ -12,7 +12,7 @@ if (PROJECT_IS_TOP_LEVEL)
     endif()
   endif()
 
-  set(MINIMUM_CXX_STANDARD 14)
+  set(MINIMUM_CXX_STANDARD 20)
   include(../cmake/cxx_standard.cmake)
   set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 endif()
@@ -22,19 +22,25 @@ if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/gcc_warnings.cmake)
 endif()
 
-if (MSVC)
-  add_compile_options(/W4)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  set(HW_5_COMPILE_WARNING_FLAGS -Wc++20-compat-pedantic)
 endif()
 
-file(GLOB_RECURSE SOURCES
-    "src/*.cpp"
-)
-
-add_executable(editor ${SOURCES})
+add_executable(editor
+  src/controller/document_controller.cpp
+  src/controller/primitive_controller.cpp
+  src/model/primitives/line.cpp
+  src/model/document.cpp
+  src/model/primitive.cpp
+  src/view/document_view.cpp
+  src/view/primitive_view.cpp
+  src/main.cpp)
 target_include_directories(editor PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_compile_options(editor PRIVATE
+  ${COMPILE_WARNING_FLAGS} ${HW_5_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)
   target_link_libraries(editor PRIVATE -static)
-  target_compile_options(editor PRIVATE ${GCC_FLAGS} -Wno-effc++)
+  target_compile_options(editor PRIVATE -Wno-effc++)
 endif()
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)

@@ -8,6 +8,7 @@ constexpr std::uint16_t TEST_VALUE_2 = 217;
 
 TEST(HW6, Matrix)
 {
+    int value = 0;
     // infinite matrix int filled with values ​​-1
     Matrix<int, -1> matrix;
     std::string capturedStdout;
@@ -19,7 +20,8 @@ TEST(HW6, Matrix)
     ASSERT_EQ(-1, a);
     ASSERT_EQ(0, matrix.size());
     matrix[100][100] = TEST_VALUE_1;
-    ASSERT_EQ(TEST_VALUE_1, matrix[100][100]);
+    value = matrix[100][100];
+    ASSERT_EQ(TEST_VALUE_1, value);
     ASSERT_EQ(1, matrix.size());
 
     // one row will be printed
@@ -45,8 +47,9 @@ TEST(HW6, Matrix)
     ASSERT_EQ("100100314\n", capturedStdout);
 
     ((matrix[100][100] = TEST_VALUE_1) = 0) = TEST_VALUE_2;
+    value = matrix[100][100];
 
-    ASSERT_EQ(TEST_VALUE_2, matrix[100][100]);
+    ASSERT_EQ(TEST_VALUE_2, value);
     ASSERT_EQ(1, matrix.size());
 
     StdoutCapture::Begin();

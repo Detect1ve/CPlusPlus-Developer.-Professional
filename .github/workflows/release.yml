@@ -10,35 +10,115 @@ on:
       - feature/github_actions
 
 jobs:
-  build:
+  build_and_test:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'push' }}
+    strategy:
+      matrix:
+        include:
+          - name: GCC-Release
+            compiler: gcc
+            c_compiler: gcc-14
+            cpp_compiler: g++-14
+            build_dir: build-gcc-release
+            build_type: Release
+            install_compiler: true
+            build_packages: true
+            build_docs: true
+          - name: GCC-Debug
+            compiler: gcc
+            c_compiler: gcc-14
+            cpp_compiler: g++-14
+            build_dir: build-gcc-debug
+            build_type: Debug
+            install_compiler: true
+          - name: GCC-RelWithDebInfo
+            compiler: gcc
+            c_compiler: gcc-14
+            cpp_compiler: g++-14
+            build_dir: build-gcc-relwithdebinfo
+            build_type: RelWithDebInfo
+            install_compiler: true
+          - name: GCC-MinSizeRel
+            compiler: gcc
+            c_compiler: gcc-14
+            cpp_compiler: g++-14
+            build_dir: build-gcc-minsizerel
+            build_type: MinSizeRel
+            install_compiler: true
+          - name: Clang-Release
+            compiler: clang
+            c_compiler: clang
+            cpp_compiler: clang++
+            build_dir: build-clang-release
+            build_type: Release
+          - name: Clang-Debug
+            compiler: clang
+            c_compiler: clang
+            cpp_compiler: clang++
+            build_dir: build-clang-debug
+            build_type: Debug
+          - name: Clang-RelWithDebInfo
+            compiler: clang
+            c_compiler: clang
+            cpp_compiler: clang++
+            build_dir: build-clang-relwithdebinfo
+            build_type: RelWithDebInfo
+          - name: Clang-MinSizeRel
+            compiler: clang
+            c_compiler: clang
+            cpp_compiler: clang++
+            build_dir: build-clang-minsizerel
+            build_type: MinSizeRel
+    name: ${{ matrix.name }}
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: true
       - name: Install CMake
         run: |
-          wget -qO- "https://cmake.org/files/v4.1/cmake-4.1.2-linux-x86_64.tar.gz" | sudo tar --strip-components=1 -xz -C /usr/local
+          wget -qO- "https://cmake.org/files/v4.2/cmake-4.2.0-linux-x86_64.tar.gz" | sudo tar --strip-components=1 -xz -C /usr/local
       - name: Install GCC
-        run: |
-          sudo apt-get update && sudo apt-get install g++-14 -y
-          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 10
-          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-14 10
-      - run: cmake -G Ninja -B build -D PATCH_VERSION=${{ github.run_number }}
-      - run: cmake --build build
-      - run: cmake --build build --target test
-      - run: cmake --build build --target package
+        if: matrix.install_compiler
+        run: sudo apt-get update && sudo apt-get install -y ${{ matrix.cpp_compiler }}
+      - run: |
+          cmake -G Ninja \
+            -B ${{ matrix.build_dir }} \
+            -D PATCH_VERSION=${{ github.run_number }} \
+            -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -D CMAKE_C_COMPILER=${{ matrix.c_compiler }} \
+            -D CMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
+      - run: cmake --build ${{ matrix.build_dir }}
+      - run: cmake --build ${{ matrix.build_dir }} --target test
+      - if: matrix.build_packages && github.event_name == 'push'
+        run: cmake --build ${{ matrix.build_dir }} --target package
+      - if: matrix.build_docs && github.event_name == 'push'
+        run: cmake --build ${{ matrix.build_dir }} --target docs
+      - name: Upload artifacts
+        if: (matrix.build_packages || matrix.build_docs) && github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts
+          path: ${{ matrix.build_dir }}
+
+  release:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    needs: build_and_test
+    steps:
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-artifacts
+          path: release-artifacts
       - id: find_packages
         name: Find all unique DEB packages
         run: |
-          PACKAGES=$(find . -name "*-0.0.${{ github.run_number }}-Linux.deb" | awk -F/ '{print $NF, $0}' | sort -k1,1 -u | cut -d' ' -f2- | jq -R -s -c 'split("\n")[:-1]')
+          PACKAGES=$(find release-artifacts -name "*-0.0.${{ github.run_number }}-Linux.deb" | awk -F/ '{print $NF, $0}' | sort -k1,1 -u | cut -d' ' -f2- | jq -R -s -c 'split("\n")[:-1]')
           echo "packages=$PACKAGES" >> "$GITHUB_OUTPUT"
-      - run: cmake --build build --target docs
       - id: find_docs
         name: Find Doxygen Documentation
         run: |
-          DOCS_DIR=$(cmake -LA -N build | grep DOXYGEN_OUTPUT_DIRECTORY | cut -d= -f2)/html
+          DOCS_DIR=$(cmake -LA -N release-artifacts | grep DOXYGEN_OUTPUT_DIRECTORY | cut -d= -f2)/html
           echo "docs_dir=$DOCS_DIR" >> "$GITHUB_OUTPUT"
       - name: Deploy Doxygen Documentation to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
@@ -82,24 +162,3 @@ jobs:
                 data: fs.readFileSync(packagePath)
               });
             }
-
-  pull_request_ci:
-    runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'pull_request' }}
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: true
-      - name: Install CMake
-        run: |
-          wget -qO- "https://cmake.org/files/v4.1/cmake-4.1.2-linux-x86_64.tar.gz" | sudo tar --strip-components=1 -xz -C /usr/local
-      - name: Install GCC
-        run: |
-          sudo apt-get update && sudo apt-get install g++-14 -y
-          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 10
-          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-14 10
-      - run: cmake -G Ninja -B build -D PATCH_VERSION=${{ github.run_number }}
-      - run: cmake --build build
-      - run: cmake --build build --target test
-      - run: cmake --build build --target package
-      - run: cmake --build build --target docs

@@ -102,9 +102,10 @@ public:
     static std::atomic<bool> threads_initialized;
 
     static std::condition_variable& queue_cv() {
-        static std::condition_variable condition;
+        // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
+        static auto* condition = new std::condition_variable();
 
-        return condition;
+        return *condition;
     }
 
     static std::mutex& queue_mutex() {
@@ -114,33 +115,38 @@ public:
     }
 
     static std::queue<OutputTask>& file_queue() {
-        static std::queue<OutputTask> queue;
+        // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
+        static auto* queue = new std::queue<OutputTask>;
 
-        return queue;
+        return *queue;
     }
 
     static std::queue<OutputTask>& log_queue() {
-        static std::queue<OutputTask> queue;
+        // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
+        static auto* queue = new std::queue<OutputTask>;
 
-        return queue;
+        return *queue;
     }
 
     static std::thread& file_thread1() {
-        static std::thread thread;
+        // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
+        static auto* thread = new std::thread;
 
-        return thread;
+        return *thread;
     }
 
     static std::thread& file_thread2() {
-        static std::thread thread;
+        // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
+        static auto* thread = new std::thread;
 
-        return thread;
+        return *thread;
     }
 
     static std::thread& log_thread() {
-        static std::thread thread;
+        // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
+        static auto* thread = new std::thread;
 
-        return thread;
+        return *thread;
     }
 };
 
@@ -162,15 +168,17 @@ std::mutex& contexts_mutex() {
 }
 
 std::map<void*, std::unique_ptr<ConnectionContext>>& contexts() {
-    static std::map<void*, std::unique_ptr<ConnectionContext>> contexts_map;
+    // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
+    static auto* contexts_map = new std::map<void*, std::unique_ptr<ConnectionContext>>;
 
-    return contexts_map;
+    return *contexts_map;
 }
 
 std::unique_ptr<taskmanager>& shared_task_manager() {
-    static std::unique_ptr<taskmanager> manager;
+    // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
+    static auto* manager = new std::unique_ptr<taskmanager>;
 
-    return manager;
+    return *manager;
 }
 
 void process_command(ConnectionContext* context, const std::string& command) {

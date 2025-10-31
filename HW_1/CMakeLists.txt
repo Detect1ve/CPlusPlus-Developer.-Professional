@@ -15,7 +15,7 @@ if (PROJECT_IS_TOP_LEVEL)
             add_compile_options(-fdiagnostics-color=always)
         endif()
     endif()
-    set(MINIMUM_CXX_STANDARD 98)
+    set(MINIMUM_CXX_STANDARD 11)
     include(../cmake/cxx_standard.cmake)
     set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 endif()
@@ -26,7 +26,7 @@ add_executable(helloworld_cli main.cpp)
 add_library(helloworld STATIC lib.cpp)
 
 target_include_directories(helloworld
-    PRIVATE "${CMAKE_CURRENT_BINARY_DIR}"
+    PRIVATE "${PROJECT_BINARY_DIR}"
 )
 
 target_link_libraries(helloworld_cli PRIVATE
@@ -61,6 +61,42 @@ target_link_libraries(g_test_version
     PRIVATE GTest::gtest_main
     helloworld
 )
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 15)
+        set(HW_1_COMPILE_WARNING_FLAGS -Wleading-whitespace=none)
+    endif()
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    set(HW_1_COMPILE_WARNING_FLAGS -Wc++11-compat-pedantic)
+endif()
+
+target_compile_options(helloworld_cli PRIVATE
+    ${COMPILE_WARNING_FLAGS} ${HW_1_COMPILE_WARNING_FLAGS}
+)
+target_compile_options(helloworld PRIVATE
+    ${COMPILE_WARNING_FLAGS} ${HW_1_COMPILE_WARNING_FLAGS}
+)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(helloworld PRIVATE
+        -Wno-suggest-attribute=const 
+    )
+endif()
+target_compile_options(test_version PRIVATE
+    ${COMPILE_WARNING_FLAGS} ${HW_1_COMPILE_WARNING_FLAGS}
+)
+if (NOT MSVC)
+    target_compile_options(test_version PRIVATE
+        -Wno-used-but-marked-unused -Wno-global-constructors
+    )
+endif()
+target_compile_options(g_test_version PRIVATE
+    ${COMPILE_WARNING_FLAGS} ${HW_1_COMPILE_WARNING_FLAGS}
+)
+if (NOT MSVC)
+    target_compile_options(g_test_version PRIVATE
+        -Wno-global-constructors
+    )
+endif()
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
     set_target_properties(helloworld_cli PROPERTIES
@@ -113,38 +149,6 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
     )
 endif()
 
-if (MSVC)
-    target_compile_options(helloworld_cli PRIVATE
-        /W4
-    )
-    target_compile_options(helloworld PRIVATE
-        /W4
-    )
-    target_compile_options(test_version PRIVATE
-        /W4
-    )
-    target_compile_options(g_test_version PRIVATE
-        /W4
-    )
-else ()
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 15)
-        set(HW_1_GCC_FLAGS -Wleading-whitespace=none)
-    endif()
-
-    target_compile_options(helloworld_cli PRIVATE
-        ${GCC_FLAGS} ${HW_1_GCC_FLAGS}
-    )
-    target_compile_options(helloworld PRIVATE
-        ${GCC_FLAGS} -Wno-suggest-attribute=const ${HW_1_GCC_FLAGS}
-    )
-    target_compile_options(test_version PRIVATE
-        ${GCC_FLAGS} ${HW_1_GCC_FLAGS}
-    )
-    target_compile_options(g_test_version PRIVATE
-        ${GCC_FLAGS} ${HW_1_GCC_FLAGS}
-    )
-endif()
-
 install(TARGETS helloworld_cli RUNTIME DESTINATION bin
                                        COMPONENT "${PROJECT_NAME}"
 )
@@ -167,5 +171,5 @@ else ()
 endif()
 
 enable_testing()
-add_test(HW_1.test_version test_version)
-add_test(HW_1.g_test_version g_test_version)
+add_test(NAME HW_1.test_version COMMAND $<TARGET_FILE:test_version>)
+add_test(NAME HW_1.g_test_version COMMAND $<TARGET_FILE:g_test_version>)

@@ -24,6 +24,10 @@ if (MSVC OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     include(../cmake/cxx_standard.cmake)
   endif()
 
+  if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    set(HW_12_COMPILE_WARNING_FLAGS -Wc++17-compat-pedantic)
+  endif()
+
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
   add_executable(mapper mapper.cpp)
@@ -38,13 +42,18 @@ if (MSVC OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_link_libraries(reducer_variance PRIVATE -static)
   endif()
 
-  if (MSVC)
-    add_compile_options(/W4)
-  else()
-    target_compile_options(mapper PRIVATE ${GCC_FLAGS})
-    target_compile_options(reducer PRIVATE ${GCC_FLAGS})
-    target_compile_options(mapper_variance PRIVATE ${GCC_FLAGS})
-    target_compile_options(reducer_variance PRIVATE ${GCC_FLAGS})
+  target_compile_options(mapper PRIVATE
+    ${COMPILE_WARNING_FLAGS} ${HW_12_COMPILE_WARNING_FLAGS})
+  target_compile_options(reducer PRIVATE
+    ${COMPILE_WARNING_FLAGS} ${HW_12_COMPILE_WARNING_FLAGS})
+  target_compile_options(mapper_variance PRIVATE
+    ${COMPILE_WARNING_FLAGS} ${HW_12_COMPILE_WARNING_FLAGS})
+  target_compile_options(reducer_variance PRIVATE
+    ${COMPILE_WARNING_FLAGS} ${HW_12_COMPILE_WARNING_FLAGS})
+  if (NOT MSVC)
+    target_compile_options(mapper PRIVATE -Wno-unused-parameter -Wno-unsafe-buffer-usage)
+    target_compile_options(reducer PRIVATE -Wno-unused-parameter)
+    target_compile_options(mapper_variance PRIVATE -Wno-unsafe-buffer-usage)
   endif()
 
   if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
@@ -60,6 +69,7 @@ if (MSVC OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set_target_properties(mapper PROPERTIES
       CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
         -clang-diagnostic-unused-parameter,\
+        -llvm-prefer-static-over-anonymous-namespace,\
         -misc-unused-parameters,\
         -performance-avoid-endl,\
         ${CLANG_TIDY_HW_12_OPTS}")
@@ -73,6 +83,7 @@ if (MSVC OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 
     set_target_properties(mapper_variance PROPERTIES
       CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
+        -llvm-prefer-static-over-anonymous-namespace,\
         ${CLANG_TIDY_HW_12_OPTS}")
 
     set_target_properties(reducer_variance PROPERTIES

@@ -32,23 +32,26 @@ if (PROJECT_IS_TOP_LEVEL)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
-if (MSVC)
-  add_compile_options(/W4)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  set(HW_9_COMPILE_WARNING_FLAGS -Wc++17-compat-pedantic)
 endif()
 
 add_library(async SHARED lib/async.cpp include/async.h)
 target_include_directories(async PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_compile_options(async PRIVATE
+  ${COMPILE_WARNING_FLAGS} ${HW_9_COMPILE_WARNING_FLAGS})
 if (MSVC)
   set_target_properties(async PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 else()
-  target_compile_options(async PRIVATE ${GCC_FLAGS} -Wno-effc++ -Wno-strict-overflow)
+  target_compile_options(async PRIVATE -Wno-effc++ -Wno-strict-overflow)
 endif()
 
 add_library(async_static STATIC lib/async.cpp)
 target_include_directories(async_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_compile_options(async_static PRIVATE
+  ${COMPILE_WARNING_FLAGS} ${HW_9_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)
-  target_compile_options(async_static PRIVATE
-    ${GCC_FLAGS} -Wno-effc++ -Wno-strict-overflow)
+  target_compile_options(async_static PRIVATE -Wno-effc++ -Wno-strict-overflow)
 endif()
 
 add_executable(async_cli src/main.cpp)
@@ -56,12 +59,18 @@ target_link_libraries(async_cli PRIVATE async_static)
 if (NOT MSVC)
   target_link_libraries(async_cli PRIVATE -static)
 endif()
-target_compile_options(async_cli PRIVATE ${GCC_FLAGS})
+target_compile_options(async_cli PRIVATE
+  ${COMPILE_WARNING_FLAGS} ${HW_9_COMPILE_WARNING_FLAGS})
 
 add_executable(async_test test/async_test.cpp)
 target_link_libraries(async_test
   PRIVATE async capture GTest::gtest_main wrapper_absl_strings)
-target_compile_options(async_test PRIVATE ${GCC_FLAGS})
+target_compile_options(async_test PRIVATE
+  ${COMPILE_WARNING_FLAGS} ${HW_9_COMPILE_WARNING_FLAGS})
+if (NOT MSVC)
+  target_compile_options(async_test
+    PRIVATE -Wno-unsafe-buffer-usage -Wno-global-constructors)
+endif()
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set(CLANG_TIDY_HW_9_OPTS
@@ -122,7 +131,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
 endif()
 
 enable_testing()
-add_test(HW_9.async_test async_test)
+add_test(NAME HW_9.async_test COMMAND $<TARGET_FILE:async_test>)
 
 install(TARGETS async
         LIBRARY DESTINATION lib

@@ -33,45 +33,53 @@ if (PROJECT_IS_TOP_LEVEL)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  set(HW_10_COMPILE_WARNING_FLAGS -Wc++17-compat-pedantic)
+endif()
+
 add_library(server_async STATIC lib/async.cpp)
 target_include_directories(server_async PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-
-if (MSVC)
-  target_compile_options(server_async PRIVATE /W4)
-else()
-  target_compile_options(server_async PRIVATE ${GCC_FLAGS} -Wno-effc++)
+target_compile_options(server_async PRIVATE
+  ${COMPILE_WARNING_FLAGS} ${HW_10_COMPILE_WARNING_FLAGS})
+if (NOT MSVC)
+  target_compile_options(server_async PRIVATE -Wno-effc++)
 endif()
 
 add_library(server STATIC lib/server.cpp)
 target_include_directories(server PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(server PRIVATE server_async wrapper_boost_asio)
-
-if (MSVC)
-  target_compile_options(server PRIVATE /W4)
-else()
-  target_compile_options(server PRIVATE ${GCC_FLAGS} -Wno-effc++ -Wno-null-dereference)
+target_compile_options(server PRIVATE
+  ${COMPILE_WARNING_FLAGS} ${HW_10_COMPILE_WARNING_FLAGS})
+if (NOT MSVC)
+  target_compile_options(server PRIVATE -Wno-effc++ -Wno-null-dereference)
 endif()
 
 add_executable(bulk_server src/main.cpp)
 target_link_libraries(bulk_server PRIVATE server)
+target_compile_options(bulk_server PRIVATE
+  ${COMPILE_WARNING_FLAGS} ${HW_10_COMPILE_WARNING_FLAGS})
 if (MSVC)
-target_compile_options(bulk_server PRIVATE /W4)
   target_compile_definitions(server PRIVATE _WIN32_WINNT=0x0A00)
   target_compile_definitions(bulk_server PRIVATE _WIN32_WINNT=0x0A00)
 else()
-  target_compile_options(bulk_server PRIVATE ${GCC_FLAGS})
+  target_compile_options(bulk_server
+    PRIVATE -Wno-unsafe-buffer-usage-in-container -Wno-unsafe-buffer-usage)
   target_link_libraries(bulk_server PRIVATE -static)
 endif()
 
 add_executable(bulk_server_test test/bulk_server_test.cpp)
 target_link_libraries(bulk_server_test PRIVATE capture GTest::gtest_main server
   socket_wrapper)
-
-if (MSVC)
-  target_compile_options(bulk_server_test PRIVATE /W4)
-else()
-  target_compile_options(bulk_server_test PRIVATE ${GCC_FLAGS} -Wno-alloc-zero
-    -Wno-strict-overflow)
+target_compile_options(bulk_server_test PRIVATE
+  ${COMPILE_WARNING_FLAGS} ${HW_10_COMPILE_WARNING_FLAGS})
+if (NOT MSVC)
+  if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(bulk_server_test
+      PRIVATE -Wno-alloc-zero -Wno-strict-overflow)
+  else()
+    target_compile_options(bulk_server_test
+      PRIVATE -Wno-unsafe-buffer-usage -Wno-global-constructors)
+  endif()
 endif()
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
@@ -126,7 +134,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
 endif()
 
 enable_testing()
-add_test(HW_10.bulk_server_test bulk_server_test)
+add_test(NAME HW_10.bulk_server_test COMMAND $<TARGET_FILE:bulk_server_test>)
 
 install(TARGETS bulk_server
         RUNTIME DESTINATION bin

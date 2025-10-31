@@ -7,7 +7,8 @@ int main(
     const int          argc,
     const char **const argv)
 {
-    auto [status, options] = option_process({argv, static_cast<std::size_t>(argc)});
+    const std::span<const char* const> args(argv, static_cast<std::size_t>(argc));
+    auto [status, options] = option_process(args);
 
     if (status == ProcessStatus::HELP_REQUESTED)
     {

@@ -34,6 +34,10 @@ if (PROJECT_IS_TOP_LEVEL)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  set(HW_8_COMPILE_WARNING_FLAGS -Wc++17-compat-pedantic)
+endif()
+
 include(../common/boost_crc.cmake)
 include(../common/boost_filesystem.cmake)
 include(../common/boost_program_options.cmake)
@@ -43,11 +47,11 @@ target_include_directories(bayan_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(bayan_lib
   PRIVATE wrapper_boost_algorithm wrapper_boost_crc wrapper_boost_filesystem
     wrapper_boost_program_options wrapper_boost_uuid)
-if (MSVC)
-  target_compile_options(bayan_lib PRIVATE /W4)
-else()
+target_compile_options(bayan_lib PRIVATE
+  ${COMPILE_WARNING_FLAGS} ${HW_8_COMPILE_WARNING_FLAGS})
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   target_compile_options(bayan_lib
-    PRIVATE ${GCC_FLAGS} -Wno-alloc-zero -Wno-effc++ -Wno-strict-overflow)
+    PRIVATE -Wno-alloc-zero -Wno-effc++ -Wno-strict-overflow)
 endif()
 
 add_executable(bayan src/main.cpp)
@@ -55,20 +59,20 @@ target_link_libraries(bayan PRIVATE bayan_lib)
 if (NOT MSVC)
   target_link_libraries(bayan PRIVATE -static)
 endif()
-if (MSVC)
-  target_compile_options(bayan PRIVATE /W4)
-else()
-  target_compile_options(bayan PRIVATE ${GCC_FLAGS})
+target_compile_options(bayan PRIVATE
+  ${COMPILE_WARNING_FLAGS} ${HW_8_COMPILE_WARNING_FLAGS})
+if (NOT MSVC)
+  target_compile_options(bayan PRIVATE -Wno-unsafe-buffer-usage-in-container)
 endif()
 
 add_executable(bayan_test test/bayan_test.cpp)
 target_link_libraries(bayan_test
   PRIVATE bayan_lib capture GTest::gtest_main wrapper_absl_strings
     wrapper_boost_filesystem)
-if (MSVC)
-  target_compile_options(bayan_test PRIVATE /W4)
-else()
-  target_compile_options(bayan_test PRIVATE ${GCC_FLAGS})
+target_compile_options(bayan_test PRIVATE
+  ${COMPILE_WARNING_FLAGS} ${HW_8_COMPILE_WARNING_FLAGS})
+if (NOT MSVC)
+  target_compile_options(bayan_test PRIVATE -Wno-global-constructors)
 endif()
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
@@ -107,7 +111,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
 endif()
 
 enable_testing()
-add_test(HW_8.bayan_test bayan_test)
+add_test(NAME HW_8.bayan_test COMMAND $<TARGET_FILE:bayan_test>)
 
 install(TARGETS bayan RUNTIME DESTINATION bin
                       COMPONENT "${PROJECT_NAME}")

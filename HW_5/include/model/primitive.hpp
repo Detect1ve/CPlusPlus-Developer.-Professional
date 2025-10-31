@@ -17,7 +17,7 @@ namespace editor::model
     class Primitive
     {
     public:
-        virtual ~Primitive() = default;
+        virtual ~Primitive();
 
         Primitive() = default;
         Primitive(const Primitive&) = delete;

@@ -114,7 +114,16 @@ protected:
     {
         return start_time;
     }
+public:
+    HW9() = default;
+    HW9(const HW9&) = delete;
+    HW9(HW9&&) = delete;
+    HW9& operator=(const HW9&) = delete;
+    HW9& operator=(HW9&&) = delete;
+    ~HW9() override;
 };
+
+HW9::~HW9() = default;
 
 TEST_F(HW9, MainFunctionality)
 {
