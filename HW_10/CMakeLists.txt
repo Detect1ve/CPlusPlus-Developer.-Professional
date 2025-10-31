@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25..4.1.0)
+cmake_minimum_required(VERSION 3.25..4.1.2)
 
 if (NOT DEFINED PATCH_VERSION)
   set(PATCH_VERSION
@@ -39,7 +39,7 @@ target_include_directories(server_async PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/incl
 if (MSVC)
   target_compile_options(server_async PRIVATE /W4)
 else()
-  target_compile_options(server_async PRIVATE ${GCC_FLAGS} -Wno-effc++)
+  target_compile_options(server_async PRIVATE ${COMPILE_WARNING_FLAGS} -Wno-effc++)
 endif()
 
 add_library(server STATIC lib/server.cpp)
@@ -49,7 +49,8 @@ target_link_libraries(server PRIVATE server_async wrapper_boost_asio)
 if (MSVC)
   target_compile_options(server PRIVATE /W4)
 else()
-  target_compile_options(server PRIVATE ${GCC_FLAGS} -Wno-effc++ -Wno-null-dereference)
+  target_compile_options(server
+    PRIVATE ${COMPILE_WARNING_FLAGS} -Wno-effc++ -Wno-null-dereference)
 endif()
 
 add_executable(bulk_server src/main.cpp)
@@ -59,7 +60,9 @@ target_compile_options(bulk_server PRIVATE /W4)
   target_compile_definitions(server PRIVATE _WIN32_WINNT=0x0A00)
   target_compile_definitions(bulk_server PRIVATE _WIN32_WINNT=0x0A00)
 else()
-  target_compile_options(bulk_server PRIVATE ${GCC_FLAGS})
+  target_compile_options(bulk_server
+    PRIVATE ${COMPILE_WARNING_FLAGS} -Wno-unsafe-buffer-usage-in-container
+      -Wno-unsafe-buffer-usage)
   target_link_libraries(bulk_server PRIVATE -static)
 endif()
 
@@ -70,8 +73,13 @@ target_link_libraries(bulk_server_test PRIVATE capture GTest::gtest_main server
 if (MSVC)
   target_compile_options(bulk_server_test PRIVATE /W4)
 else()
-  target_compile_options(bulk_server_test PRIVATE ${GCC_FLAGS} -Wno-alloc-zero
-    -Wno-strict-overflow)
+  if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(bulk_server_test
+      PRIVATE ${COMPILE_WARNING_FLAGS} -Wno-alloc-zero -Wno-strict-overflow)
+  else()
+    target_compile_options(bulk_server_test
+      PRIVATE ${COMPILE_WARNING_FLAGS} -Wno-unsafe-buffer-usage -Wno-global-constructors)
+  endif()
 endif()
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)

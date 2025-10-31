@@ -167,7 +167,16 @@ protected:
     {
         return port_;
     }
+public:
+    HW10() = default;
+    HW10(const HW10&) = delete;
+    HW10(HW10&&) = delete;
+    HW10& operator=(const HW10&) = delete;
+    HW10& operator=(HW10&&) = delete;
+    ~HW10() override;
 };
+
+HW10::~HW10() = default;
 
 TEST_F(HW10, CombinedConnectionTest)
 {

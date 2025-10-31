@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25..4.1.0)
+cmake_minimum_required(VERSION 3.25..4.1.2)
 
 if (NOT DEFINED PATCH_VERSION)
   set(PATCH_VERSION
@@ -40,7 +40,7 @@ add_library(taskmanager STATIC lib/taskmanager.cpp)
 target_include_directories(taskmanager PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 if (NOT MSVC)
   target_compile_options(taskmanager
-    PRIVATE ${GCC_FLAGS} -Wno-strict-overflow
+    PRIVATE ${COMPILE_WARNING_FLAGS} -Wno-strict-overflow
     PUBLIC -Wno-effc++)
 endif()
 
@@ -49,11 +49,14 @@ target_link_libraries(bulk PRIVATE taskmanager)
 if (NOT MSVC)
   target_link_libraries(bulk PRIVATE -static)
 endif()
-target_compile_options(bulk PRIVATE ${GCC_FLAGS})
+target_compile_options(bulk
+  PRIVATE ${COMPILE_WARNING_FLAGS} -Wno-unsafe-buffer-usage-in-container
+    -Wno-unsafe-buffer-usage)
 
 add_executable(taskmanager_test test/taskmanager_test.cpp)
 target_link_libraries(taskmanager_test PRIVATE capture GTest::gtest_main taskmanager)
-target_compile_options(taskmanager_test PRIVATE ${GCC_FLAGS})
+target_compile_options(taskmanager_test
+  PRIVATE ${COMPILE_WARNING_FLAGS} -Wno-unsafe-buffer-usage -Wno-global-constructors)
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set(CLANG_TIDY_HW_7_OPTS

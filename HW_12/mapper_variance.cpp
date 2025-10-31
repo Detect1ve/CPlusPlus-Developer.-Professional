@@ -38,7 +38,7 @@ namespace
             {
                 if (current_index == field_index.value)
                 {
-                    return current_field;
+                    break;
                 }
 
                 current_field.clear();
@@ -50,12 +50,7 @@ namespace
             }
         }
 
-        if (current_index == field_index.value)
-        {
-            return current_field;
-        }
-
-        return "";
+        return current_field;
     }
 } // namespace
 
@@ -74,6 +69,7 @@ int main()
             const std::string_view price_field_sv(price_field);
             double price = 0.0;
             auto [ptr, ec] = std::from_chars(price_field_sv.data(),
+                // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
                 price_field_sv.data() + price_field_sv.size(), price,
                 std::chars_format::general);
             if (ec == std::errc())

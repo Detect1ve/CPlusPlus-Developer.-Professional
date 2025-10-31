@@ -57,7 +57,7 @@ int main()
         my_list_with_custom_alloc.push_back(i);
     }
 
-    for (const auto& elem : my_list_with_custom_alloc)
+    for (const auto elem : my_list_with_custom_alloc)
     {
         std::cout << elem << '\n';
     }

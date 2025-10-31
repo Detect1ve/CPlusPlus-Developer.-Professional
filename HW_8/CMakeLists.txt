@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25..4.1.0)
+cmake_minimum_required(VERSION 3.25..4.1.2)
 
 if (NOT DEFINED PATCH_VERSION)
   set(PATCH_VERSION
@@ -46,8 +46,12 @@ target_link_libraries(bayan_lib
 if (MSVC)
   target_compile_options(bayan_lib PRIVATE /W4)
 else()
-  target_compile_options(bayan_lib
-    PRIVATE ${GCC_FLAGS} -Wno-alloc-zero -Wno-effc++ -Wno-strict-overflow)
+  if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(bayan_lib
+      PRIVATE ${COMPILE_WARNING_FLAGS} -Wno-alloc-zero -Wno-effc++ -Wno-strict-overflow)
+  else()
+    target_compile_options(bayan_lib PRIVATE ${COMPILE_WARNING_FLAGS})
+  endif()
 endif()
 
 add_executable(bayan src/main.cpp)
@@ -58,7 +62,8 @@ endif()
 if (MSVC)
   target_compile_options(bayan PRIVATE /W4)
 else()
-  target_compile_options(bayan PRIVATE ${GCC_FLAGS})
+  target_compile_options(bayan
+    PRIVATE ${COMPILE_WARNING_FLAGS} -Wno-unsafe-buffer-usage-in-container)
 endif()
 
 add_executable(bayan_test test/bayan_test.cpp)
@@ -68,7 +73,8 @@ target_link_libraries(bayan_test
 if (MSVC)
   target_compile_options(bayan_test PRIVATE /W4)
 else()
-  target_compile_options(bayan_test PRIVATE ${GCC_FLAGS})
+  target_compile_options(bayan_test
+    PRIVATE ${COMPILE_WARNING_FLAGS} -Wno-global-constructors)
 endif()
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)

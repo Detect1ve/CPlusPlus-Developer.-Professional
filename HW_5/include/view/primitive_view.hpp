@@ -10,7 +10,7 @@ namespace editor::view
         const model::Primitive* primitive_;
     public:
         explicit PrimitiveView(const model::Primitive* primitive);
-        virtual ~PrimitiveView() = default;
+        virtual ~PrimitiveView();
 
         PrimitiveView(const PrimitiveView&) = delete;
         PrimitiveView& operator=(const PrimitiveView&) = delete;
@@ -20,7 +20,7 @@ namespace editor::view
         virtual void render() const = 0;
 
         [[nodiscard]] const model::Primitive* getPrimitive() const
-#if !defined(_MSC_VER)
+#ifndef _MSC_VER
         __attribute__((pure))
 #endif
         ;

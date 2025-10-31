@@ -22,17 +22,17 @@ struct FileInfo
     ~FileInfo() noexcept;
 
     [[nodiscard]] uintmax_t get_size() const
-#if !defined(_MSC_VER)
+#ifndef _MSC_VER
         __attribute__((pure))
 #endif
         ;
     [[nodiscard]] const std::vector<std::string>& get_hashes() const
-#if !defined(_MSC_VER)
+#ifndef _MSC_VER
         __attribute__((const))
 #endif
         ;
     const boost::filesystem::path& get_path() const
-#if !defined(_MSC_VER)
+#ifndef _MSC_VER
         __attribute__((const))
 #endif
         ;
@@ -113,12 +113,9 @@ std::string compute_md5(std::string_view input)
 
     hash.process_bytes(input.data(), input.length());
     hash.get_digest(digest);
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-    const auto *const char_digest = reinterpret_cast<const char*>(&digest);
     std::string result;
 
-    boost::algorithm::hex(std::span(char_digest, sizeof(digest)),
-        std::back_inserter(result));
+    boost::algorithm::hex(std::span(digest), std::back_inserter(result));
 
     return result;
 }

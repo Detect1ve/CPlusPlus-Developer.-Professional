@@ -24,18 +24,18 @@ namespace editor::model
         void addPrimitive(std::unique_ptr<Primitive> primitive);
         void removePrimitive(std::size_t index);
         [[nodiscard]] const Primitive* getPrimitive(std::size_t index) const
-#if !defined(_MSC_VER)
+#ifndef _MSC_VER
             __attribute__((pure))
 #endif
             ;
         [[nodiscard]] std::size_t getPrimitiveCount() const
-#if !defined(_MSC_VER)
+#ifndef _MSC_VER
             __attribute__((pure))
 #endif
             ;
 
         [[nodiscard]] const std::string& getName() const
-#if !defined(_MSC_VER)
+#ifndef _MSC_VER
             __attribute__((const))
 #endif
             ;
@@ -44,7 +44,7 @@ namespace editor::model
         [[nodiscard]] static bool saveToFile(
             const Document&    document,
             const std::string& filename)
-#if !defined(_MSC_VER)
+#ifndef _MSC_VER
             __attribute__((const))
 #endif
             ;

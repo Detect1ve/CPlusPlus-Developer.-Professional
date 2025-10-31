@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25..4.1.0)
+cmake_minimum_required(VERSION 3.25..4.1.2)
 
 if (NOT DEFINED PATCH_VERSION)
   set(PATCH_VERSION
@@ -41,13 +41,15 @@ target_include_directories(async PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 if (MSVC)
   set_target_properties(async PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 else()
-  target_compile_options(async PRIVATE ${GCC_FLAGS} -Wno-effc++ -Wno-strict-overflow)
+  target_compile_options(async
+    PRIVATE ${COMPILE_WARNING_FLAGS} -Wno-effc++ -Wno-strict-overflow)
 endif()
 
 add_library(async_static STATIC lib/async.cpp)
 target_include_directories(async_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 if (NOT MSVC)
-  target_compile_options(async_static PRIVATE ${GCC_FLAGS} -Wno-effc++ -Wno-strict-overflow)
+  target_compile_options(async_static
+    PRIVATE ${COMPILE_WARNING_FLAGS} -Wno-effc++ -Wno-strict-overflow)
 endif()
 
 add_executable(async_cli src/main.cpp)
@@ -55,12 +57,13 @@ target_link_libraries(async_cli PRIVATE async_static)
 if (NOT MSVC)
   target_link_libraries(async_cli PRIVATE -static)
 endif()
-target_compile_options(async_cli PRIVATE ${GCC_FLAGS})
+target_compile_options(async_cli PRIVATE ${COMPILE_WARNING_FLAGS})
 
 add_executable(async_test test/async_test.cpp)
 target_link_libraries(async_test
   PRIVATE async capture GTest::gtest_main wrapper_absl_strings)
-target_compile_options(async_test PRIVATE ${GCC_FLAGS})
+target_compile_options(async_test
+  PRIVATE ${COMPILE_WARNING_FLAGS} -Wno-unsafe-buffer-usage -Wno-global-constructors)
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set(CLANG_TIDY_HW_9_OPTS

@@ -64,7 +64,7 @@ namespace std
 
 [[nodiscard]]
 std::expected<std::uint8_t, std::error_code> from_chars(std::string_view chars)
-#if !defined(_MSC_VER)
+#ifndef _MSC_VER
     __attribute__((pure))
 #endif
     ;

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25..4.1.0)
+cmake_minimum_required(VERSION 3.25..4.1.2)
 
 project(HW_5 LANGUAGES CXX)
 
@@ -34,7 +34,7 @@ add_executable(editor ${SOURCES})
 target_include_directories(editor PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 if (NOT MSVC)
   target_link_libraries(editor PRIVATE -static)
-  target_compile_options(editor PRIVATE ${GCC_FLAGS} -Wno-effc++)
+  target_compile_options(editor PRIVATE ${COMPILE_WARNING_FLAGS} -Wno-effc++)
 endif()
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)

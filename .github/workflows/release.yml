@@ -19,7 +19,7 @@ jobs:
           submodules: true
       - name: Install CMake
         run: |
-          wget -qO- "https://cmake.org/files/v4.1/cmake-4.1.0-linux-x86_64.tar.gz" | sudo tar --strip-components=1 -xz -C /usr/local
+          wget -qO- "https://cmake.org/files/v4.1/cmake-4.1.2-linux-x86_64.tar.gz" | sudo tar --strip-components=1 -xz -C /usr/local
       - name: Install GCC
         run: |
           sudo apt-get update && sudo apt-get install g++-14 -y
@@ -92,7 +92,7 @@ jobs:
           submodules: true
       - name: Install CMake
         run: |
-          wget -qO- "https://cmake.org/files/v4.1/cmake-4.1.0-linux-x86_64.tar.gz" | sudo tar --strip-components=1 -xz -C /usr/local
+          wget -qO- "https://cmake.org/files/v4.1/cmake-4.1.2-linux-x86_64.tar.gz" | sudo tar --strip-components=1 -xz -C /usr/local
       - name: Install GCC
         run: |
           sudo apt-get update && sudo apt-get install g++-14 -y

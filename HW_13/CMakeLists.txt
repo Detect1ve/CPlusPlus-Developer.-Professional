@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25..4.1.0)
+cmake_minimum_required(VERSION 3.25..4.1.2)
 
 if (NOT DEFINED PATCH_VERSION)
   set(PATCH_VERSION
@@ -38,7 +38,8 @@ target_include_directories(mlp_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 if (MSVC)
   target_compile_options(mlp_lib PRIVATE /W4)
 else()
-  target_compile_options(mlp_lib PRIVATE ${GCC_FLAGS} -Wno-effc++)
+  target_compile_options(mlp_lib
+    PRIVATE ${COMPILE_WARNING_FLAGS} -Wno-effc++ -Wno-unsafe-buffer-usage)
 endif()
 
 add_executable(fashio_mnist src/main.cpp)
@@ -47,7 +48,8 @@ if (MSVC)
   target_compile_options(fashio_mnist PRIVATE /W4)
 else()
   target_link_libraries(fashio_mnist -static)
-  target_compile_options(fashio_mnist PRIVATE ${GCC_FLAGS})
+  target_compile_options(fashio_mnist
+    PRIVATE ${COMPILE_WARNING_FLAGS} -Wno-unsafe-buffer-usage-in-container)
 endif()
 
 add_executable(fashio_mnist_test test/mlp_test.cpp)
@@ -55,7 +57,8 @@ target_link_libraries(fashio_mnist_test mlp_lib GTest::gtest_main)
 if (MSVC)
   target_compile_options(fashio_mnist_test PRIVATE /W4)
 else()
-  target_compile_options(fashio_mnist_test PRIVATE ${GCC_FLAGS})
+  target_compile_options(fashio_mnist_test
+    PRIVATE ${COMPILE_WARNING_FLAGS} -Wno-global-constructors)
 endif()
 
 target_compile_definitions(fashio_mnist_test PRIVATE

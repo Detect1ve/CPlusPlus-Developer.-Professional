@@ -25,7 +25,7 @@ namespace editor::view
         void update();
 
         [[nodiscard]] const model::Document* getDocument() const
-#if !defined(_MSC_VER)
+#ifndef _MSC_VER
             __attribute__((pure))
 #endif
             ;

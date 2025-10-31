@@ -16,8 +16,7 @@ namespace
         hash.process_bytes(input.data(), input.length());
         hash.get_digest(digest);
 
-        auto bytes = std::bit_cast<std::array<unsigned char, sizeof(digest)>>(digest);
-        boost::algorithm::hex_lower(bytes, std::back_inserter(result));
+        boost::algorithm::hex_lower(std::span(digest), std::back_inserter(result));
 
         return result;
     }

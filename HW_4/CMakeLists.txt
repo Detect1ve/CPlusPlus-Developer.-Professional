@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25..4.1.0)
+cmake_minimum_required(VERSION 3.25..4.1.2)
 
 if (NOT DEFINED PATCH_VERSION)
   set(PATCH_VERSION
@@ -52,11 +52,12 @@ target_link_libraries(print_ip PRIVATE ip_address)
 if (NOT MSVC)
   target_link_libraries(print_ip PRIVATE -static)
 endif()
-target_compile_options(print_ip PRIVATE ${GCC_FLAGS})
+target_compile_options(print_ip PRIVATE ${COMPILE_WARNING_FLAGS})
 
 add_executable(print_ip_test test/sfinae_ip_address_test.cpp)
 target_link_libraries(print_ip_test PRIVATE capture GTest::gtest_main ip_address)
-target_compile_options(print_ip_test PRIVATE ${GCC_FLAGS})
+target_compile_options(print_ip_test
+  PRIVATE ${COMPILE_WARNING_FLAGS} -Wno-global-constructors)
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set(CLANG_TIDY_HW_4_OPTS

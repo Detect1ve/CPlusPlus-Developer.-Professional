@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25..4.1.0)
+cmake_minimum_required(VERSION 3.25..4.1.2)
 
 if (NOT DEFINED PATCH_VERSION)
   set(PATCH_VERSION
@@ -42,14 +42,17 @@ target_link_libraries(server_and_database PRIVATE wrapper_boost_asio)
 if (MSVC)
   target_compile_definitions(server_and_database PRIVATE _WIN32_WINNT=0x0A00)
 else()
-  target_compile_options(server_and_database PRIVATE ${GCC_FLAGS} -Wno-effc++
-    -Wno-null-dereference -Wno-strict-overflow)
+  target_compile_options(server_and_database
+    PRIVATE ${COMPILE_WARNING_FLAGS} -Wno-effc++ -Wno-null-dereference
+      -Wno-strict-overflow -Wno-unsafe-buffer-usage)
 endif()
 
 add_executable(join_server src/main.cpp)
 target_link_libraries(join_server PRIVATE server_and_database)
 if (NOT MSVC)
-  target_compile_options(join_server PRIVATE ${GCC_FLAGS})
+  target_compile_options(join_server
+    PRIVATE ${COMPILE_WARNING_FLAGS} -Wno-unsafe-buffer-usage-in-container
+      -Wno-unsafe-buffer-usage)
   target_link_libraries(join_server PRIVATE -static)
 endif()
 
@@ -57,8 +60,9 @@ add_executable(join_server_test test/join_server_test.cpp)
 target_link_libraries(join_server_test PRIVATE GTest::gtest_main server_and_database
   socket_wrapper)
 if (NOT MSVC)
-  target_compile_options(join_server_test PRIVATE ${GCC_FLAGS} -Wno-effc++
-    -Wno-strict-overflow)
+  target_compile_options(join_server_test
+    PRIVATE ${COMPILE_WARNING_FLAGS} -Wno-effc++ -Wno-strict-overflow
+      -Wno-global-constructors)
 endif()
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25..4.1.0)
+cmake_minimum_required(VERSION 3.25..4.1.2)
 
 if (NOT DEFINED PATCH_VERSION)
   set(PATCH_VERSION
@@ -41,10 +41,12 @@ if (MSVC OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   if (MSVC)
     add_compile_options(/W4)
   else()
-    target_compile_options(mapper PRIVATE ${GCC_FLAGS})
-    target_compile_options(reducer PRIVATE ${GCC_FLAGS})
-    target_compile_options(mapper_variance PRIVATE ${GCC_FLAGS})
-    target_compile_options(reducer_variance PRIVATE ${GCC_FLAGS})
+    target_compile_options(mapper
+      PRIVATE ${COMPILE_WARNING_FLAGS} -Wno-unused-parameter -Wno-unsafe-buffer-usage)
+    target_compile_options(reducer PRIVATE ${COMPILE_WARNING_FLAGS} -Wno-unused-parameter)
+    target_compile_options(mapper_variance
+      PRIVATE ${COMPILE_WARNING_FLAGS} -Wno-unsafe-buffer-usage)
+    target_compile_options(reducer_variance PRIVATE ${COMPILE_WARNING_FLAGS})
   endif()
 
   if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
@@ -60,6 +62,7 @@ if (MSVC OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set_target_properties(mapper PROPERTIES
       CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
         -clang-diagnostic-unused-parameter,\
+        -llvm-prefer-static-over-anonymous-namespace,\
         -misc-unused-parameters,\
         -performance-avoid-endl,\
         ${CLANG_TIDY_HW_12_OPTS}")
@@ -73,6 +76,7 @@ if (MSVC OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 
     set_target_properties(mapper_variance PROPERTIES
       CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
+        -llvm-prefer-static-over-anonymous-namespace,\
         ${CLANG_TIDY_HW_12_OPTS}")
 
     set_target_properties(reducer_variance PROPERTIES

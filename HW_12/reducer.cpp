@@ -1,21 +1,20 @@
 #include <cmath>
 #include <cstdint>
 #include <iostream>
-#include <string>
-
 #include <sstream>
+#include <string>
 
 int main(int argc, char ** argv)
 {
     size_t count = 0;
     std::string line;
-    double sum = 0.0;
+    float sum = 0.0;
     while (std::getline(std::cin, line))
     {
         std::istringstream iss(line);
         std::string key;
         float price = NAN;
-        std::int64_t value_count = 0;
+        std::size_t value_count = 0;
 
         if (iss >> key >> price >> value_count)
         {
@@ -24,7 +23,7 @@ int main(int argc, char ** argv)
         }
     }
 
-    const double mean = (count > 0 ? sum / static_cast<double>(count) : 0.0);
+    const float mean = (count > 0 ? sum / static_cast<float>(count) : 0.0F);
 
     std::cout << "Mean price: " << mean << std::endl;
 

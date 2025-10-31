@@ -21,19 +21,19 @@ namespace editor::controller
         // NOLINTNEXTLINE(fuchsia-default-arguments-declarations)
         void createNewDocument(const std::string& name = "Untitled");
         bool saveDocument(const std::string& filename)
-#if !defined(_MSC_VER)
+#ifndef _MSC_VER
             __attribute__((pure))
 #endif
             ;
         bool loadDocument(const std::string& filename);
 
         [[nodiscard]] model::Document* getDocument() const
-#if !defined(_MSC_VER)
+#ifndef _MSC_VER
             __attribute__((pure))
 #endif
             ;
         [[nodiscard]] PrimitiveController* getPrimitiveController() const
-#if !defined(_MSC_VER)
+#ifndef _MSC_VER
             __attribute__((pure))
 #endif
             ;

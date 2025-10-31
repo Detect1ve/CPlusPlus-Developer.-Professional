@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25..4.1.0)
+cmake_minimum_required(VERSION 3.25..4.1.2)
 
 project(HW_3 LANGUAGES CXX)
 
@@ -19,24 +19,13 @@ endif()
 if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
   include(../cmake/fetch_googletest.cmake)
+  include(../cmake/fetch_gsl.cmake)
   include(../cmake/gcc_warnings.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
 if (MSVC)
   add_compile_options(/W4)
-endif()
-
-find_package(Microsoft.GSL 4.2.0 CONFIG)
-if (NOT Microsoft.GSL_FOUND)
-  FetchContent_Declare(
-    GSL
-    GIT_REPOSITORY https://github.com/microsoft/GSL
-    GIT_TAG v4.2.0
-    GIT_SHALLOW ON
-    EXCLUDE_FROM_ALL)
-
-  FetchContent_MakeAvailable(GSL)
 endif()
 
 add_library(list_and_allocator INTERFACE)
@@ -49,15 +38,17 @@ target_link_libraries(main PRIVATE list_and_allocator)
 if (NOT MSVC)
   target_link_libraries(main PRIVATE -static)
 endif()
-target_compile_options(main PRIVATE ${GCC_FLAGS})
+target_compile_options(main PRIVATE ${COMPILE_WARNING_FLAGS})
 
 add_executable(my_allocator_test test/my_allocator_test.cpp)
 target_link_libraries(my_allocator_test PRIVATE GTest::gtest_main list_and_allocator)
-target_compile_options(my_allocator_test PRIVATE ${GCC_FLAGS})
+target_compile_options(my_allocator_test
+  PRIVATE ${COMPILE_WARNING_FLAGS} -Wno-global-constructors)
 
 add_executable(my_list_test test/my_list_test.cpp)
 target_link_libraries(my_list_test PRIVATE GTest::gtest_main list_and_allocator)
-target_compile_options(my_list_test PRIVATE ${GCC_FLAGS})
+target_compile_options(my_list_test
+  PRIVATE ${COMPILE_WARNING_FLAGS} -Wno-global-constructors)
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set(CLANG_TIDY_HW_3_OPTS

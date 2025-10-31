@@ -14,7 +14,7 @@ namespace bulk
     {
         int add_task(std::string_view task);
         [[nodiscard]] bool is_dynamic_block_active() const noexcept
-#if !defined(_MSC_VER)
+#ifndef _MSC_VER
             __attribute__((pure))
 #endif
             ;

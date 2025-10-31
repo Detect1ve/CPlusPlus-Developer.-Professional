@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25..4.1.0)
+cmake_minimum_required(VERSION 3.25..4.1.2)
 
 if (NOT DEFINED PATCH_VERSION)
     set(PATCH_VERSION "1" CACHE INTERNAL "Patch version")
@@ -62,6 +62,47 @@ target_link_libraries(g_test_version
     helloworld
 )
 
+if (MSVC)
+    target_compile_options(helloworld_cli PRIVATE
+        /W4
+    )
+    target_compile_options(helloworld PRIVATE
+        /W4
+    )
+    target_compile_options(test_version PRIVATE
+        /W4
+    )
+    target_compile_options(g_test_version PRIVATE
+        /W4
+    )
+else ()
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 15)
+            set(HW_1_GCC_FLAGS -Wleading-whitespace=none)
+        endif()
+    endif()
+
+    target_compile_options(helloworld_cli PRIVATE
+        ${COMPILE_WARNING_FLAGS} ${HW_1_GCC_FLAGS}
+    )
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        target_compile_options(helloworld PRIVATE
+            ${COMPILE_WARNING_FLAGS} -Wno-suggest-attribute=const ${HW_1_GCC_FLAGS}
+        )
+    else()
+        target_compile_options(helloworld PRIVATE
+            ${COMPILE_WARNING_FLAGS} ${HW_1_GCC_FLAGS}
+        )
+    endif()
+    target_compile_options(test_version PRIVATE
+        ${COMPILE_WARNING_FLAGS} -Wno-used-but-marked-unused -Wno-global-constructors
+        ${HW_1_GCC_FLAGS}
+    )
+    target_compile_options(g_test_version PRIVATE
+        ${COMPILE_WARNING_FLAGS} -Wno-global-constructors ${HW_1_GCC_FLAGS}
+    )
+endif()
+
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
     set_target_properties(helloworld_cli PROPERTIES
         CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
@@ -110,38 +151,6 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
             -llvmlibc-callee-namespace,\
             -llvmlibc-restrict-system-libc-headers,\
             -modernize-use-trailing-return-type"
-    )
-endif()
-
-if (MSVC)
-    target_compile_options(helloworld_cli PRIVATE
-        /W4
-    )
-    target_compile_options(helloworld PRIVATE
-        /W4
-    )
-    target_compile_options(test_version PRIVATE
-        /W4
-    )
-    target_compile_options(g_test_version PRIVATE
-        /W4
-    )
-else ()
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 15)
-        set(HW_1_GCC_FLAGS -Wleading-whitespace=none)
-    endif()
-
-    target_compile_options(helloworld_cli PRIVATE
-        ${GCC_FLAGS} ${HW_1_GCC_FLAGS}
-    )
-    target_compile_options(helloworld PRIVATE
-        ${GCC_FLAGS} -Wno-suggest-attribute=const ${HW_1_GCC_FLAGS}
-    )
-    target_compile_options(test_version PRIVATE
-        ${GCC_FLAGS} ${HW_1_GCC_FLAGS}
-    )
-    target_compile_options(g_test_version PRIVATE
-        ${GCC_FLAGS} ${HW_1_GCC_FLAGS}
     )
 endif()
 
