@@ -15,15 +15,15 @@ if (PROJECT_IS_TOP_LEVEL)
   set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 endif()
 
-if (MSVC)
-  add_compile_options(/W4)
-endif()
-
 if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
   include(../cmake/fetch_googletest.cmake)
   include(../cmake/gcc_warnings.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  set(PROJECT_WORK_COMPILE_WARNING_FLAGS -Wc++11-compat-pedantic)
 endif()
 
 add_library(data_queue INTERFACE)
@@ -34,14 +34,19 @@ endif()
 
 add_executable(queue_test test/queue_test.cpp)
 target_link_libraries(queue_test PRIVATE data_queue GTest::gtest_main)
-target_compile_options(queue_test PRIVATE ${GCC_FLAGS})
+target_compile_options(queue_test PRIVATE
+  ${COMPILE_WARNING_FLAGS} ${PROJECT_WORK_COMPILE_WARNING_FLAGS})
+if (NOT MSVC)
+  target_compile_options(queue_test PRIVATE -Wno-global-constructors)
+endif()
 
 enable_testing()
-add_test(Project_work.queue_test queue_test)
+add_test(NAME Project_work.queue_test COMMAND $<TARGET_FILE:queue_test>)
 
 add_executable(queue_performance_test test/queue_performance_test.cpp)
 target_link_libraries(queue_performance_test PRIVATE data_queue)
-target_compile_options(queue_performance_test PRIVATE ${GCC_FLAGS})
+target_compile_options(queue_performance_test PRIVATE
+  ${COMPILE_WARNING_FLAGS} ${PROJECT_WORK_COMPILE_WARNING_FLAGS})
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set(CLANG_TIDY_PROJECT_WORK_OPTS

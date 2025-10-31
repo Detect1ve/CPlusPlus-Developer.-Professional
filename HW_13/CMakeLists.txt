@@ -18,7 +18,7 @@ if (PROJECT_IS_TOP_LEVEL)
     endif()
   endif()
 
-  set(MINIMUM_CXX_STANDARD 14)
+  set(MINIMUM_CXX_STANDARD 17)
   include(../cmake/cxx_standard.cmake)
   set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 endif()
@@ -30,32 +30,36 @@ if (PROJECT_IS_TOP_LEVEL)
     list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  set(HW_13_COMPILE_WARNING_FLAGS -Wc++17-compat-pedantic)
+endif()
+
 include(../common/eigen3.cmake)
 
 add_library(mlp_lib STATIC lib/mlp.cpp)
 target_link_libraries(mlp_lib PRIVATE eigen3_eigen)
 target_include_directories(mlp_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-if (MSVC)
-  target_compile_options(mlp_lib PRIVATE /W4)
-else()
-  target_compile_options(mlp_lib PRIVATE ${GCC_FLAGS} -Wno-effc++)
+target_compile_options(mlp_lib PRIVATE
+  ${COMPILE_WARNING_FLAGS} ${HW_13_COMPILE_WARNING_FLAGS})
+if (NOT MSVC)
+  target_compile_options(mlp_lib PRIVATE -Wno-effc++ -Wno-unsafe-buffer-usage)
 endif()
 
 add_executable(fashio_mnist src/main.cpp)
 target_link_libraries(fashio_mnist mlp_lib)
-if (MSVC)
-  target_compile_options(fashio_mnist PRIVATE /W4)
-else()
+target_compile_options(fashio_mnist PRIVATE
+  ${COMPILE_WARNING_FLAGS} ${HW_13_COMPILE_WARNING_FLAGS})
+if (NOT MSVC)
   target_link_libraries(fashio_mnist -static)
-  target_compile_options(fashio_mnist PRIVATE ${GCC_FLAGS})
+  target_compile_options(fashio_mnist PRIVATE -Wno-unsafe-buffer-usage-in-container)
 endif()
 
 add_executable(fashio_mnist_test test/mlp_test.cpp)
 target_link_libraries(fashio_mnist_test mlp_lib GTest::gtest_main)
-if (MSVC)
-  target_compile_options(fashio_mnist_test PRIVATE /W4)
-else()
-  target_compile_options(fashio_mnist_test PRIVATE ${GCC_FLAGS})
+target_compile_options(fashio_mnist_test PRIVATE
+  ${COMPILE_WARNING_FLAGS} ${HW_13_COMPILE_WARNING_FLAGS})
+if (NOT MSVC)
+  target_compile_options(fashio_mnist_test PRIVATE -Wno-global-constructors)
 endif()
 
 target_compile_definitions(fashio_mnist_test PRIVATE
@@ -91,7 +95,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
 endif()
 
 enable_testing()
-add_test(HW_13.fashio_mnist_test fashio_mnist_test)
+add_test(NAME HW_13.fashio_mnist_test COMMAND $<TARGET_FILE:fashio_mnist_test>)
 
 install(TARGETS fashio_mnist
         RUNTIME DESTINATION bin

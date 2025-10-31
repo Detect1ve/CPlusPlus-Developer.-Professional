@@ -31,29 +31,38 @@ if (PROJECT_IS_TOP_LEVEL)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
-
-if (MSVC)
-  add_compile_options(/W4)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  set(HW_7_COMPILE_WARNING_FLAGS -Wc++17-compat-pedantic)
 endif()
 
 add_library(taskmanager STATIC lib/taskmanager.cpp)
 target_include_directories(taskmanager PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_compile_options(taskmanager PRIVATE
+  ${COMPILE_WARNING_FLAGS} ${HW_7_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)
   target_compile_options(taskmanager
-    PRIVATE ${GCC_FLAGS} -Wno-strict-overflow
+    PRIVATE -Wno-strict-overflow
     PUBLIC -Wno-effc++)
 endif()
 
 add_executable(bulk src/main.cpp)
 target_link_libraries(bulk PRIVATE taskmanager)
+target_compile_options(bulk PRIVATE
+  ${COMPILE_WARNING_FLAGS} ${HW_7_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)
   target_link_libraries(bulk PRIVATE -static)
+  target_compile_options(bulk
+    PRIVATE -Wno-unsafe-buffer-usage-in-container -Wno-unsafe-buffer-usage)
 endif()
-target_compile_options(bulk PRIVATE ${GCC_FLAGS})
 
 add_executable(taskmanager_test test/taskmanager_test.cpp)
 target_link_libraries(taskmanager_test PRIVATE capture GTest::gtest_main taskmanager)
-target_compile_options(taskmanager_test PRIVATE ${GCC_FLAGS})
+target_compile_options(taskmanager_test PRIVATE
+  ${COMPILE_WARNING_FLAGS} ${HW_7_COMPILE_WARNING_FLAGS})
+if (NOT MSVC)
+  target_compile_options(taskmanager_test
+    PRIVATE -Wno-unsafe-buffer-usage -Wno-global-constructors)
+endif()
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set(CLANG_TIDY_HW_7_OPTS
@@ -84,7 +93,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
 endif()
 
 enable_testing()
-add_test(HW_7.taskmanager_test taskmanager_test)
+add_test(NAME HW_7.taskmanager_test COMMAND $<TARGET_FILE:taskmanager_test>)
 
 install(TARGETS bulk RUNTIME DESTINATION bin
                      COMPONENT "${PROJECT_NAME}")

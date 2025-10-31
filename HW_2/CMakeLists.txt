@@ -33,14 +33,17 @@ if (PROJECT_IS_TOP_LEVEL)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
-if (MSVC)
-  add_compile_options(/W4)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  set(HW_2_COMPILE_WARNING_FLAGS -Wc++20-compat-pedantic)
 endif()
 
 add_library(ip_filter_lib STATIC lib/ip_filter.cpp)
 target_include_directories(ip_filter_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_compile_options(ip_filter_lib PRIVATE
+  ${COMPILE_WARNING_FLAGS} ${HW_2_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)
-  target_compile_options(ip_filter_lib PRIVATE ${GCC_FLAGS} -Wno-strict-overflow)
+  target_compile_options(ip_filter_lib
+    PRIVATE -Wno-strict-overflow -Wno-unsafe-buffer-usage)
 endif()
 
 add_executable(ip_filter src/main.cpp)
@@ -48,13 +51,18 @@ target_link_libraries(ip_filter PRIVATE ip_filter_lib)
 if (NOT MSVC)
   target_link_libraries(ip_filter PRIVATE -static)
 endif()
-target_compile_options(ip_filter PRIVATE ${GCC_FLAGS})
+target_compile_options(ip_filter PRIVATE
+  ${COMPILE_WARNING_FLAGS} ${HW_2_COMPILE_WARNING_FLAGS})
 
 add_executable(ip_filter_test test/ip_filter_test.cpp)
 target_link_libraries(ip_filter_test
   PRIVATE capture GTest::gtest_main ip_filter_lib wrapper_boost_algorithm
     wrapper_boost_uuid)
-target_compile_options(ip_filter_test PRIVATE ${GCC_FLAGS})
+target_compile_options(ip_filter_test PRIVATE
+  ${COMPILE_WARNING_FLAGS} ${HW_2_COMPILE_WARNING_FLAGS})
+if (NOT MSVC)
+  target_compile_options(ip_filter_test PRIVATE -Wno-global-constructors)
+endif()
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set(CLANG_TIDY_HW_2_OPTS

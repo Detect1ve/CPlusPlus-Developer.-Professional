@@ -29,75 +29,28 @@ include(cmake/clang-tidy.cmake)
 include(cmake/fetch_googletest.cmake)
 include(cmake/gcc_warnings.cmake)
 
-check_subdirectory_compatibility(HW_1)
-if (IS_COMPATIBLE)
-  add_subdirectory(HW_1)
-endif()
+set(SUBDIRS
+  HW_1
+  HW_2
+  HW_3
+  HW_4
+  HW_5
+  HW_6
+  HW_7
+  HW_8
+  HW_9
+  HW_10
+  HW_11
+  HW_12
+  HW_13
+  Project_work)
 
-check_subdirectory_compatibility(HW_2)
-if (IS_COMPATIBLE)
-  add_subdirectory(HW_2)
-endif()
-
-check_subdirectory_compatibility(HW_3)
-if (IS_COMPATIBLE)
-  add_subdirectory(HW_3)
-endif()
-
-check_subdirectory_compatibility(HW_4)
-if (IS_COMPATIBLE)
-  add_subdirectory(HW_4)
-endif()
-
-check_subdirectory_compatibility(HW_5)
-if (IS_COMPATIBLE)
-  add_subdirectory(HW_5)
-endif()
-
-check_subdirectory_compatibility(HW_6)
-if (IS_COMPATIBLE)
-  add_subdirectory(HW_6)
-endif()
-
-check_subdirectory_compatibility(HW_7)
-if (IS_COMPATIBLE)
-  add_subdirectory(HW_7)
-endif()
-
-check_subdirectory_compatibility(HW_8)
-if (IS_COMPATIBLE)
-  add_subdirectory(HW_8)
-endif()
-
-check_subdirectory_compatibility(HW_9)
-if (IS_COMPATIBLE)
-  add_subdirectory(HW_9)
-endif()
-
-check_subdirectory_compatibility(HW_10)
-if (IS_COMPATIBLE)
-  add_subdirectory(HW_10)
-endif()
-
-check_subdirectory_compatibility(HW_11)
-if (IS_COMPATIBLE)
-  add_subdirectory(HW_11)
-endif()
-
-check_subdirectory_compatibility(HW_12)
-if (IS_COMPATIBLE)
-  add_subdirectory(HW_12)
-endif()
-
-check_subdirectory_compatibility(HW_13)
-if (IS_COMPATIBLE)
-  add_subdirectory(HW_13)
-endif()
-
-check_subdirectory_compatibility(Project_work)
-if (IS_COMPATIBLE)
-  add_subdirectory(Project_work)
-endif()
+foreach(SUBDIR ${SUBDIRS})
+  check_subdirectory_compatibility(${SUBDIR})
+  if (IS_COMPATIBLE)
+    add_subdirectory(${SUBDIR})
+  endif()
+endforeach()
 
 enable_testing()
 
@@ -106,7 +59,7 @@ set(CPACK_PACKAGE_CONTACT Nikolai_Grin@Mail.Ru)
 set(CPACK_DEB_COMPONENT_INSTALL ON)
 
 get_cmake_property(CPACK_COMPONENTS_ALL COMPONENTS)
-# For some known reason, FetchContent_Declare for Eigen3 adds extra components.
+# For some known reason, FetchContent_Declare for Eigen3 adds extra component.
 # Report the issue and remove this workaround when it is fixed.
-list(REMOVE_ITEM CPACK_COMPONENTS_ALL "Devel" "Unspecified")
+list(REMOVE_ITEM CPACK_COMPONENTS_ALL "Devel")
 include(CPack)

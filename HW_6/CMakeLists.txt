@@ -18,7 +18,7 @@ if (PROJECT_IS_TOP_LEVEL)
     endif()
   endif()
 
-  set(MINIMUM_CXX_STANDARD 11)
+  set(MINIMUM_CXX_STANDARD 17)
   include(../cmake/cxx_standard.cmake)
   set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 endif()
@@ -31,8 +31,8 @@ if (PROJECT_IS_TOP_LEVEL)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
-if (MSVC)
-  add_compile_options(/W4)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  set(HW_6_COMPILE_WARNING_FLAGS -Wc++17-compat-pedantic)
 endif()
 
 add_executable(matrix src/main.cpp)
@@ -40,12 +40,17 @@ target_include_directories(matrix PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 if (NOT MSVC)
   target_link_libraries(matrix PRIVATE -static)
 endif()
-target_compile_options(matrix PRIVATE ${GCC_FLAGS})
+target_compile_options(matrix PRIVATE
+  ${COMPILE_WARNING_FLAGS} ${HW_6_COMPILE_WARNING_FLAGS})
 
 add_executable(matrix_test test/matrix_test.cpp)
 target_include_directories(matrix_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(matrix_test PRIVATE capture GTest::gtest_main)
-target_compile_options(matrix_test PRIVATE ${GCC_FLAGS})
+target_compile_options(matrix_test PRIVATE
+  ${COMPILE_WARNING_FLAGS} ${HW_6_COMPILE_WARNING_FLAGS})
+if (NOT MSVC)
+  target_compile_options(matrix_test PRIVATE -Wno-global-constructors)
+endif()
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set(CLANG_TIDY_HW_6_OPTS
@@ -81,7 +86,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
 endif()
 
 enable_testing()
-add_test(HW_6.matrix_test matrix_test)
+add_test(NAME HW_6.matrix_test COMMAND $<TARGET_FILE:matrix_test>)
 
 install(TARGETS matrix RUNTIME DESTINATION bin
                                COMPONENT "${PROJECT_NAME}")
