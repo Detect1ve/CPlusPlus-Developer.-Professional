@@ -16,8 +16,7 @@ namespace
         hash.process_bytes(input.data(), input.length());
         hash.get_digest(digest);
 
-        auto bytes = std::bit_cast<std::array<unsigned char, sizeof(digest)>>(digest);
-        boost::algorithm::hex_lower(bytes, std::back_inserter(result));
+        boost::algorithm::hex_lower(std::span(digest), std::back_inserter(result));
 
         return result;
     }
@@ -25,8 +24,10 @@ namespace
 
 TEST(HW2, IpFilter)
 {
-    std::string encoded;
     auto parse_result = stdin_to_vector();
+    std::string encoded;
+    std::string result;
+
     ASSERT_TRUE(parse_result) << "Cannot parse stdin " << parse_result.error().message();
 
     reverse_lexicographic_sort(parse_result.value());
@@ -47,10 +48,10 @@ TEST(HW2, IpFilter)
         ASSERT_TRUE(ip_result) << "Cannot filter_any";
         print(ip_result.value());
 
-        const std::string result = StdoutCapture::End();
+        result = StdoutCapture::End();
 
         encoded = compute_md5(result);
     }
 
-    ASSERT_EQ(encoded, "24e7a7b2270daee89c64d3ca5fb3da1a");
+    ASSERT_EQ(encoded, "24e7a7b2270daee89c64d3ca5fb3da1a") << result;
 }

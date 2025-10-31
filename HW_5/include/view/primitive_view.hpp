@@ -10,7 +10,7 @@ namespace editor::view
         const model::Primitive* primitive_;
     public:
         explicit PrimitiveView(const model::Primitive* primitive);
-        virtual ~PrimitiveView() = default;
+        virtual ~PrimitiveView();
 
         PrimitiveView(const PrimitiveView&) = delete;
         PrimitiveView& operator=(const PrimitiveView&) = delete;

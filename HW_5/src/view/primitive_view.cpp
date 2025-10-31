@@ -8,6 +8,12 @@ namespace editor::view
     class LineView final : public PrimitiveView
     {
     public:
+        ~LineView() override;
+        LineView(const LineView&) = delete;
+        LineView(LineView&&) = delete;
+        LineView& operator=(const LineView&) = delete;
+        LineView& operator=(LineView&&) = delete;
+
         explicit LineView(const model::Primitive* primitive) : PrimitiveView(primitive) {}
 
         void render() const override
@@ -22,8 +28,11 @@ namespace editor::view
         }
     };
 
+    LineView::~LineView() = default;
     PrimitiveView::PrimitiveView(const model::Primitive* primitive)
         : primitive_(primitive) {}
+
+    PrimitiveView::~PrimitiveView() = default;
 
     const model::Primitive* PrimitiveView::getPrimitive() const
     {

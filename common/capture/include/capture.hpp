@@ -1,6 +1,8 @@
 #ifndef CAPTURE_HPP
 #define CAPTURE_HPP
 
+#include <gsl/pointers>
+
 class StdoutCapture
 {
 public:
@@ -21,30 +23,41 @@ public:
 
     static void Begin()
     {
-        if (!instance())
+        if (*instance() == nullptr)
         {
-            instance() = std::make_unique<StdoutCapture>();
+            *instance() = new StdoutCapture();
+            (void)std::atexit(Destroy);
         }
     }
 
     static std::string End()
     {
         std::string output;
-        if (instance())
+        if (*instance() != nullptr)
         {
-            output = instance()->m_buffer.str();
-            instance().reset();
+            output = (*instance())->m_buffer.str();
+            Destroy();
         }
 
         return output;
     }
 
 private:
-    static std::unique_ptr<StdoutCapture>& instance()
+    static void Destroy()
     {
-        static std::unique_ptr<StdoutCapture> s_instance;
+        gsl::owner<StdoutCapture*> to_delete = *instance();
+        if (to_delete != nullptr)
+        {
+            *instance() = nullptr;
+            delete to_delete;
+        }
+    }
 
-        return s_instance;
+    static gsl::owner<StdoutCapture*>* instance()
+    {
+        static gsl::owner<StdoutCapture*> s_instance = nullptr;
+
+        return &s_instance;
     }
 
     std::streambuf* m_old_buf;
@@ -71,29 +84,41 @@ public:
 
     static void Begin()
     {
-        if (!instance())
+        if (*instance() == nullptr)
         {
-            instance() = std::make_unique<StderrCapture>();
+            *instance() = new StderrCapture();
+            (void)std::atexit(Destroy);
         }
     }
 
     static std::string End()
     {
         std::string output;
-        if (instance())
+        if (*instance() != nullptr)
         {
-            output = instance()->m_buffer.str();
-            instance().reset();
+            output = (*instance())->m_buffer.str();
+            Destroy();
         }
+
         return output;
     }
 
 private:
-    static std::unique_ptr<StderrCapture>& instance()
+    static void Destroy()
     {
-        static std::unique_ptr<StderrCapture> s_instance;
+        gsl::owner<StderrCapture*> to_delete = *instance();
+        if (to_delete != nullptr)
+        {
+            *instance() = nullptr;
+            delete to_delete;
+        }
+    }
 
-        return s_instance;
+    static gsl::owner<StderrCapture*>* instance()
+    {
+        static gsl::owner<StderrCapture*> s_instance = nullptr;
+
+        return &s_instance;
     }
 
     std::streambuf* m_old_buf;

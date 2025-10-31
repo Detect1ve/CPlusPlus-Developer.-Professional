@@ -1,4 +1,4 @@
-find_package(Boost 1.88.0 CONFIG COMPONENTS unit_test_framework crc program_options uuid
+find_package(Boost 1.89.0 CONFIG COMPONENTS unit_test_framework crc program_options uuid
   algorithm filesystem asio)
 if (NOT Boost_FOUND)
   include(FetchContent)
