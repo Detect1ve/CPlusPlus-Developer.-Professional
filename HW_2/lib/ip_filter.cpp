@@ -58,7 +58,7 @@ namespace
         auto common_range = std::min(first_ip.size(), second_ip.size());
         auto first_view = first_ip | std::views::take(common_range);
 
-        for (const auto& [idx, ip_part] : first_view | std::views::enumerate)
+        for (const auto [idx, ip_part] : first_view | std::views::enumerate)
         {
             auto first_result = from_chars(ip_part);
             auto second_result = from_chars(second_ip[static_cast<std::size_t>(idx)]);

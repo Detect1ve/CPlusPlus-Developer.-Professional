@@ -73,13 +73,6 @@ namespace pc_queue
             PriorityType priority;
         };
 
-        /**
-        * @brief Constructor
-        *
-        * @param[in] usePriority Should use priorities
-        * @param[in] mode        Queue operating mode
-        * @param[in] maxSize     Maximum queue size (0 - unlimited)
-        */
         Queue() : Queue(false, QueueMode::MULTI_PRODUCER_MULTI_CONSUMER, 0) {}
 
         explicit Queue(const bool usePriority)
@@ -92,6 +85,13 @@ namespace pc_queue
             :
             Queue(usePriority, mode, 0) {}
 
+        /**
+        * @brief Constructor
+        *
+        * @param[in] usePriority Should use priorities
+        * @param[in] mode        Queue operating mode
+        * @param[in] maxSize     Maximum queue size (0 - unlimited)
+        */
         explicit Queue(
             const bool        usePriority,
             const QueueMode   mode,
@@ -154,9 +154,6 @@ namespace pc_queue
 
         /**
         * @brief Removes an element from the queue
-        *
-        * @param[in] timeout Wait timeout in milliseconds
-        *                    (0 - no wait, -1 - infinite wait)
         *
         * @return An element from the queue,
         *         or std::nullopt if the queue is empty or closed

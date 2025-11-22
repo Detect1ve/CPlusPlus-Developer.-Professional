@@ -6,8 +6,8 @@
 #include <taskmanager.hpp>
 
 int main(
-    int const    argc,
-    char **const argv)
+    int const          argc,
+    const char **const argv)
 {
     auto const args = std::span(argv, static_cast<std::size_t>(argc))
         | std::views::transform([](char const *const arg) noexcept

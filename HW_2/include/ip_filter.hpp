@@ -15,9 +15,10 @@
 #include <ranges>
 #include <utility>
 #include <vector>
-#if defined(__clang_analyzer__) && (__clang_major__ <= 18)
-// Provide a dummy implementation of std::expected for older clang-tidy versions to allow
-// parsing of function signatures and bodies without fatal errors.
+#if (defined(__clang_analyzer__) || defined(__clang__)) && (__clang_major__ <= 18)
+// Provide a dummy implementation of std::unexpected for older clang-tidy and clang
+// versions to allow parsing of function signatures and bodies without fatal errors.
+// Also provide implementation of std::expected for older clang-tidy and clang versions.
 
 namespace std
 {
@@ -34,12 +35,14 @@ namespace std
     template <class T, class E>
     class expected // NOLINT(cert-dcl58-cpp)
     {
+        T value_;
+
     public:
         expected() = default;
         // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-        expected(const T& /*unused*/) {}
+        expected(T val) : value_(std::move(val)) {}
         // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-        expected(const unexpected<E>& /*unused*/) {}
+        expected(const unexpected<E>& /*unused*/) : value_{} {}
 
         explicit operator bool() const
         {
@@ -48,8 +51,7 @@ namespace std
 
         T& value()
         {
-            static T dummy_value;
-            return dummy_value;
+            return value_;
         }
 
         [[nodiscard]] E error() const
@@ -84,7 +86,9 @@ std::expected<std::vector<std::vector<std::string>>, std::error_code> filter(
     const First&   ip_pool,
     const Rest&... octet)
 {
-    for (const auto& val : std::initializer_list<int>{octet...})
+    auto octet_list = std::initializer_list<int>{octet...};
+
+    for (const auto& val : octet_list)
     {
         if (  std::cmp_less(val, std::numeric_limits<unsigned char>::min())
            || std::cmp_greater(val, std::numeric_limits<unsigned char>::max()))

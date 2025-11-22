@@ -8,6 +8,12 @@ namespace editor::model
     class Line final : public Primitive
     {
     public:
+        ~Line() override;
+        Line(const Line&) = delete;
+        Line(Line&&) = delete;
+        Line& operator=(const Line&) = delete;
+        Line& operator=(Line&&) = delete;
+
         Line(
             Point start,
             Point end,

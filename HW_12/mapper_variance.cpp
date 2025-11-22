@@ -1,4 +1,5 @@
 #include <charconv>
+#include <iomanip>
 #include <iostream>
 #include <map>
 #if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
@@ -7,7 +8,9 @@
 
 namespace
 {
-    constexpr int PRICE_FIELD_INDEX = 9;
+    constexpr unsigned char MAX_PRICE_LENGTH = 5;
+    constexpr unsigned char MAX_PRICE_SQUARED_LENGTH = 11;
+    constexpr unsigned char PRICE_FIELD_INDEX = 9;
 
     struct Delimiter
     {
@@ -38,7 +41,7 @@ namespace
             {
                 if (current_index == field_index.value)
                 {
-                    return current_field;
+                    break;
                 }
 
                 current_field.clear();
@@ -50,12 +53,7 @@ namespace
             }
         }
 
-        if (current_index == field_index.value)
-        {
-            return current_field;
-        }
-
-        return "";
+        return current_field;
     }
 } // namespace
 
@@ -74,6 +72,7 @@ int main()
             const std::string_view price_field_sv(price_field);
             double price = 0.0;
             auto [ptr, ec] = std::from_chars(price_field_sv.data(),
+                // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
                 price_field_sv.data() + price_field_sv.size(), price,
                 std::chars_format::general);
             if (ec == std::errc())
@@ -87,7 +86,9 @@ int main()
     {
         const double price_squared = price * price;
 
-        std::cout << "price\t" << price << "\t" << price_squared << "\t" << count << '\n';
+        std::cout << "price\t" << std::setw(MAX_PRICE_LENGTH) << price << '\t'
+            << std::setw(MAX_PRICE_SQUARED_LENGTH) << price_squared << '\t'
+            << std::setw(4) << count << '\n';
     }
 
     return 0;
