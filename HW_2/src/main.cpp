@@ -2,6 +2,7 @@
 
 #include <ip_filter.hpp>
 
+// NOLINTNEXTLINE(bugprone-exception-escape)
 int main(
     int          /*argc*/,
     char const * /*argv*/[])

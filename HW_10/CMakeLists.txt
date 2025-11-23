@@ -83,6 +83,10 @@ if (NOT MSVC)
 endif()
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
+  if (MSVC)
+    set(CLANG_TIDY_MSVC_OPTS ";--extra-arg=/EHsc")
+  endif()
+
   set(CLANG_TIDY_HW_10_OPTS
     "-llvm-header-guard,\
      -llvm-namespace-comment,\
@@ -113,7 +117,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
 
   set_target_properties(bulk_server PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      ${CLANG_TIDY_HW_10_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+      ${CLANG_TIDY_HW_10_OPTS}${CLANG_TIDY_MSVC_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
 
   set_target_properties(bulk_server_test PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
@@ -122,7 +126,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
       -fuchsia-default-arguments-calls,\
       -llvm-prefer-static-over-anonymous-namespace,\
       -llvmlibc-inline-function-decl,\
-      ${CLANG_TIDY_HW_10_OPTS};--config=\
+      ${CLANG_TIDY_HW_10_OPTS}${CLANG_TIDY_MSVC_OPTS};--config=\
       {\
         CheckOptions:\
         [\
