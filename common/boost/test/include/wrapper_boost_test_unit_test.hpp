@@ -3,6 +3,8 @@
 
 #ifndef _MSC_VER
 #pragma GCC system_header
+#else
+#pragma system_header
 #endif // _MSC_VER
 #include <boost/test/unit_test.hpp>
 

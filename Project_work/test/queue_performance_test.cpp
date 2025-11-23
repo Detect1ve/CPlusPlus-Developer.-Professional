@@ -2,7 +2,7 @@
 #include <atomic>
 #include <thread>
 #endif
-#if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
+#if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
 #include <chrono>
 #include <string>
 #endif
@@ -372,7 +372,7 @@ namespace
     }
 } // namespace
 
-int main()
+int main() // NOLINT(bugprone-exception-escape)
 {
     try
     {
@@ -397,13 +397,13 @@ int main()
     {
         std::cerr << "An exception occurred: " << e.what() << '\n';
 
-        return 1;
+        return EXIT_FAILURE;
     }
     catch (...)
     {
         std::cerr << "An unknown exception occurred\n";
 
-        return 1;
+        return EXIT_FAILURE;
     }
 
     return 0;

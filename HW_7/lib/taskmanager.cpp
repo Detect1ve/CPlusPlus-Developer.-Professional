@@ -273,7 +273,7 @@ namespace bulk
         }
 #endif
     }
-
+    // NOLINTNEXTLINE(bugprone-exception-escape)
     taskmanager::~taskmanager() noexcept
     {
         try
