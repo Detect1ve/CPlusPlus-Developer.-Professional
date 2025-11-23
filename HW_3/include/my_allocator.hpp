@@ -11,7 +11,7 @@ class MyAllocator
 public:
     using value_type = T;
 
-#if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
+#if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
     MyAllocator() noexcept {}
 #endif
 
@@ -27,7 +27,7 @@ public:
         return static_cast<T*>(malloc(sizeof(T) * n));
     }
 
-#if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
+#if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
     template <typename U>
     MyAllocator(const MyAllocator<U, size>&) noexcept {}
 #endif

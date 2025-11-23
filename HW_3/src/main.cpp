@@ -21,46 +21,63 @@ namespace
     }
 } // namespace
 
+// NOLINTNEXTLINE(bugprone-exception-escape)
 int main()
 {
-    std::map<int, int> map_with_standard_alloc;
-
-    for (unsigned i = 0; i < CONTAINER_SIZE; i++)
+    try
     {
-        map_with_standard_alloc.insert({i, factorial(i)});
+        std::map<int, int> map_with_standard_alloc;
+
+        for (unsigned i = 0; i < CONTAINER_SIZE; i++)
+        {
+            map_with_standard_alloc.insert({i, factorial(i)});
+        }
+
+        std::map<int, int, std::less<>,
+            MyAllocator<std::pair<const int, int>, CONTAINER_SIZE>>
+                map_with_custom_alloc;
+
+        for (unsigned i = 0; i < CONTAINER_SIZE; i++)
+        {
+            map_with_custom_alloc.insert({i, factorial(i)});
+        }
+
+        for (const auto& elem : map_with_custom_alloc)
+        {
+            std::cout << elem.first << " " << elem.second << '\n';
+        }
+
+        MyList<unsigned> my_list_with_standard_alloc;
+
+        for (unsigned i = 0; i < CONTAINER_SIZE; i++)
+        {
+            my_list_with_standard_alloc.push_back(i);
+        }
+
+        MyList<unsigned, MyAllocator<int, CONTAINER_SIZE>> my_list_with_custom_alloc;
+
+        for (unsigned i = 0; i < CONTAINER_SIZE; i++)
+        {
+            my_list_with_custom_alloc.push_back(i);
+        }
+
+        for (const auto elem : my_list_with_custom_alloc)
+        {
+            std::cout << elem << '\n';
+        }
+
+        return 0;
     }
-
-    std::map<int, int, std::less<>,
-        MyAllocator<std::pair<const int, int>, CONTAINER_SIZE>> map_with_custom_alloc;
-
-    for (unsigned i = 0; i < CONTAINER_SIZE; i++)
+    catch (const std::exception& e)
     {
-        map_with_custom_alloc.insert({i, factorial(i)});
-    }
+        std::cerr << "Unhandled exception: " << e.what() << '\n';
 
-    for (const auto& elem : map_with_custom_alloc)
+        return EXIT_FAILURE;
+    }
+    catch (...)
     {
-        std::cout << elem.first << " " << elem.second << '\n';
+        std::cerr << "Unknown exception occurred\n";
+
+        return EXIT_FAILURE;
     }
-
-    MyList<unsigned> my_list_with_standard_alloc;
-
-    for (unsigned i = 0; i < CONTAINER_SIZE; i++)
-    {
-        my_list_with_standard_alloc.push_back(i);
-    }
-
-    MyList<unsigned, MyAllocator<int, CONTAINER_SIZE>> my_list_with_custom_alloc;
-
-    for (unsigned i = 0; i < CONTAINER_SIZE; i++)
-    {
-        my_list_with_custom_alloc.push_back(i);
-    }
-
-    for (const auto elem : my_list_with_custom_alloc)
-    {
-        std::cout << elem << '\n';
-    }
-
-    return 0;
 }

@@ -65,6 +65,10 @@ if (NOT MSVC)
 endif()
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
+  if (MSVC)
+    set(CLANG_TIDY_MSVC_OPTS ";--extra-arg=/EHsc")
+  endif()
+
   set(CLANG_TIDY_HW_7_OPTS
     "-fuchsia-default-arguments-calls,\
      -llvmlibc-callee-namespace,\
@@ -79,7 +83,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
       -altera-unroll-loops,\
       -fuchsia-overloaded-operator,\
       -llvm-prefer-static-over-anonymous-namespace,\
-      ${CLANG_TIDY_HW_7_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+      ${CLANG_TIDY_HW_7_OPTS}${CLANG_TIDY_MSVC_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
 
   set_target_properties(bulk PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\

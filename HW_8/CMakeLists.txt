@@ -69,6 +69,10 @@ if (NOT MSVC)
 endif()
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
+  if (MSVC)
+    set(CLANG_TIDY_MSVC_OPTS ";--extra-arg=/EHsc")
+  endif()
+
   set(CLANG_TIDY_HW_8_OPTS
     "-altera-struct-pack-align,\
      -fuchsia-default-arguments-calls,\
@@ -83,7 +87,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
       -altera-id-dependent-backward-branch,\
       -altera-unroll-loops,\
       -llvmlibc-implementation-in-namespace,\
-      ${CLANG_TIDY_HW_8_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+      ${CLANG_TIDY_HW_8_OPTS}${CLANG_TIDY_MSVC_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
 
   set_target_properties(bayan PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\

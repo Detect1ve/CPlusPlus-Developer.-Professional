@@ -19,8 +19,7 @@ struct FileInfo
     FileInfo(FileInfo&&) noexcept = default;
     FileInfo& operator=(const FileInfo& other);
     FileInfo& operator=(FileInfo&&) noexcept = default;
-
-    ~FileInfo() noexcept;
+    ~FileInfo() noexcept = default;
 
     [[nodiscard]] uintmax_t get_size() const
 #ifndef _MSC_VER
@@ -47,8 +46,8 @@ private:
 
     boost::filesystem::path path_;
     mutable bool file_opened{false};
-    mutable std::ifstream file_stream;
     mutable std::vector<std::string> hashes;
+    mutable std::unique_ptr<std::ifstream> file_stream;
     std::size_t block_size_;
     uintmax_t size_;
 };
@@ -191,6 +190,7 @@ FileInfo::FileInfo(const FileInfo& other)
     :
     path_(other.path_),
     hashes(other.hashes),
+    file_stream(nullptr),
     block_size_(other.block_size_),
     size_(other.size_) {}
 
@@ -205,14 +205,10 @@ FileInfo& FileInfo::operator=(const FileInfo& other)
         size_ = other.size_;
         block_size_ = other.block_size_;
         file_opened = false;
+        file_stream = nullptr;
     }
 
     return *this;
-}
-
-FileInfo::~FileInfo() noexcept
-{
-    close_file();
 }
 
 uintmax_t FileInfo::get_size() const
@@ -246,10 +242,10 @@ std::string FileInfo::compute_block_hash(
         open_file();
     }
 
-    file_stream.seekg(static_cast<std::streamoff>(block_index * block_size_));
-    file_stream.read(buffer.data(), static_cast<std::streamsize>(block_size_));
+    file_stream->seekg(static_cast<std::streamoff>(block_index * block_size_));
+    file_stream->read(buffer.data(), static_cast<std::streamsize>(block_size_));
 
-    const std::streamsize bytes_read = file_stream.gcount();
+    const std::streamsize bytes_read = file_stream->gcount();
 
     const std::string block_data(buffer.data(),
         static_cast<std::string::size_type>(bytes_read));
@@ -263,8 +259,8 @@ void FileInfo::open_file() const
 {
     if (!file_opened)
     {
-        file_stream.open(path_.string(), std::ios::binary);
-        if (!file_stream)
+        file_stream = std::make_unique<std::ifstream>(path_.string(), std::ios::binary);
+        if (!*file_stream)
         {
             throw std::runtime_error("Failed to open file: " + path_.string());
         }
@@ -277,8 +273,9 @@ void FileInfo::close_file() const
 {
     if (file_opened)
     {
-        file_stream.close();
+        file_stream->close();
         file_opened = false;
+        file_stream = nullptr;
     }
 }
 
