@@ -63,6 +63,10 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
      -misc-include-cleaner,\
      -modernize-use-trailing-return-type;--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
 
+  if (MSVC)
+    set(CLANG_TIDY_PROJECT_WORK_OPTS "${CLANG_TIDY_PROJECT_WORK_OPTS};--extra-arg=/EHsc")
+  endif()
+
   set_target_properties(queue_test PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
       ${CLANG_TIDY_PROJECT_WORK_OPTS};--config=\

@@ -3,7 +3,7 @@
 #include <ranges>
 
 #include <server.hpp>
-
+// NOLINTNEXTLINE(bugprone-exception-escape)
 int main(
     const int   argc,
     const char *argv[])
@@ -63,6 +63,8 @@ int main(
     catch (std::exception& e)
     {
         std::cerr << "Exception: " << e.what() << '\n';
+
+        ret = -4;
     }
 
     return ret;

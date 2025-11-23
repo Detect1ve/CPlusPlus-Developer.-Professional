@@ -70,6 +70,10 @@ if (NOT MSVC)
 endif()
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
+  if (MSVC)
+    set(CLANG_TIDY_MSVC_OPTS ";--extra-arg=/EHsc")
+  endif()
+
   set(CLANG_TIDY_HW_11_OPTS
     "-llvmlibc-callee-namespace,\
      -llvmlibc-implementation-in-namespace,\
@@ -88,7 +92,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
 
   set_target_properties(join_server PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      ${CLANG_TIDY_HW_11_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+      ${CLANG_TIDY_HW_11_OPTS}${CLANG_TIDY_MSVC_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
 
   set_target_properties(join_server_test PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
@@ -96,7 +100,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
       -altera-unroll-loops,\
       -fuchsia-default-arguments-calls,\
       -llvmlibc-inline-function-decl,\
-      ${CLANG_TIDY_HW_11_OPTS};--header-filter=(${CMAKE_CURRENT_SOURCE_DIR}/include/.*|${SOCKET_WRAPPER_INCLUDE_DIR}/.*)")
+      ${CLANG_TIDY_HW_11_OPTS}${CLANG_TIDY_MSVC_OPTS};--header-filter=(${CMAKE_CURRENT_SOURCE_DIR}/include/.*|${SOCKET_WRAPPER_INCLUDE_DIR}/.*)")
 endif()
 
 enable_testing()

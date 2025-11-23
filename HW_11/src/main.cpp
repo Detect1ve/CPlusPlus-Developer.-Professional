@@ -6,7 +6,7 @@
 #include <ranges>
 
 #include <server.hpp>
-
+// NOLINTNEXTLINE(bugprone-exception-escape)
 int main(
     const int   argc,
     const char* argv[])
