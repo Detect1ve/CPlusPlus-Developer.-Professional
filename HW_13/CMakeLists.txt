@@ -66,6 +66,10 @@ target_compile_definitions(fashio_mnist_test PRIVATE
   PROJECT_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
+  if (MSVC)
+    set(CLANG_TIDY_MSVC_OPTS ";--extra-arg=/EHsc")
+  endif()
+
   set(CLANG_TIDY_HW_13_OPTS
     "-fuchsia-default-arguments-calls,\
      -llvmlibc-callee-namespace,\
@@ -87,7 +91,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
       -llvm-prefer-static-over-anonymous-namespace,\
       -llvmlibc-implementation-in-namespace,\
-      ${CLANG_TIDY_HW_13_OPTS}")
+      ${CLANG_TIDY_HW_13_OPTS}${CLANG_TIDY_MSVC_OPTS}")
 
   set_target_properties(fashio_mnist_test PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
