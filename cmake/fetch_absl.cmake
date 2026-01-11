@@ -4,7 +4,7 @@ if (NOT absl_FOUND)
   FetchContent_Declare(
     absl
     GIT_REPOSITORY https://github.com/abseil/abseil-cpp.git
-    GIT_TAG 20250814.1
+    GIT_TAG 20260107.0
     GIT_SHALLOW ON
     EXCLUDE_FROM_ALL
     SYSTEM)

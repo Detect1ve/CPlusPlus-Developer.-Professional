@@ -1,6 +1,8 @@
-cmake_minimum_required(VERSION 3.25..4.2.0)
+cmake_minimum_required(VERSION 3.25..4.2.1)
 
 project(C++-Developer-Professional LANGUAGES CXX)
+
+message(STATUS "C++ Compiler: ${CMAKE_CXX_COMPILER}")
 
 if (NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
