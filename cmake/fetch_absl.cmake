@@ -6,6 +6,7 @@ if (NOT absl_FOUND)
     GIT_REPOSITORY https://github.com/abseil/abseil-cpp.git
     GIT_TAG 20250814.1
     GIT_SHALLOW ON
-    EXCLUDE_FROM_ALL)
+    EXCLUDE_FROM_ALL
+    SYSTEM)
   FetchContent_MakeAvailable(absl)
 endif()

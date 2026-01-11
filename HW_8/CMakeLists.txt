@@ -24,11 +24,10 @@ if (PROJECT_IS_TOP_LEVEL)
 endif()
 
 if (PROJECT_IS_TOP_LEVEL)
-  include(../common/absl.cmake)
-  include(../common/boost_algorithm.cmake)
-  include(../common/boost_uuid.cmake)
   include(../common/capture.cmake)
   include(../cmake/clang-tidy.cmake)
+  include(../cmake/fetch_absl.cmake)
+  include(../cmake/fetch_boost.cmake)
   include(../cmake/fetch_googletest.cmake)
   include(../cmake/gcc_warnings.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
@@ -38,15 +37,10 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set(HW_8_COMPILE_WARNING_FLAGS -Wc++17-compat-pedantic)
 endif()
 
-include(../common/boost_crc.cmake)
-include(../common/boost_filesystem.cmake)
-include(../common/boost_program_options.cmake)
-
 add_library(bayan_lib STATIC lib/bayan.cpp)
 target_include_directories(bayan_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(bayan_lib
-  PRIVATE wrapper_boost_algorithm wrapper_boost_crc wrapper_boost_filesystem
-    wrapper_boost_program_options wrapper_boost_uuid)
+target_link_libraries(bayan_lib PRIVATE
+  Boost::algorithm Boost::crc Boost::filesystem Boost::program_options Boost::uuid)
 target_compile_options(bayan_lib PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_8_COMPILE_WARNING_FLAGS})
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -66,9 +60,8 @@ if (NOT MSVC)
 endif()
 
 add_executable(bayan_test test/bayan_test.cpp)
-target_link_libraries(bayan_test
-  PRIVATE bayan_lib capture GTest::gtest_main wrapper_absl_strings
-    wrapper_boost_filesystem)
+target_link_libraries(bayan_test PRIVATE
+  absl::strings bayan_lib Boost::filesystem capture GTest::gtest_main)
 target_compile_options(bayan_test PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_8_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)

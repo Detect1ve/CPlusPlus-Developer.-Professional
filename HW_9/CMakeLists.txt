@@ -24,9 +24,9 @@ if (PROJECT_IS_TOP_LEVEL)
 endif()
 
 if (PROJECT_IS_TOP_LEVEL)
-  include(../common/absl.cmake)
   include(../common/capture.cmake)
   include(../cmake/clang-tidy.cmake)
+  include(../cmake/fetch_absl.cmake)
   include(../cmake/fetch_googletest.cmake)
   include(../cmake/gcc_warnings.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
@@ -63,13 +63,12 @@ target_compile_options(async_cli PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_9_COMPILE_WARNING_FLAGS})
 
 add_executable(async_test test/async_test.cpp)
-target_link_libraries(async_test
-  PRIVATE async capture GTest::gtest_main wrapper_absl_strings)
+target_link_libraries(async_test PRIVATE absl::strings async capture GTest::gtest_main)
 target_compile_options(async_test PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_9_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)
-  target_compile_options(async_test
-    PRIVATE -Wno-unsafe-buffer-usage -Wno-global-constructors)
+  target_compile_options(async_test PRIVATE
+    -Wno-unsafe-buffer-usage -Wno-global-constructors)
 endif()
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)

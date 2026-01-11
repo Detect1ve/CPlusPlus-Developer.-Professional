@@ -7,7 +7,7 @@
 #include <netdb.h>
 #endif
 
-#include <absl_strings_match.hpp>
+#include <absl/strings/match.h>
 
 namespace test_util
 {

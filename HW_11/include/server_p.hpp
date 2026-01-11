@@ -1,9 +1,10 @@
 #ifndef SERVER_P_HPP
 #define SERVER_P_HPP
 
+#include <boost/asio.hpp>
+
 #include <database.hpp>
 #include <server.hpp>
-#include <wrapper_boost_asio.hpp>
 
 class ServerImpl
 {

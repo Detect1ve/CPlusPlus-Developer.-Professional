@@ -7,6 +7,7 @@ if (NOT Eigen_FOUND)
     GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
     GIT_TAG 5.0.0
     GIT_SHALLOW ON
-    EXCLUDE_FROM_ALL)
+    EXCLUDE_FROM_ALL
+    SYSTEM)
   FetchContent_MakeAvailable(Eigen3)
 endif()

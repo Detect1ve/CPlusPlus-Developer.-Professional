@@ -8,6 +8,7 @@ if (NOT Boost_FOUND)
     URL https://github.com/boostorg/boost/releases/download/boost-1.89.0/boost-1.89.0-cmake.tar.xz
     URL_MD5 537da0e22b31b8b7185cc44fdde70458
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-    EXCLUDE_FROM_ALL)
+    EXCLUDE_FROM_ALL
+    SYSTEM)
   FetchContent_MakeAvailable(Boost)
 endif()
