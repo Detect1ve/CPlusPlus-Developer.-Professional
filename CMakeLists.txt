@@ -19,13 +19,11 @@ set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 
 list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 
-include(common/boost_algorithm.cmake)
-include(common/boost_asio.cmake)
-include(common/boost_uuid.cmake)
 include(common/capture.cmake)
 include(common/socket_wrapper.cmake)
 
 include(cmake/clang-tidy.cmake)
+include(cmake/fetch_boost.cmake)
 include(cmake/fetch_googletest.cmake)
 include(cmake/gcc_warnings.cmake)
 

@@ -41,17 +41,16 @@ endif()
 
 if (PROJECT_IS_TOP_LEVEL)
     include(../cmake/clang-tidy.cmake)
+    include(../cmake/fetch_boost.cmake)
     include(../cmake/fetch_googletest.cmake)
     include(../cmake/gcc_warnings.cmake)
     list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
-include(../common/boost_test.cmake)
-
 add_executable(test_version test_version.cpp)
 
 target_link_libraries(test_version
-    PRIVATE wrapper_boost_unit_test_framework
+    PRIVATE Boost::unit_test_framework
     helloworld
 )
 
@@ -133,6 +132,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
             -hicpp-vararg,\
             -llvmlibc-callee-namespace,\
             -llvmlibc-implementation-in-namespace,\
+            -llvmlibc-restrict-system-libc-headers,\
             -misc-include-cleaner,\
             -readability-identifier-length"
     )

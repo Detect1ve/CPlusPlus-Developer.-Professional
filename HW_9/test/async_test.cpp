@@ -7,8 +7,8 @@
 #include <fstream>
 
 #include <gtest/gtest.h>
+#include <absl/strings/match.h>
 
-#include <absl_strings_match.hpp>
 #include <async.h>
 #include <capture.hpp>
 

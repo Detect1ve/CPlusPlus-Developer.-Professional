@@ -34,10 +34,10 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set(HW_13_COMPILE_WARNING_FLAGS -Wc++17-compat-pedantic)
 endif()
 
-include(../common/eigen3.cmake)
+include(../cmake/fetch_eigen3.cmake)
 
 add_library(mlp_lib STATIC lib/mlp.cpp)
-target_link_libraries(mlp_lib PRIVATE eigen3_eigen)
+target_link_libraries(mlp_lib PRIVATE Eigen3::Eigen)
 target_include_directories(mlp_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_compile_options(mlp_lib PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_13_COMPILE_WARNING_FLAGS})

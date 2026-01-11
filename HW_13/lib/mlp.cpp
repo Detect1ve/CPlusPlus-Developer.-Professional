@@ -5,7 +5,8 @@
 #include <fstream>
 #include <iostream>
 
-#include <eigen_dense.hpp>
+#include <Eigen/Dense>
+
 #include <mlp.hpp>
 
 namespace

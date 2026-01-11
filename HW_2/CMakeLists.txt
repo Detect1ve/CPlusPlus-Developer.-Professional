@@ -24,10 +24,9 @@ if (PROJECT_IS_TOP_LEVEL)
 endif()
 
 if (PROJECT_IS_TOP_LEVEL)
-  include(../common/boost_algorithm.cmake)
-  include(../common/boost_uuid.cmake)
   include(../common/capture.cmake)
   include(../cmake/clang-tidy.cmake)
+  include(../cmake/fetch_boost.cmake)
   include(../cmake/fetch_googletest.cmake)
   include(../cmake/gcc_warnings.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
@@ -55,9 +54,8 @@ target_compile_options(ip_filter PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_2_COMPILE_WARNING_FLAGS})
 
 add_executable(ip_filter_test test/ip_filter_test.cpp)
-target_link_libraries(ip_filter_test
-  PRIVATE capture GTest::gtest_main ip_filter_lib wrapper_boost_algorithm
-    wrapper_boost_uuid)
+target_link_libraries(ip_filter_test PRIVATE
+  Boost::algorithm Boost::uuid capture GTest::gtest_main ip_filter_lib)
 target_compile_options(ip_filter_test PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_2_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)
