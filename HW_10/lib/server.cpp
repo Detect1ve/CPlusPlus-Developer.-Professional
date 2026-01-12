@@ -84,11 +84,12 @@ namespace async
         ServerImpl&       server,
         const std::size_t bulk_size)
         :
-        pimpl_(std::make_unique<SessionImpl>(
-            *static_cast<boost::asio::ip::tcp::socket*>(socket),
-            server,
-            bulk_size,
-            *this)) {}
+        pimpl_(nullptr)
+    {
+        pimpl_  = std::make_unique<SessionImpl>(
+            *static_cast<boost::asio::ip::tcp::socket*>(socket), server, bulk_size,
+            *this);
+    }
 
     Session::~Session() = default;
 

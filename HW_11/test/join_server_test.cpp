@@ -21,7 +21,7 @@ protected:
         {
             try
             {
-                server_ = std::make_unique<Server>(promise, 0);
+                server_ = std::make_unique<Server>(promise, std::int16_t{0});
                 server_->run();
             }
             catch (const std::exception&)

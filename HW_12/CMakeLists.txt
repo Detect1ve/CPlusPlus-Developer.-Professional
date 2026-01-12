@@ -22,7 +22,7 @@ if (MSVC OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 
     set(MINIMUM_CXX_STANDARD 17)
     include(../cmake/cxx_standard.cmake)
-    include(../cmake/gcc_warnings.cmake)
+    include(../cmake/warning_flags.cmake)
   endif()
 
   if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")

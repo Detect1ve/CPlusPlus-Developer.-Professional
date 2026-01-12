@@ -63,6 +63,11 @@ public:
         Database*   database)
         :
         pimpl_(std::make_unique<SessionImpl>(std::move(socket), database)) {}
+    ~Session() = default;
+    Session(const Session&) = delete;
+    Session& operator=(const Session&) = delete;
+    Session(Session&&) = delete;
+    Session& operator=(Session&&) = delete;
 
     void start()
     {
@@ -185,8 +190,7 @@ void SessionImpl::process_command(std::string_view command)
 
 ServerImpl::ServerImpl(const std::uint16_t port)
     :
-    acceptor_(io_context_, tcp::endpoint(tcp::v4(), port)),
-    database_()
+    acceptor_(io_context_, tcp::endpoint(tcp::v4(), port))
 {
     do_accept();
 }
@@ -195,8 +199,7 @@ ServerImpl::ServerImpl(
     std::promise<std::uint16_t>& port_promise,
     const std::uint16_t          port)
     :
-    acceptor_(io_context_, tcp::endpoint(tcp::v4(), port)),
-    database_()
+    acceptor_(io_context_, tcp::endpoint(tcp::v4(), port))
 {
     port_promise.set_value(acceptor_.local_endpoint().port());
 

@@ -43,9 +43,9 @@ if (ENABLE_CLANG_TIDY)
     string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" CLANG_TIDY_VERSION_NUMBER
       "${CLANG_TIDY_VERSION}")
     if (CLANG_TIDY_VERSION_NUMBER VERSION_GREATER_EQUAL 14)
-      set(CLANG_TIDY_OPTS "${CLANG_TIDY_BIN};--use-color;--warnings-as-errors=*;-checks=*")
+      set(CLANG_TIDY_OPTS "${CLANG_TIDY_BIN};--use-color;--warnings-as-errors=*;-checks=*,-clang-diagnostic-unused-command-line-argument")
     else()
-      set(CLANG_TIDY_OPTS "${CLANG_TIDY_BIN};--warnings-as-errors=*;-checks=*")
+      set(CLANG_TIDY_OPTS "${CLANG_TIDY_BIN};--warnings-as-errors=*;-checks=*,-clang-diagnostic-unused-command-line-argument")
     endif()
 
   else()

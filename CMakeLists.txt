@@ -27,7 +27,7 @@ include(common/socket_wrapper.cmake)
 include(cmake/clang-tidy.cmake)
 include(cmake/fetch_boost.cmake)
 include(cmake/fetch_googletest.cmake)
-include(cmake/gcc_warnings.cmake)
+include(cmake/warning_flags.cmake)
 
 set(SUBDIRS
   HW_1

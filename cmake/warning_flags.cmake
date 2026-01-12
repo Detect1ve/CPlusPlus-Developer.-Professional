@@ -126,5 +126,12 @@ if (NOT MSVC)
     endif()
   endif()
 else()
-  set(COMPILE_WARNING_FLAGS /W4)
+  set(COMPILE_WARNING_FLAGS
+    # https://learn.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-by-category?view=msvc-170#language
+    /Zc:__cplusplus /Zc:inline /Zc:preprocessor /Zc:templateScope /Zc:throwingNew
+    # https://learn.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-by-category?view=msvc-170#diagnostics
+    /sdl
+    /W4
+    /w14242 /w14296 /w14355 /w14625 /w14626 /w15026 /w15027)
+    # /Wall /wd4365 /wd4514 /wd4668 /wd4820 /wd5039 /wd5045)
 endif()

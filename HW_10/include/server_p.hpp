@@ -25,6 +25,11 @@ namespace async
             std::cout << "Server started on port " << port << " with bulk size "
                 << bulk_size << '\n';
         }
+        ~ServerImpl() = default;
+        ServerImpl(const ServerImpl&) = delete;
+        ServerImpl& operator=(const ServerImpl&) = delete;
+        ServerImpl(ServerImpl&&) = delete;
+        ServerImpl& operator=(ServerImpl&&) = delete;
 
         void start_accept()
         {

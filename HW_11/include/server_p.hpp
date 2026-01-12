@@ -19,6 +19,12 @@ public:
     explicit ServerImpl(
         std::promise<std::uint16_t>& port_promise,
         std::uint16_t                port);
+    ~ServerImpl() = default;
+    ServerImpl(const ServerImpl&) = delete;
+    ServerImpl& operator=(const ServerImpl&) = delete;
+    ServerImpl(ServerImpl&&) = delete;
+    ServerImpl& operator=(ServerImpl&&) = delete;
+
     void run();
     void stop();
 };

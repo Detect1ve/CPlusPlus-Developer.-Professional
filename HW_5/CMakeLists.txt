@@ -19,7 +19,7 @@ endif()
 
 if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
-  include(../cmake/gcc_warnings.cmake)
+  include(../cmake/warning_flags.cmake)
 endif()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")

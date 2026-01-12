@@ -20,7 +20,7 @@ if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
   include(../cmake/fetch_googletest.cmake)
   include(../cmake/fetch_gsl.cmake)
-  include(../cmake/gcc_warnings.cmake)
+  include(../cmake/warning_flags.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
