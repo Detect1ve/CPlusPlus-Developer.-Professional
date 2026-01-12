@@ -22,7 +22,7 @@ if (MSVC OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 
     set(MINIMUM_CXX_STANDARD 17)
     include(../cmake/cxx_standard.cmake)
-    include(../cmake/gcc_warnings.cmake)
+    include(../cmake/warning_flags.cmake)
   endif()
 
   if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -55,6 +55,9 @@ if (MSVC OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_compile_options(mapper PRIVATE -Wno-unused-parameter -Wno-unsafe-buffer-usage)
     target_compile_options(reducer PRIVATE -Wno-unused-parameter)
     target_compile_options(mapper_variance PRIVATE -Wno-unsafe-buffer-usage)
+  else()
+    target_compile_options(mapper PRIVATE /wd4100)
+    target_compile_options(reducer PRIVATE /wd4100)
   endif()
 
   if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)

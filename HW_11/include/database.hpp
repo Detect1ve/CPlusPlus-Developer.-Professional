@@ -18,6 +18,13 @@ class Database
     std::unordered_map<int, std::string> table_a_;
     std::unordered_map<int, std::string> table_b_;
 public:
+    Database() = default;
+    ~Database() = default;
+    Database(const Database&) = delete;
+    Database& operator=(const Database&) = delete;
+    Database(Database&&) = delete;
+    Database& operator=(Database&&) = delete;
+
     bool insert(
         std::string_view table,
         int              record_id,

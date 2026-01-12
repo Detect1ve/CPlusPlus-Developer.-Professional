@@ -86,7 +86,7 @@ void reverse_lexicographic_sort(std::vector<std::vector<std::string>>& ip_pool)
 
 std::expected<std::vector<std::vector<std::string>>, std::error_code> filter_any(
     const std::vector<std::vector<std::string>>& ip_pool,
-    const unsigned char                any_octet)
+    const unsigned char                          any_octet)
 {
 #ifdef __cpp_lib_ranges_to_container
     return ip_pool | std::ranges::views::filter([any_octet](const auto& ip_address)

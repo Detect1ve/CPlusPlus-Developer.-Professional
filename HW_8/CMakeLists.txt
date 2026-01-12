@@ -29,7 +29,7 @@ if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/fetch_absl.cmake)
   include(../cmake/fetch_boost.cmake)
   include(../cmake/fetch_googletest.cmake)
-  include(../cmake/gcc_warnings.cmake)
+  include(../cmake/warning_flags.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 

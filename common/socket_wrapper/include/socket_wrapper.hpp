@@ -41,7 +41,11 @@ namespace test_util
             }
 
             sock_ = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+#ifdef _WIN32
+            if (sock_ == INVALID_SOCKET)
+#else
             if (sock_ < 0)
+#endif
             {
                 freeaddrinfo(res);
 #ifdef _WIN32
