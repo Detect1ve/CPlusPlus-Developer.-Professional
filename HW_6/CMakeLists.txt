@@ -18,7 +18,7 @@ if (PROJECT_IS_TOP_LEVEL)
     endif()
   endif()
 
-  set(MINIMUM_CXX_STANDARD 17)
+  set(MINIMUM_CXX_STANDARD 20)
   include(../cmake/cxx_standard.cmake)
   set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 endif()
@@ -32,7 +32,7 @@ if (PROJECT_IS_TOP_LEVEL)
 endif()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  set(HW_6_COMPILE_WARNING_FLAGS -Wc++17-compat-pedantic)
+  set(HW_6_COMPILE_WARNING_FLAGS -Wc++20-compat-pedantic)
 endif()
 
 add_executable(matrix src/main.cpp)

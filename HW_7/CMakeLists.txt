@@ -32,7 +32,7 @@ if (PROJECT_IS_TOP_LEVEL)
 endif()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  set(HW_7_COMPILE_WARNING_FLAGS -Wc++17-compat-pedantic)
+  set(HW_7_COMPILE_WARNING_FLAGS -Wc++20-compat-pedantic)
 endif()
 
 add_library(taskmanager STATIC lib/taskmanager.cpp)
