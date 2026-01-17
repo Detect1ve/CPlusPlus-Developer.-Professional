@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25..4.2.0)
+cmake_minimum_required(VERSION 3.25..4.2.1)
 
 if (NOT DEFINED PATCH_VERSION)
   set(PATCH_VERSION
@@ -22,6 +22,7 @@ if (MSVC OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 
     set(MINIMUM_CXX_STANDARD 17)
     include(../cmake/cxx_standard.cmake)
+    include(../cmake/warning_flags.cmake)
   endif()
 
   if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -58,8 +59,7 @@ if (MSVC OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 
   if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
     set(CLANG_TIDY_HW_12_OPTS
-      "-altera-unroll-loops,\
-       -fuchsia-default-arguments-calls,\
+      "-fuchsia-default-arguments-calls,\
        -llvmlibc-callee-namespace,\
        -llvmlibc-implementation-in-namespace,\
        -llvmlibc-restrict-system-libc-headers,\

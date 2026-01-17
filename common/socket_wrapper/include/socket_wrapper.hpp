@@ -7,12 +7,39 @@
 #include <netdb.h>
 #endif
 
-#include <absl_strings_match.hpp>
+#include <absl/strings/match.h>
 
 namespace test_util
 {
     class ClientSocket
     {
+        void close_socket()
+        {
+#ifdef _WIN32
+            if (sock_ != INVALID_SOCKET)
+            {
+                closesocket(sock_);
+                WSACleanup();
+                sock_ = INVALID_SOCKET;
+            }
+#else
+            if (sock_ != -1)
+            {
+                if (close(sock_) != 0)
+                {
+                    std::cerr << "close failed\n";
+                }
+
+                sock_ = -1;
+            }
+#endif
+        }
+
+#ifdef _WIN32
+        SOCKET sock_ = INVALID_SOCKET;
+#else
+        int sock_ = -1;
+#endif
     public:
         ClientSocket(
             const std::string&  host,
@@ -41,7 +68,11 @@ namespace test_util
             }
 
             sock_ = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+#ifdef _WIN32
+            if (sock_ == INVALID_SOCKET)
+#else
             if (sock_ < 0)
+#endif
             {
                 freeaddrinfo(res);
 #ifdef _WIN32
@@ -141,37 +172,7 @@ namespace test_util
 
             return result;
         }
-
-    private:
-        void close_socket()
-        {
-#ifdef _WIN32
-            if (sock_ != INVALID_SOCKET)
-            {
-                closesocket(sock_);
-                WSACleanup();
-                sock_ = INVALID_SOCKET;
-            }
-#else
-            if (sock_ != -1)
-            {
-                if (close(sock_) != 0)
-                {
-                    std::cerr << "close failed\n";
-                }
-
-                sock_ = -1;
-            }
-#endif
-        }
-
-#ifdef _WIN32
-        SOCKET sock_ = INVALID_SOCKET;
-#else
-        int sock_ = -1;
-#endif
     };
-
 } // namespace test_util
 
 #endif // SOCKET_WRAPPER_HPP

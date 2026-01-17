@@ -9,6 +9,8 @@ namespace editor::model
 {
     class Document
     {
+        std::string name_;
+        std::vector<std::unique_ptr<Primitive>> primitives_;
     public:
         explicit Document(std::string name);
         ~Document() = default;
@@ -47,10 +49,6 @@ namespace editor::model
             ;
 
         static std::unique_ptr<Document> loadFromFile(const std::string& filename);
-
-    private:
-        std::string name_;
-        std::vector<std::unique_ptr<Primitive>> primitives_;
     };
 } // namespace editor::model
 

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25..4.2.0)
+cmake_minimum_required(VERSION 3.25..4.2.1)
 
 if (NOT DEFINED PATCH_VERSION)
   set(PATCH_VERSION
@@ -24,13 +24,12 @@ if (PROJECT_IS_TOP_LEVEL)
 endif()
 
 if (PROJECT_IS_TOP_LEVEL)
-  include(../common/absl.cmake)
-  include(../common/boost_algorithm.cmake)
-  include(../common/boost_uuid.cmake)
   include(../common/capture.cmake)
   include(../cmake/clang-tidy.cmake)
+  include(../cmake/fetch_absl.cmake)
+  include(../cmake/fetch_boost.cmake)
   include(../cmake/fetch_googletest.cmake)
-  include(../cmake/gcc_warnings.cmake)
+  include(../cmake/warning_flags.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
@@ -38,15 +37,10 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set(HW_8_COMPILE_WARNING_FLAGS -Wc++17-compat-pedantic)
 endif()
 
-include(../common/boost_crc.cmake)
-include(../common/boost_filesystem.cmake)
-include(../common/boost_program_options.cmake)
-
 add_library(bayan_lib STATIC lib/bayan.cpp)
 target_include_directories(bayan_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(bayan_lib
-  PRIVATE wrapper_boost_algorithm wrapper_boost_crc wrapper_boost_filesystem
-    wrapper_boost_program_options wrapper_boost_uuid)
+target_link_libraries(bayan_lib PRIVATE
+  Boost::algorithm Boost::crc Boost::filesystem Boost::program_options Boost::uuid)
 target_compile_options(bayan_lib PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_8_COMPILE_WARNING_FLAGS})
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -66,9 +60,8 @@ if (NOT MSVC)
 endif()
 
 add_executable(bayan_test test/bayan_test.cpp)
-target_link_libraries(bayan_test
-  PRIVATE bayan_lib capture GTest::gtest_main wrapper_absl_strings
-    wrapper_boost_filesystem)
+target_link_libraries(bayan_test PRIVATE
+  absl::strings bayan_lib Boost::filesystem capture GTest::gtest_main)
 target_compile_options(bayan_test PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_8_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)
@@ -76,6 +69,10 @@ if (NOT MSVC)
 endif()
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
+  if (MSVC)
+    set(CLANG_TIDY_MSVC_OPTS ";--extra-arg=/EHsc")
+  endif()
+
   set(CLANG_TIDY_HW_8_OPTS
     "-altera-struct-pack-align,\
      -fuchsia-default-arguments-calls,\
@@ -87,10 +84,8 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
 
   set_target_properties(bayan_lib PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      -altera-id-dependent-backward-branch,\
-      -altera-unroll-loops,\
       -llvmlibc-implementation-in-namespace,\
-      ${CLANG_TIDY_HW_8_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+      ${CLANG_TIDY_HW_8_OPTS}${CLANG_TIDY_MSVC_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
 
   set_target_properties(bayan PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\

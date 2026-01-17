@@ -15,7 +15,7 @@ namespace
         std::cout << "Example: " << programName << " test.csv model\n";
     }
 } // namespace
-
+// NOLINTNEXTLINE(bugprone-exception-escape)
 int main(
     const int   argc,
     const char* argv[])
@@ -54,5 +54,5 @@ int main(
         ret = -2;
     }
 
-    return 0;
+    return ret;
 }

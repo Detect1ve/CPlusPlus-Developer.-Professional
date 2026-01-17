@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
+#include <boost/algorithm/hex.hpp>
+#include <boost/uuid/detail/md5.hpp>
 
 #include <capture.hpp>
 #include <ip_filter.hpp>
-#include <wrapper_boost_algorithm_hex.hpp>
-#include <wrapper_boost_uuid_detail_md5.hpp>
 
 namespace
 {

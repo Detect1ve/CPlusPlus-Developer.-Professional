@@ -6,7 +6,8 @@ if (NOT GTest_FOUND)
     GIT_REPOSITORY https://github.com/google/googletest.git
     GIT_TAG v1.17.0
     GIT_SHALLOW ON
-    EXCLUDE_FROM_ALL)
+    EXCLUDE_FROM_ALL
+    SYSTEM)
   set(INSTALL_GTEST OFF CACHE BOOL "Disable installation of GTest" FORCE)
   FetchContent_MakeAvailable(GTest)
 endif()

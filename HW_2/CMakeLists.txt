@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25..4.2.0)
+cmake_minimum_required(VERSION 3.25..4.2.1)
 
 if (NOT DEFINED PATCH_VERSION)
   set(PATCH_VERSION
@@ -24,12 +24,11 @@ if (PROJECT_IS_TOP_LEVEL)
 endif()
 
 if (PROJECT_IS_TOP_LEVEL)
-  include(../common/boost_algorithm.cmake)
-  include(../common/boost_uuid.cmake)
   include(../common/capture.cmake)
   include(../cmake/clang-tidy.cmake)
+  include(../cmake/fetch_boost.cmake)
   include(../cmake/fetch_googletest.cmake)
-  include(../cmake/gcc_warnings.cmake)
+  include(../cmake/warning_flags.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
@@ -42,8 +41,8 @@ target_include_directories(ip_filter_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/incl
 target_compile_options(ip_filter_lib PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_2_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)
-  target_compile_options(ip_filter_lib
-    PRIVATE -Wno-strict-overflow -Wno-unsafe-buffer-usage)
+  target_compile_options(ip_filter_lib PRIVATE
+    -Wno-strict-overflow -Wno-unsafe-buffer-usage)
 endif()
 
 add_executable(ip_filter src/main.cpp)
@@ -55,9 +54,8 @@ target_compile_options(ip_filter PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_2_COMPILE_WARNING_FLAGS})
 
 add_executable(ip_filter_test test/ip_filter_test.cpp)
-target_link_libraries(ip_filter_test
-  PRIVATE capture GTest::gtest_main ip_filter_lib wrapper_boost_algorithm
-    wrapper_boost_uuid)
+target_link_libraries(ip_filter_test PRIVATE
+  Boost::algorithm Boost::uuid capture GTest::gtest_main ip_filter_lib)
 target_compile_options(ip_filter_test PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_2_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)
@@ -65,10 +63,12 @@ if (NOT MSVC)
 endif()
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
+  if (MSVC)
+    set(CLANG_TIDY_MSVC_OPTS ";--extra-arg=/EHsc")
+  endif()
+
   set(CLANG_TIDY_HW_2_OPTS
-    "-altera-id-dependent-backward-branch,\
-     -altera-unroll-loops,\
-     -llvmlibc-callee-namespace,\
+    "-llvmlibc-callee-namespace,\
      -llvmlibc-implementation-in-namespace,\
      -llvmlibc-inline-function-decl,\
      -llvmlibc-restrict-system-libc-headers,\
@@ -79,12 +79,12 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
       -fuchsia-default-arguments-calls,\
       -llvm-prefer-static-over-anonymous-namespace,\
-      ${CLANG_TIDY_HW_2_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+      ${CLANG_TIDY_HW_2_OPTS}${CLANG_TIDY_MSVC_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
 
   set_target_properties(ip_filter PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
       -google-readability-todo,\
-      ${CLANG_TIDY_HW_2_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+      ${CLANG_TIDY_HW_2_OPTS}${CLANG_TIDY_MSVC_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
 
   set_target_properties(ip_filter_test PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\

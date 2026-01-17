@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25..4.2.0)
+cmake_minimum_required(VERSION 3.25..4.2.1)
 
 if (NOT DEFINED PATCH_VERSION)
   set(PATCH_VERSION
@@ -24,11 +24,11 @@ if (PROJECT_IS_TOP_LEVEL)
 endif()
 
 if (PROJECT_IS_TOP_LEVEL)
-  include(../common/absl.cmake)
   include(../common/capture.cmake)
   include(../cmake/clang-tidy.cmake)
+  include(../cmake/fetch_absl.cmake)
   include(../cmake/fetch_googletest.cmake)
-  include(../cmake/gcc_warnings.cmake)
+  include(../cmake/warning_flags.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
@@ -63,13 +63,12 @@ target_compile_options(async_cli PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_9_COMPILE_WARNING_FLAGS})
 
 add_executable(async_test test/async_test.cpp)
-target_link_libraries(async_test
-  PRIVATE async capture GTest::gtest_main wrapper_absl_strings)
+target_link_libraries(async_test PRIVATE absl::strings async capture GTest::gtest_main)
 target_compile_options(async_test PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_9_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)
-  target_compile_options(async_test
-    PRIVATE -Wno-unsafe-buffer-usage -Wno-global-constructors)
+  target_compile_options(async_test PRIVATE
+    -Wno-unsafe-buffer-usage -Wno-global-constructors)
 endif()
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
@@ -85,18 +84,14 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
 
   set_target_properties(async PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      -altera-id-dependent-backward-branch,\
       -altera-struct-pack-align,\
-      -altera-unroll-loops,\
       -fuchsia-default-arguments-calls,\
       -llvm-prefer-static-over-anonymous-namespace,\
       ${CLANG_TIDY_HW_9_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
 
   set_target_properties(async_static PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      -altera-id-dependent-backward-branch,\
       -altera-struct-pack-align,\
-      -altera-unroll-loops,\
       -fuchsia-default-arguments-calls,\
       -llvm-prefer-static-over-anonymous-namespace,\
       ${CLANG_TIDY_HW_9_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
@@ -115,7 +110,6 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
 
   set_target_properties(async_test PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      -altera-unroll-loops,\
       -fuchsia-default-arguments-calls,\
       -llvm-prefer-static-over-anonymous-namespace,\
       -llvmlibc-inline-function-decl,\

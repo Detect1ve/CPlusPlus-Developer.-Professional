@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25..4.2.0)
+cmake_minimum_required(VERSION 3.25..4.2.1)
 
 if (NOT DEFINED PATCH_VERSION)
     set(PATCH_VERSION "1" CACHE INTERNAL "Patch version")
@@ -41,17 +41,16 @@ endif()
 
 if (PROJECT_IS_TOP_LEVEL)
     include(../cmake/clang-tidy.cmake)
+    include(../cmake/fetch_boost.cmake)
     include(../cmake/fetch_googletest.cmake)
-    include(../cmake/gcc_warnings.cmake)
+    include(../cmake/warning_flags.cmake)
     list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
-
-include(../common/boost_test.cmake)
 
 add_executable(test_version test_version.cpp)
 
 target_link_libraries(test_version
-    PRIVATE wrapper_boost_unit_test_framework
+    PRIVATE Boost::unit_test_framework
     helloworld
 )
 
@@ -123,7 +122,6 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
 
     set_target_properties(test_version PROPERTIES
         CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-            -altera-unroll-loops,\
             -cert-err58-cpp,\
             -cppcoreguidelines-avoid-do-while,\
             -cppcoreguidelines-macro-usage,\
@@ -133,6 +131,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
             -hicpp-vararg,\
             -llvmlibc-callee-namespace,\
             -llvmlibc-implementation-in-namespace,\
+            -llvmlibc-restrict-system-libc-headers,\
             -misc-include-cleaner,\
             -readability-identifier-length"
     )

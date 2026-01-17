@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25..4.2.0)
+cmake_minimum_required(VERSION 3.25..4.2.1)
 
 if (NOT DEFINED PATCH_VERSION)
   set(PATCH_VERSION
@@ -30,7 +30,7 @@ if (PROJECT_IS_TOP_LEVEL)
   include(../common/capture.cmake)
   include(../cmake/clang-tidy.cmake)
   include(../cmake/fetch_googletest.cmake)
-  include(../cmake/gcc_warnings.cmake)
+  include(../cmake/warning_flags.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
@@ -65,8 +65,7 @@ endif()
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set(CLANG_TIDY_HW_4_OPTS
-    "-altera-unroll-loops,\
-     -cppcoreguidelines-avoid-magic-numbers,\
+    "-cppcoreguidelines-avoid-magic-numbers,\
      -fuchsia-default-arguments-calls,\
      -google-runtime-int,\
      -llvmlibc-callee-namespace,\
@@ -102,20 +101,20 @@ add_test(NAME HW_4.print_ip_test COMMAND $<TARGET_FILE:print_ip_test>)
 install(TARGETS print_ip RUNTIME DESTINATION bin
                                  COMPONENT "${PROJECT_NAME}")
 
-find_package(Doxygen 1.15.0)
+find_package(Doxygen 1.16.1)
 if (NOT Doxygen_FOUND)
   if (WIN32)
-    set(DOXYGEN_URL https://github.com/doxygen/doxygen/releases/download/Release_1_15_0/doxygen-1.15.0.windows.x64.bin.zip)
-    set(DOXYGEN_MD5 8eb901df75b2b4dfc102a3b44f29b4cf)
+    set(DOXYGEN_URL https://github.com/doxygen/doxygen/releases/download/Release_1_16_1/doxygen-1.16.1.windows.x64.bin.zip)
+    set(DOXYGEN_SHA256 ddfa59a4ae9549651330471c2e387ec7a9891080543faed541c859e5ce448653)
   else()
-    set(DOXYGEN_URL https://github.com/doxygen/doxygen/releases/download/Release_1_15_0/doxygen-1.15.0.linux.bin.tar.gz)
-    set(DOXYGEN_MD5 72f0b4d9b5280f28be54745a815d8a74)
+    set(DOXYGEN_URL https://github.com/doxygen/doxygen/releases/download/Release_1_16_1/doxygen-1.16.1.linux.bin.tar.gz)
+    set(DOXYGEN_SHA256 a56f885d37e3aae08a99f638d17bbb381224c03a878d9e2dda4f9fa4baf1d8bd)
   endif()
   include(FetchContent)
   FetchContent_Declare(
     Doxygen
     URL ${DOXYGEN_URL}
-    URL_MD5 ${DOXYGEN_MD5}
+    URL_HASH SHA256=${DOXYGEN_SHA256}
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     EXCLUDE_FROM_ALL)
   FetchContent_MakeAvailable(Doxygen)

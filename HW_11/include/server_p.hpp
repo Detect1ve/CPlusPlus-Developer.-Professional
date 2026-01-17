@@ -1,9 +1,10 @@
 #ifndef SERVER_P_HPP
 #define SERVER_P_HPP
 
+#include <boost/asio.hpp>
+
 #include <database.hpp>
 #include <server.hpp>
-#include <wrapper_boost_asio.hpp>
 
 class ServerImpl
 {
@@ -18,6 +19,12 @@ public:
     explicit ServerImpl(
         std::promise<std::uint16_t>& port_promise,
         std::uint16_t                port);
+    ~ServerImpl() = default;
+    ServerImpl(const ServerImpl&) = delete;
+    ServerImpl& operator=(const ServerImpl&) = delete;
+    ServerImpl(ServerImpl&&) = delete;
+    ServerImpl& operator=(ServerImpl&&) = delete;
+
     void run();
     void stop();
 };

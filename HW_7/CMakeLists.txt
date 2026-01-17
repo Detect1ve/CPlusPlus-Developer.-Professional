@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25..4.2.0)
+cmake_minimum_required(VERSION 3.25..4.2.1)
 
 if (NOT DEFINED PATCH_VERSION)
   set(PATCH_VERSION
@@ -27,7 +27,7 @@ if (PROJECT_IS_TOP_LEVEL)
   include(../common/capture.cmake)
   include(../cmake/clang-tidy.cmake)
   include(../cmake/fetch_googletest.cmake)
-  include(../cmake/gcc_warnings.cmake)
+  include(../cmake/warning_flags.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
@@ -65,6 +65,10 @@ if (NOT MSVC)
 endif()
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
+  if (MSVC)
+    set(CLANG_TIDY_MSVC_OPTS ";--extra-arg=/EHsc")
+  endif()
+
   set(CLANG_TIDY_HW_7_OPTS
     "-fuchsia-default-arguments-calls,\
      -llvmlibc-callee-namespace,\
@@ -76,10 +80,9 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
 
   set_target_properties(taskmanager PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      -altera-unroll-loops,\
       -fuchsia-overloaded-operator,\
       -llvm-prefer-static-over-anonymous-namespace,\
-      ${CLANG_TIDY_HW_7_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+      ${CLANG_TIDY_HW_7_OPTS}${CLANG_TIDY_MSVC_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
 
   set_target_properties(bulk PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
@@ -87,7 +90,6 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
 
   set_target_properties(taskmanager_test PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      -altera-unroll-loops,\
       -llvm-prefer-static-over-anonymous-namespace,\
       ${CLANG_TIDY_HW_7_OPTS};--header-filter=(${CMAKE_CURRENT_SOURCE_DIR}/include/.*|${CAPTURE_INCLUDE_DIR}/.*)")
 endif()

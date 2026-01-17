@@ -11,11 +11,11 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
     strategy:
       matrix:
         include:
-          - name: GCC-Release
+          - os: ubuntu-latest
+            name: GCC-Release
             compiler: gcc
             c_compiler: gcc-14
             cpp_compiler: g++-14
@@ -24,63 +24,100 @@ jobs:
             install_compiler: true
             build_packages: true
             build_docs: true
-          - name: GCC-Debug
+          - os: ubuntu-latest
+            name: GCC-Debug
             compiler: gcc
             c_compiler: gcc-14
             cpp_compiler: g++-14
             build_dir: build-gcc-debug
             build_type: Debug
             install_compiler: true
-          - name: GCC-RelWithDebInfo
+          - os: ubuntu-latest
+            name: GCC-RelWithDebInfo
             compiler: gcc
             c_compiler: gcc-14
             cpp_compiler: g++-14
             build_dir: build-gcc-relwithdebinfo
             build_type: RelWithDebInfo
             install_compiler: true
-          - name: GCC-MinSizeRel
+          - os: ubuntu-latest
+            name: GCC-MinSizeRel
             compiler: gcc
             c_compiler: gcc-14
             cpp_compiler: g++-14
             build_dir: build-gcc-minsizerel
             build_type: MinSizeRel
             install_compiler: true
-          - name: Clang-Release
+          - os: ubuntu-latest
+            name: Clang-Release
             compiler: clang
             c_compiler: clang
             cpp_compiler: clang++
             build_dir: build-clang-release
             build_type: Release
-          - name: Clang-Debug
+          - os: ubuntu-latest
+            name: Clang-Debug
             compiler: clang
             c_compiler: clang
             cpp_compiler: clang++
             build_dir: build-clang-debug
             build_type: Debug
-          - name: Clang-RelWithDebInfo
+          - os: ubuntu-latest
+            name: Clang-RelWithDebInfo
             compiler: clang
             c_compiler: clang
             cpp_compiler: clang++
             build_dir: build-clang-relwithdebinfo
             build_type: RelWithDebInfo
-          - name: Clang-MinSizeRel
+          - os: ubuntu-latest
+            name: Clang-MinSizeRel
             compiler: clang
             c_compiler: clang
             cpp_compiler: clang++
             build_dir: build-clang-minsizerel
             build_type: MinSizeRel
+          - os: windows-latest
+            name: MSVC-Release
+            build_dir: build-msvc-release
+            build_type: Release
+            c_compiler: cl
+            cpp_compiler: cl
+          - os: windows-latest
+            name: MSVC-Debug
+            build_dir: build-msvc-debug
+            build_type: Debug
+            c_compiler: cl
+            cpp_compiler: cl
+          - os: windows-latest
+            name: MSVC-RelWithDebInfo
+            build_dir: build-msvc-relwithdebinfo
+            build_type: RelWithDebInfo
+            c_compiler: cl
+            cpp_compiler: cl
+          - os: windows-latest
+            name: MSVC-MinSizeRel
+            build_dir: build-msvc-minsizerel
+            build_type: MinSizeRel
+            c_compiler: cl
+            cpp_compiler: cl
+    runs-on: ${{ matrix.os }}
     name: ${{ matrix.name }}
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: true
       - name: Install CMake
+        if: runner.os == 'Linux'
         run: |
           wget -qO- "https://cmake.org/files/v4.2/cmake-4.2.1-linux-x86_64.tar.gz" | sudo tar --strip-components=1 -xz -C /usr/local
       - name: Install GCC
         if: matrix.install_compiler
         run: sudo apt-get update && sudo apt-get install -y ${{ matrix.cpp_compiler }}
-      - run: |
+      - name: Setup MSVC environment
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+      - shell: bash
+        run: |
           cmake -G Ninja \
             -B ${{ matrix.build_dir }} \
             -D PATCH_VERSION=${{ github.run_number }} \

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25..4.2.0)
+cmake_minimum_required(VERSION 3.25..4.2.1)
 
 if (NOT DEFINED PATCH_VERSION)
   set(PATCH_VERSION
@@ -24,11 +24,11 @@ if (PROJECT_IS_TOP_LEVEL)
 endif()
 
 if (PROJECT_IS_TOP_LEVEL)
-  include(../common/boost_asio.cmake)
   include(../common/socket_wrapper.cmake)
   include(../cmake/clang-tidy.cmake)
+  include(../cmake/fetch_boost.cmake)
   include(../cmake/fetch_googletest.cmake)
-  include(../cmake/gcc_warnings.cmake)
+  include(../cmake/warning_flags.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
@@ -38,7 +38,7 @@ endif()
 
 add_library(server_and_database STATIC lib/server.cpp lib/database.cpp)
 target_include_directories(server_and_database PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(server_and_database PRIVATE wrapper_boost_asio)
+target_link_libraries(server_and_database PRIVATE Boost::asio)
 target_compile_options(server_and_database PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_11_COMPILE_WARNING_FLAGS})
 if (MSVC)
@@ -70,6 +70,10 @@ if (NOT MSVC)
 endif()
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
+  if (MSVC)
+    set(CLANG_TIDY_MSVC_OPTS ";--extra-arg=/EHsc")
+  endif()
+
   set(CLANG_TIDY_HW_11_OPTS
     "-llvmlibc-callee-namespace,\
      -llvmlibc-implementation-in-namespace,\
@@ -80,23 +84,21 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set_target_properties(server_and_database PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
       -altera-struct-pack-align,\
-      -altera-unroll-loops,\
       -fuchsia-default-arguments-calls,\
       -llvm-prefer-static-over-anonymous-namespace,\
+      -llvmlibc-inline-function-decl,\
       -misc-no-recursion,\
       ${CLANG_TIDY_HW_11_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
 
   set_target_properties(join_server PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      ${CLANG_TIDY_HW_11_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+      ${CLANG_TIDY_HW_11_OPTS}${CLANG_TIDY_MSVC_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
 
   set_target_properties(join_server_test PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      -altera-id-dependent-backward-branch,\
-      -altera-unroll-loops,\
       -fuchsia-default-arguments-calls,\
       -llvmlibc-inline-function-decl,\
-      ${CLANG_TIDY_HW_11_OPTS};--header-filter=(${CMAKE_CURRENT_SOURCE_DIR}/include/.*|${SOCKET_WRAPPER_INCLUDE_DIR}/.*)")
+      ${CLANG_TIDY_HW_11_OPTS}${CLANG_TIDY_MSVC_OPTS};--header-filter=(${CMAKE_CURRENT_SOURCE_DIR}/include/.*|${SOCKET_WRAPPER_INCLUDE_DIR}/.*)")
 endif()
 
 enable_testing()

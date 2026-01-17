@@ -3,13 +3,19 @@
 
 #include <iostream>
 
+#include <boost/asio.hpp>
+
 #include <server.hpp>
-#include <wrapper_boost_asio.hpp>
 
 namespace async
 {
     class ServerImpl
     {
+        friend class Server;
+        std::unique_ptr<boost::asio::io_context> io_context_;
+        boost::asio::ip::tcp::acceptor acceptor_;
+        std::size_t bulk_size_;
+        std::vector<std::shared_ptr<Session>> sessions_;
     public:
         ServerImpl(
             std::unique_ptr<boost::asio::io_context> io_context,
@@ -24,6 +30,11 @@ namespace async
             std::cout << "Server started on port " << port << " with bulk size "
                 << bulk_size << '\n';
         }
+        ~ServerImpl() = default;
+        ServerImpl(const ServerImpl&) = delete;
+        ServerImpl& operator=(const ServerImpl&) = delete;
+        ServerImpl(ServerImpl&&) = delete;
+        ServerImpl& operator=(ServerImpl&&) = delete;
 
         void start_accept()
         {
@@ -53,17 +64,16 @@ namespace async
         {
             std::erase(sessions_, session);
         }
-
-    private:
-        friend class Server;
-        std::unique_ptr<boost::asio::io_context> io_context_;
-        boost::asio::ip::tcp::acceptor acceptor_;
-        std::size_t bulk_size_;
-        std::vector<std::shared_ptr<Session>> sessions_;
     };
 
     class SessionImpl
     {
+        boost::asio::ip::tcp::socket socket_;
+        std::size_t bulk_size_;
+        handle_t handle_{nullptr};
+        ServerImpl& server_;
+        Session& session_;
+        std::unique_ptr<boost::asio::streambuf> buffer_;
     public:
         SessionImpl(
             boost::asio::ip::tcp::socket& socket,
@@ -155,14 +165,6 @@ namespace async
                 std::cerr << "Error: " << error.message() << '\n';
             }
         }
-
-    private:
-        boost::asio::ip::tcp::socket socket_;
-        std::size_t bulk_size_;
-        handle_t handle_{nullptr};
-        ServerImpl& server_;
-        Session& session_;
-        std::unique_ptr<boost::asio::streambuf> buffer_;
     };
 } // namespace async
 

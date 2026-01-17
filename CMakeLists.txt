@@ -1,6 +1,8 @@
-cmake_minimum_required(VERSION 3.25..4.2.0)
+cmake_minimum_required(VERSION 3.25..4.2.1)
 
 project(C++-Developer-Professional LANGUAGES CXX)
+
+message(STATUS "C++ Compiler: ${CMAKE_CXX_COMPILER}")
 
 if (NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
@@ -19,15 +21,13 @@ set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 
 list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 
-include(common/boost_algorithm.cmake)
-include(common/boost_asio.cmake)
-include(common/boost_uuid.cmake)
 include(common/capture.cmake)
 include(common/socket_wrapper.cmake)
 
 include(cmake/clang-tidy.cmake)
+include(cmake/fetch_boost.cmake)
 include(cmake/fetch_googletest.cmake)
-include(cmake/gcc_warnings.cmake)
+include(cmake/warning_flags.cmake)
 
 set(SUBDIRS
   HW_1

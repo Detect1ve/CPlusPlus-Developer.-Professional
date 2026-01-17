@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25..4.2.0)
+cmake_minimum_required(VERSION 3.25..4.2.1)
 
 if (NOT DEFINED PATCH_VERSION)
   set(PATCH_VERSION
@@ -26,7 +26,7 @@ endif()
 if (PROJECT_IS_TOP_LEVEL)
     include(../cmake/clang-tidy.cmake)
     include(../cmake/fetch_googletest.cmake)
-    include(../cmake/gcc_warnings.cmake)
+    include(../cmake/warning_flags.cmake)
     list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
@@ -34,10 +34,10 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set(HW_13_COMPILE_WARNING_FLAGS -Wc++17-compat-pedantic)
 endif()
 
-include(../common/eigen3.cmake)
+include(../cmake/fetch_eigen3.cmake)
 
 add_library(mlp_lib STATIC lib/mlp.cpp)
-target_link_libraries(mlp_lib PRIVATE eigen3_eigen)
+target_link_libraries(mlp_lib PRIVATE Eigen3::Eigen)
 target_include_directories(mlp_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_compile_options(mlp_lib PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_13_COMPILE_WARNING_FLAGS})
@@ -66,6 +66,10 @@ target_compile_definitions(fashio_mnist_test PRIVATE
   PROJECT_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
+  if (MSVC)
+    set(CLANG_TIDY_MSVC_OPTS ";--extra-arg=/EHsc")
+  endif()
+
   set(CLANG_TIDY_HW_13_OPTS
     "-fuchsia-default-arguments-calls,\
      -llvmlibc-callee-namespace,\
@@ -75,8 +79,6 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
 
   set_target_properties(mlp_lib PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      -altera-id-dependent-backward-branch,\
-      -altera-unroll-loops,\
       -cppcoreguidelines-avoid-magic-numbers,\
       -llvm-prefer-static-over-anonymous-namespace,\
       -llvmlibc-implementation-in-namespace,\
@@ -87,7 +89,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
       -llvm-prefer-static-over-anonymous-namespace,\
       -llvmlibc-implementation-in-namespace,\
-      ${CLANG_TIDY_HW_13_OPTS}")
+      ${CLANG_TIDY_HW_13_OPTS}${CLANG_TIDY_MSVC_OPTS}")
 
   set_target_properties(fashio_mnist_test PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\

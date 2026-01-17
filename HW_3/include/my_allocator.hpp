@@ -8,10 +8,11 @@
 template <typename T, const std::size_t size>
 class MyAllocator
 {
+    std::size_t memory_alloc = 0;
 public:
     using value_type = T;
 
-#if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
+#if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
     MyAllocator() noexcept {}
 #endif
 
@@ -27,7 +28,7 @@ public:
         return static_cast<T*>(malloc(sizeof(T) * n));
     }
 
-#if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
+#if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
     template <typename U>
     MyAllocator(const MyAllocator<U, size>&) noexcept {}
 #endif
@@ -45,9 +46,6 @@ public:
         memory_alloc -= n;
         free(ptr); // NOLINT(cppcoreguidelines-no-malloc,hicpp-no-malloc)
     }
-
-private:
-    std::size_t memory_alloc = 0;
 };
 
 #endif // MY_ALLOCATOR_HPP

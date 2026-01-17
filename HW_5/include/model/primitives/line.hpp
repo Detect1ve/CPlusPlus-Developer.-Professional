@@ -7,6 +7,11 @@ namespace editor::model
 {
     class Line final : public Primitive
     {
+        int x1_;
+        int y1_;
+        int x2_;
+        int y2_;
+        int thickness_;
     public:
         ~Line() override;
         Line(const Line&) = delete;
@@ -54,13 +59,6 @@ namespace editor::model
         {
             return thickness_;
         }
-
-    private:
-        int x1_;
-        int y1_;
-        int x2_;
-        int y2_;
-        int thickness_;
     };
 } // namespace editor::model
 

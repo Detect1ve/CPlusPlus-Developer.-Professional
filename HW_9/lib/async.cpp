@@ -1,4 +1,4 @@
-#if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
+#if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
 #include <chrono>
 #endif
 #include <condition_variable>

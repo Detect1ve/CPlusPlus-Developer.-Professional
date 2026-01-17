@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25..4.2.0)
+cmake_minimum_required(VERSION 3.25..4.2.1)
 
 if (NOT DEFINED PATCH_VERSION)
   set(PATCH_VERSION
@@ -27,7 +27,7 @@ if (PROJECT_IS_TOP_LEVEL)
   include(../common/capture.cmake)
   include(../cmake/clang-tidy.cmake)
   include(../cmake/fetch_googletest.cmake)
-  include(../cmake/gcc_warnings.cmake)
+  include(../cmake/warning_flags.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
@@ -54,8 +54,7 @@ endif()
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set(CLANG_TIDY_HW_6_OPTS
-    "-altera-unroll-loops,\
-     -fuchsia-overloaded-operator,\
+    "-fuchsia-overloaded-operator,\
      -llvmlibc-callee-namespace,\
      -llvmlibc-implementation-in-namespace,\
      -llvmlibc-inline-function-decl,\

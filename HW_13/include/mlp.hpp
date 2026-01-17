@@ -6,6 +6,10 @@
 
 class MLP
 {
+    class Impl;
+    std::unique_ptr<Impl> pimpl;
+
+    int predict(const std::vector<float>& image);
 public:
     static constexpr float PIXEL_MAX_VALUE = 255.0F;
 
@@ -29,12 +33,6 @@ public:
     static float evaluate_with_predictions(
         const std::string& test_data_path,
         const std::string& predictions_path);
-
-private:
-    class Impl;
-    std::unique_ptr<Impl> pimpl;
-
-    int predict(const std::vector<float>& image);
 };
 
 #endif // MLP_HPP

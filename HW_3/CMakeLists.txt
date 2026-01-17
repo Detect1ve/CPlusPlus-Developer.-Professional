@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25..4.2.0)
+cmake_minimum_required(VERSION 3.25..4.2.1)
 
 project(HW_3 LANGUAGES CXX)
 
@@ -20,7 +20,7 @@ if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
   include(../cmake/fetch_googletest.cmake)
   include(../cmake/fetch_gsl.cmake)
-  include(../cmake/gcc_warnings.cmake)
+  include(../cmake/warning_flags.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
@@ -58,10 +58,12 @@ if (NOT MSVC)
 endif()
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
+  if (MSVC)
+    set(CLANG_TIDY_MSVC_OPTS ";--extra-arg=/EHsc")
+  endif()
+
   set(CLANG_TIDY_HW_3_OPTS
-    "-altera-id-dependent-backward-branch,\
-     -altera-struct-pack-align,\
-     -altera-unroll-loops,\
+    "-altera-struct-pack-align,\
      -fuchsia-overloaded-operator,\
      -llvmlibc-inline-function-decl,\
      -llvmlibc-restrict-system-libc-headers,\
@@ -73,7 +75,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
       -llvmlibc-callee-namespace,\
       -llvmlibc-implementation-in-namespace,\
       -misc-include-cleaner,\
-      ${CLANG_TIDY_HW_3_OPTS}")
+      ${CLANG_TIDY_HW_3_OPTS}${CLANG_TIDY_MSVC_OPTS}")
 
   set_target_properties(my_allocator_test PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
@@ -83,7 +85,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
       -fuchsia-statically-constructed-objects,\
       -llvmlibc-implementation-in-namespace,\
       -misc-include-cleaner,\
-      ${CLANG_TIDY_HW_3_OPTS}")
+      ${CLANG_TIDY_HW_3_OPTS}${CLANG_TIDY_MSVC_OPTS}")
 
   set_target_properties(my_list_test PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\

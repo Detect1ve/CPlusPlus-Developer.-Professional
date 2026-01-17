@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25..4.2.0)
+cmake_minimum_required(VERSION 3.25..4.2.1)
 project(ProducerConsumerQueue LANGUAGES CXX)
 
 if (PROJECT_IS_TOP_LEVEL)
@@ -18,7 +18,7 @@ endif()
 if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
   include(../cmake/fetch_googletest.cmake)
-  include(../cmake/gcc_warnings.cmake)
+  include(../cmake/warning_flags.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
@@ -50,9 +50,7 @@ target_compile_options(queue_performance_test PRIVATE
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set(CLANG_TIDY_PROJECT_WORK_OPTS
-    "-altera-id-dependent-backward-branch,\
-     -altera-struct-pack-align,\
-     -altera-unroll-loops,\
+    "-altera-struct-pack-align,\
      -fuchsia-default-arguments-calls,\
      -fuchsia-default-arguments-declarations,\
      -fuchsia-overloaded-operator,\
@@ -62,6 +60,10 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
      -llvmlibc-restrict-system-libc-headers,\
      -misc-include-cleaner,\
      -modernize-use-trailing-return-type;--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+
+  if (MSVC)
+    set(CLANG_TIDY_PROJECT_WORK_OPTS "${CLANG_TIDY_PROJECT_WORK_OPTS};--extra-arg=/EHsc")
+  endif()
 
   set_target_properties(queue_test PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\

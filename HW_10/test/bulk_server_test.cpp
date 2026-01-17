@@ -1,3 +1,6 @@
+#ifndef _MSC_VER
+#include <algorithm>
+#endif
 #include <charconv>
 #include <filesystem>
 #include <fstream>

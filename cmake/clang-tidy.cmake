@@ -42,12 +42,15 @@ if (ENABLE_CLANG_TIDY)
     message(STATUS "clang-tidy version: ${CLANG_TIDY_VERSION}")
     string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" CLANG_TIDY_VERSION_NUMBER
       "${CLANG_TIDY_VERSION}")
+    set(CLANG_TIDY_OPTS "${CLANG_TIDY_BIN};")
     if (CLANG_TIDY_VERSION_NUMBER VERSION_GREATER_EQUAL 14)
-      set(CLANG_TIDY_OPTS "${CLANG_TIDY_BIN};--use-color;--warnings-as-errors=*;-checks=*")
-    else()
-      set(CLANG_TIDY_OPTS "${CLANG_TIDY_BIN};--warnings-as-errors=*;-checks=*")
+      set(CLANG_TIDY_OPTS "${CLANG_TIDY_OPTS}--use-color;")
     endif()
 
+    set(CLANG_TIDY_OPTS "${CLANG_TIDY_OPTS}--warnings-as-errors=*;-checks=*,\
+      -altera-id-dependent-backward-branch,\
+      -altera-unroll-loops,\
+      -clang-diagnostic-unused-command-line-argument")
   else()
     message(STATUS "clang-tidy not found, static analysis will be skipped.")
   endif()
