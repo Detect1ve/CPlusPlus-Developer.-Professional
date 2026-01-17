@@ -12,6 +12,7 @@ namespace async
 
     class Server
     {
+        std::unique_ptr<ServerImpl> pimpl_;
     public:
         Server(
             std::uint16_t port,
@@ -27,15 +28,13 @@ namespace async
         void run();
         void setup_signal_handling();
         void stop();
-
-    private:
-        std::unique_ptr<ServerImpl> pimpl_;
     };
 
     class SessionImpl;
 
     class Session : public std::enable_shared_from_this<Session>
     {
+        std::unique_ptr<SessionImpl> pimpl_;
     public:
         Session(
             void*       socket,
@@ -49,9 +48,6 @@ namespace async
         Session& operator=(Session&&) = delete;
 
         void start();
-
-    private:
-        std::unique_ptr<SessionImpl> pimpl_;
     };
 } // namespace async
 

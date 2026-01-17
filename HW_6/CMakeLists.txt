@@ -54,8 +54,7 @@ endif()
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set(CLANG_TIDY_HW_6_OPTS
-    "-altera-unroll-loops,\
-     -fuchsia-overloaded-operator,\
+    "-fuchsia-overloaded-operator,\
      -llvmlibc-callee-namespace,\
      -llvmlibc-implementation-in-namespace,\
      -llvmlibc-inline-function-decl,\

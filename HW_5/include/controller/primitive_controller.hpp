@@ -7,6 +7,7 @@ namespace editor::controller
 {
     class PrimitiveController
     {
+        model::Document* document_;
     public:
         explicit PrimitiveController(model::Document* document);
         ~PrimitiveController() = default;
@@ -22,9 +23,6 @@ namespace editor::controller
             int   thickness);
 
         void removePrimitive(std::size_t index);
-
-    private:
-        model::Document* document_;
     };
 } // namespace editor::controller
 

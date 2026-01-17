@@ -63,9 +63,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   endif()
 
   set(CLANG_TIDY_HW_3_OPTS
-    "-altera-id-dependent-backward-branch,\
-     -altera-struct-pack-align,\
-     -altera-unroll-loops,\
+    "-altera-struct-pack-align,\
      -fuchsia-overloaded-operator,\
      -llvmlibc-inline-function-decl,\
      -llvmlibc-restrict-system-libc-headers,\

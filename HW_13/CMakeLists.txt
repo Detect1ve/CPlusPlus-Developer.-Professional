@@ -79,8 +79,6 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
 
   set_target_properties(mlp_lib PROPERTIES
     CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      -altera-id-dependent-backward-branch,\
-      -altera-unroll-loops,\
       -cppcoreguidelines-avoid-magic-numbers,\
       -llvm-prefer-static-over-anonymous-namespace,\
       -llvmlibc-implementation-in-namespace,\

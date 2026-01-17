@@ -122,7 +122,6 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
 
     set_target_properties(test_version PROPERTIES
         CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-            -altera-unroll-loops,\
             -cert-err58-cpp,\
             -cppcoreguidelines-avoid-do-while,\
             -cppcoreguidelines-macro-usage,\

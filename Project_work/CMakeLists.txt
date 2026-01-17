@@ -50,9 +50,7 @@ target_compile_options(queue_performance_test PRIVATE
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set(CLANG_TIDY_PROJECT_WORK_OPTS
-    "-altera-id-dependent-backward-branch,\
-     -altera-struct-pack-align,\
-     -altera-unroll-loops,\
+    "-altera-struct-pack-align,\
      -fuchsia-default-arguments-calls,\
      -fuchsia-default-arguments-declarations,\
      -fuchsia-overloaded-operator,\

@@ -68,9 +68,7 @@ if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   endif()
 
   set(CLANG_TIDY_HW_2_OPTS
-    "-altera-id-dependent-backward-branch,\
-     -altera-unroll-loops,\
-     -llvmlibc-callee-namespace,\
+    "-llvmlibc-callee-namespace,\
      -llvmlibc-implementation-in-namespace,\
      -llvmlibc-inline-function-decl,\
      -llvmlibc-restrict-system-libc-headers,\

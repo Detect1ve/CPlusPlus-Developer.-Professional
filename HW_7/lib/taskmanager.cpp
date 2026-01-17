@@ -11,6 +11,8 @@ namespace bulk::io
 {
     class composite_stream
     {
+        std::ostream& s1;
+        std::ostream& s2;
     public:
         composite_stream(
             std::ostream& stream1,
@@ -50,10 +52,6 @@ namespace bulk::io
 
             return *this;
         }
-
-    private:
-        std::ostream& s1;
-        std::ostream& s2;
     };
 } // namespace bulk::io
 

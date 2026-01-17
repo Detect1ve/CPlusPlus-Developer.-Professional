@@ -59,8 +59,7 @@ if (MSVC OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 
   if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
     set(CLANG_TIDY_HW_12_OPTS
-      "-altera-unroll-loops,\
-       -fuchsia-default-arguments-calls,\
+      "-fuchsia-default-arguments-calls,\
        -llvmlibc-callee-namespace,\
        -llvmlibc-implementation-in-namespace,\
        -llvmlibc-restrict-system-libc-headers,\

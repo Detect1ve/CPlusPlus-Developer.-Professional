@@ -30,9 +30,13 @@ class MyList
         T val_;
     };
 
+    Node *head = nullptr;
+    Node *tail = nullptr;
+    std::size_t size_ = 0;
 public:
     class iterator
     {
+        Node* current;
     public:
         explicit iterator(Node* const ptr) : current(ptr) {}
 
@@ -55,9 +59,6 @@ public:
         {
             return current != other.current;
         }
-
-    private:
-        Node* current;
     };
 
     iterator begin()
@@ -127,11 +128,6 @@ public:
             current = next;
         }
     }
-
-private:
-    Node *head = nullptr;
-    Node *tail = nullptr;
-    std::size_t size_ = 0;
 };
 
 #endif // MY_LIST_HPP

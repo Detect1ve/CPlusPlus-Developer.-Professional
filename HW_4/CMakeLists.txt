@@ -65,8 +65,7 @@ endif()
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
   set(CLANG_TIDY_HW_4_OPTS
-    "-altera-unroll-loops,\
-     -cppcoreguidelines-avoid-magic-numbers,\
+    "-cppcoreguidelines-avoid-magic-numbers,\
      -fuchsia-default-arguments-calls,\
      -google-runtime-int,\
      -llvmlibc-callee-namespace,\
