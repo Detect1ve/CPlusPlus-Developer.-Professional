@@ -3,6 +3,8 @@
 
 #include <vector>
 
+#include <attribute_wrapper.hpp>
+
 #include <model/primitive.hpp>
 
 namespace editor::model
@@ -20,31 +22,16 @@ namespace editor::model
 
         void addPrimitive(std::unique_ptr<Primitive> primitive);
         void removePrimitive(std::size_t index);
-        [[nodiscard]] const Primitive* getPrimitive(std::size_t index) const
-#ifndef _MSC_VER
-            __attribute__((pure))
-#endif
-            ;
-        [[nodiscard]] std::size_t getPrimitiveCount() const
-#ifndef _MSC_VER
-            __attribute__((pure))
-#endif
-            ;
+        ATTRIBUTE_PURE [[nodiscard]] const Primitive* getPrimitive(std::size_t index)
+            const;
+        ATTRIBUTE_PURE [[nodiscard]] std::size_t getPrimitiveCount() const;
 
-        [[nodiscard]] const std::string& getName() const
-#ifndef _MSC_VER
-            __attribute__((const))
-#endif
-            ;
+        ATTRIBUTE_CONST [[nodiscard]] const std::string& getName() const;
         void setName(const std::string& name);
 
-        [[nodiscard]] static bool saveToFile(
+        ATTRIBUTE_CONST [[nodiscard]] static bool saveToFile(
             const Document&    document,
-            const std::string& filename)
-#ifndef _MSC_VER
-            __attribute__((const))
-#endif
-            ;
+            const std::string& filename);
 
         static std::unique_ptr<Document> loadFromFile(const std::string& filename);
 

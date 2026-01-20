@@ -1,6 +1,8 @@
 #ifndef VIEW_PRIMITIVE_VIEW_HPP
 #define VIEW_PRIMITIVE_VIEW_HPP
 
+#include <attribute_wrapper.hpp>
+
 #include <model/primitive.hpp>
 
 namespace editor::view
@@ -19,11 +21,7 @@ namespace editor::view
 
         virtual void render() const = 0;
 
-        [[nodiscard]] const model::Primitive* getPrimitive() const
-#ifndef _MSC_VER
-        __attribute__((pure))
-#endif
-        ;
+        ATTRIBUTE_PURE [[nodiscard]] const model::Primitive* getPrimitive() const;
     };
 
     class PrimitiveViewFactory

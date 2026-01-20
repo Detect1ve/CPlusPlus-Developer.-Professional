@@ -15,6 +15,9 @@
 #include <ranges>
 #include <utility>
 #include <vector>
+
+#include <attribute_wrapper.hpp>
+
 #if (defined(__clang_analyzer__) || defined(__clang__)) && (__clang_major__ <= 18)
 // Provide a dummy implementation of std::unexpected for older clang-tidy and clang
 // versions to allow parsing of function signatures and bodies without fatal errors.
@@ -64,12 +67,8 @@ namespace std
 #include <expected>
 #endif
 
-[[nodiscard]]
-std::expected<std::uint8_t, std::error_code> from_chars(std::string_view chars)
-#ifndef _MSC_VER
-    __attribute__((pure))
-#endif
-    ;
+ATTRIBUTE_PURE [[nodiscard]]
+    std::expected<std::uint8_t, std::error_code> from_chars(std::string_view chars);
 
 [[nodiscard]] std::vector<std::string> split(
     const std::string& str,

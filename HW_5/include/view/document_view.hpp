@@ -24,11 +24,7 @@ namespace editor::view
         void render() const;
         void update();
 
-        [[nodiscard]] const model::Document* getDocument() const
-#ifndef _MSC_VER
-            __attribute__((pure))
-#endif
-            ;
+        ATTRIBUTE_PURE [[nodiscard]] const model::Document* getDocument() const;
     };
 } // namespace editor::view
 

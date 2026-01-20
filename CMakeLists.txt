@@ -21,13 +21,14 @@ set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 
 list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 
-include(common/capture.cmake)
-include(common/socket_wrapper.cmake)
-
 include(cmake/clang-tidy.cmake)
 include(cmake/fetch_boost.cmake)
 include(cmake/fetch_googletest.cmake)
 include(cmake/warning_flags.cmake)
+
+include(common/attribute_wrapper.cmake)
+include(common/capture.cmake)
+include(common/socket_wrapper.cmake)
 
 set(SUBDIRS
   HW_1
