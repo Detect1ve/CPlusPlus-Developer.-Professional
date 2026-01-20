@@ -6,6 +6,8 @@
 #include <boost/program_options.hpp>
 #include <boost/uuid/detail/md5.hpp>
 
+#include <attribute_wrapper.hpp>
+
 #include <bayan.hpp>
 
 struct FileInfo
@@ -21,21 +23,9 @@ struct FileInfo
     FileInfo& operator=(FileInfo&&) noexcept = default;
     ~FileInfo() noexcept = default;
 
-    [[nodiscard]] uintmax_t get_size() const
-#ifndef _MSC_VER
-        __attribute__((pure))
-#endif
-        ;
-    [[nodiscard]] const std::vector<std::string>& get_hashes() const
-#ifndef _MSC_VER
-        __attribute__((const))
-#endif
-        ;
-    const boost::filesystem::path& get_path() const
-#ifndef _MSC_VER
-        __attribute__((const))
-#endif
-        ;
+    ATTRIBUTE_PURE [[nodiscard]] uintmax_t get_size() const;
+    ATTRIBUTE_CONST [[nodiscard]] const std::vector<std::string>& get_hashes() const;
+    ATTRIBUTE_CONST const boost::filesystem::path& get_path() const;
     std::string compute_block_hash(
         std::size_t          block_index,
         const HashAlgorithm& hash_algo) const;

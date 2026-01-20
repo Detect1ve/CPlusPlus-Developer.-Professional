@@ -8,16 +8,14 @@
 #include <vector>
 #endif
 
+#include <attribute_wrapper.hpp>
+
 namespace bulk
 {
     class taskmanager
     {
         int add_task(std::string_view task);
-        [[nodiscard]] bool is_dynamic_block_active() const noexcept
-#ifndef _MSC_VER
-            __attribute__((pure))
-#endif
-            ;
+        ATTRIBUTE_PURE [[nodiscard]] bool is_dynamic_block_active() const noexcept;
         int process_tasks(std::vector<std::string>& block_task);
 
         int dynamic_block_nesting_level = 0;

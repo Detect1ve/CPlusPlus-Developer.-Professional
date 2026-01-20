@@ -1,0 +1,3 @@
+add_library(attribute_wrapper INTERFACE)
+set(ATTRIBUTE_WRAPPER_INCLUDE_DIR ${CMAKE_CURRENT_LIST_DIR}/attribute_wrapper/include)
+target_include_directories(attribute_wrapper INTERFACE ${ATTRIBUTE_WRAPPER_INCLUDE_DIR})

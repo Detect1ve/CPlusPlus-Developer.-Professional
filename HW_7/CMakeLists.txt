@@ -24,10 +24,11 @@ if (PROJECT_IS_TOP_LEVEL)
 endif()
 
 if (PROJECT_IS_TOP_LEVEL)
-  include(../common/capture.cmake)
   include(../cmake/clang-tidy.cmake)
   include(../cmake/fetch_googletest.cmake)
   include(../cmake/warning_flags.cmake)
+  include(../common/attribute_wrapper.cmake)
+  include(../common/capture.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
@@ -37,6 +38,7 @@ endif()
 
 add_library(taskmanager STATIC lib/taskmanager.cpp)
 target_include_directories(taskmanager PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_link_libraries(taskmanager PUBLIC attribute_wrapper)
 target_compile_options(taskmanager PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_7_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)
