@@ -2,6 +2,7 @@
 #include <cctype> // std::tolower
 #include <cstddef> // std::size_t
 #include <cstdint> // uintmax_t
+#include <cstdio> // stderr
 #include <exception> // std::exception
 #include <fstream> // std::ifstream
 #include <functional> // std::function
@@ -31,8 +32,8 @@
 #include <boost/uuid/detail/md5.hpp>
 
 #include <attribute_wrapper.hpp>
-
 #include <bayan.hpp>
+#include <custom_print.hpp>
 
 struct FileInfo
 {
@@ -394,8 +395,9 @@ std::vector<FileInfo> FileScanner::scan_directories()
         if (  !boost::filesystem::exists(dir)
            || !boost::filesystem::is_directory(dir))
         {
-            std::cerr << "Warning: Directory does not exist or is not a directory: "
-                << dir << '\n';
+            cp::println(stderr,
+                "Warning: Directory does not exist or is not a directory: {}",
+                dir.string());
             continue;
         }
 
@@ -417,7 +419,8 @@ std::vector<FileInfo> FileScanner::scan_directories()
         }
         catch (const boost::filesystem::filesystem_error& e)
         {
-            std::cerr << "Error scanning directory " << dir << ": " << e.what() << '\n';
+            cp::println(stderr, "Error scanning directory {}: {}", dir.string(),
+                e.what());
         }
     }
 
@@ -634,7 +637,7 @@ std::pair<ProcessStatus, Options> option_process(std::span<const char *const> ar
     }
     catch (const boost::program_options::error& e)
     {
-        std::cerr << e.what() << '\n';
+        cp::println(stderr, "{}", e.what());
         std::cerr << cmdline_options;
         ret = ProcessStatus::OPTION_ERROR;
     }
@@ -656,7 +659,7 @@ ProcessStatus process_files(const Options& options)
 
         if (files.empty())
         {
-            std::cout << "No files found matching the criteria.\n";
+            cp::println("No files found matching the criteria.");
 
             return ret;
         }
@@ -667,7 +670,7 @@ ProcessStatus process_files(const Options& options)
 
         if (duplicate_groups.empty())
         {
-            std::cout << "No duplicate files found.\n";
+            cp::println("No duplicate files found.");
         }
         else
         {
@@ -675,16 +678,16 @@ ProcessStatus process_files(const Options& options)
             {
                 for (const auto& file : group)
                 {
-                    std::cout << file.get_path().string() << '\n';
+                    cp::println("{}", file.get_path().string());
                 }
 
-                std::cout << '\n';
+                cp::println();
             }
         }
     }
     catch (const std::exception& e)
     {
-        std::cerr << "Error: " << e.what() << '\n';
+        cp::println(stderr, "Error: {}", e.what());
         ret = ProcessStatus::FILE_ERROR;
     }
 

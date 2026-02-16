@@ -2,11 +2,15 @@
 #include <charconv>
 #endif
 #include <cstddef> // std::size_t
+#include <cstdio> // stderr
+#include <cstdlib> // EXIT_FAILURE
+#include <exception> // std::exception
 #include <ranges>
 #include <span> // std::span
 #include <string_view> // std::string_view
 #include <system_error> // std::errc
 
+#include <custom_print.hpp>
 #include <taskmanager.hpp>
 
 int main(
@@ -22,39 +26,53 @@ int main(
     int command_number = 0;
     int ret = 0;
 
-    if (args.size() < 2)
+    try
     {
-        std::cerr << "Usage: " << args[0] << " <positive_number>\n";
-        ret = -1;
+        if (args.size() < 2)
+        {
+            cp::println(stderr, "Usage: {} <positive_number>", args[0]);
+            ret = -1;
 
-        return ret;
+            return ret;
+        }
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        if (std::from_chars(args[1].data(), args[1].data() + args[1].size(),
+            command_number, BASE).ec != std::errc{})
+        {
+            cp::println(stderr, "Invalid number format");
+            ret = -2;
+
+            return ret;
+        }
+
+        if (command_number <= 0)
+        {
+            cp::println(stderr, "Block size must be a positive number");
+            ret = -3;
+
+            return ret;
+        }
+
+        bulk::taskmanager my_task_manager(command_number, args[0]);
+
+        my_task_manager.setup_signal_handling();
+        ret = my_task_manager.run();
+        if (ret != 0)
+        {
+            cp::println(stderr, "run return {}", ret);
+        }
     }
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-    auto [ptr, ec] = std::from_chars(args[1].data(), args[1].data() + args[1].size(),
-        command_number, BASE);
-    if (ec != std::errc{})
+    catch (const std::exception& e)
     {
-        std::cerr << "Invalid number format\n";
-        ret = -2;
+        cp::safe_error(e.what());
 
-        return ret;
+        ret = EXIT_FAILURE;
     }
-
-    if (command_number <= 0)
+    catch (...)
     {
-        std::cerr << "Block size must be a positive number\n";
-        ret = -3;
+        cp::safe_error(nullptr);
 
-        return ret;
-    }
-
-    bulk::taskmanager my_task_manager(command_number, args[0]);
-
-    my_task_manager.setup_signal_handling();
-    ret = my_task_manager.run();
-    if (ret != 0)
-    {
-        std::cerr << "run return " << ret << '\n';
+        ret = EXIT_FAILURE;
     }
 
     return ret;

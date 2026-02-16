@@ -1,40 +1,52 @@
-#include <iostream>
+#include <cstdlib> // EXIT_FAILURE
+#include <exception> // std::exception
 
+#include <custom_print.hpp>
 #include <matrix.hpp>
 
 constexpr char CONTAINER_SIZE = 10;
 
 int main()
 {
-    Matrix<int, 0> matrix;
-
-    for (int i = 0; i < CONTAINER_SIZE; i++)
+    try
     {
-        matrix[i][i] = i;
-    }
+        Matrix<int, 0> matrix;
 
-    for (int i = 0; i < CONTAINER_SIZE; i++)
-    {
-        matrix[CONTAINER_SIZE - i - 1][i] = CONTAINER_SIZE - i - 1;
-    }
-
-    for (int i = 1; i < CONTAINER_SIZE - 1; i++)
-    {
-        for (int j = 1; j < CONTAINER_SIZE - 1; j++)
+        for (int i = 0; i < CONTAINER_SIZE; i++)
         {
-            std::cout << matrix[i][j] << " ";
+            matrix[i][i] = i;
         }
 
-        std::cout << '\n';
+        for (int i = 0; i < CONTAINER_SIZE; i++)
+        {
+            matrix[CONTAINER_SIZE - i - 1][i] = CONTAINER_SIZE - i - 1;
+        }
+
+        for (int i = 1; i < CONTAINER_SIZE - 1; i++)
+        {
+            for (int j = 1; j < CONTAINER_SIZE - 1; j++)
+            {
+                cp::print("{} ", matrix[i][j]);
+            }
+
+            cp::println();
+        }
+
+        cp::println("{}", matrix.size());
+
+        cp::print("{}", matrix);
     }
-
-    std::cout << matrix.size() << '\n';
-
-    for (auto elem : matrix)
+    catch (const std::exception& e)
     {
-        auto [row, col, value] = elem;
+        cp::safe_error(e.what());
 
-        std::cout << row << " " << col << " " << value << '\n';
+        return EXIT_FAILURE;
+    }
+    catch (...)
+    {
+        cp::safe_error(nullptr);
+
+        return EXIT_FAILURE;
     }
 
     return 0;

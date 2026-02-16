@@ -4,6 +4,7 @@
 #include <chrono>
 #include <cstddef> // std::size_t
 #include <cstdint> // std::int64_t
+#include <cstdio> // stderr
 #include <filesystem>
 #include <optional> // std::optional
 #include <sstream> // std::istringstream
@@ -16,6 +17,7 @@
 #include <gtest/gtest.h>
 
 #include <capture.hpp>
+#include <custom_print.hpp>
 #include <taskmanager.hpp>
 
 namespace
@@ -148,7 +150,7 @@ TEST_F(HW7, StaticBlocks)
         ret = my_task_manager.run(iss1);
         if (ret != 0)
         {
-            std::cerr << "run return " << ret << '\n';
+            cp::println(stderr, "run return {}", ret);
         }
 
         std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -162,7 +164,7 @@ TEST_F(HW7, StaticBlocks)
         ret = my_task_manager.run(iss2);
         if (ret != 0)
         {
-            std::cerr << "run return " << ret << '\n';
+            cp::println(stderr, "run return {}", ret);
         }
     }
 

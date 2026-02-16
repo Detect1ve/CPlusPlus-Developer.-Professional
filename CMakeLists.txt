@@ -28,6 +28,7 @@ include(cmake/warning_flags.cmake)
 
 include(common/attribute_wrapper.cmake)
 include(common/capture.cmake)
+include(common/custom_print.cmake)
 include(common/socket_wrapper.cmake)
 
 set(SUBDIRS

@@ -4,15 +4,16 @@
 #endif
 #include <cstddef> // std::size_t
 #include <cstdint> // std::int16_t
+#include <cstdio> // stderr
 #include <exception> // std::exception
-#include <iostream>
 #include <ranges>
 #include <span> // std::span
 #include <string_view> // std::string_view
 #include <system_error> // std::errc
 
+#include <custom_print.hpp>
 #include <server.hpp>
-// NOLINTNEXTLINE(bugprone-exception-escape)
+
 int main(
     const int   argc,
     const char* argv[])
@@ -31,7 +32,7 @@ int main(
 
         if (args.size() != 2)
         {
-            std::cerr << "Usage: " << args[0] << " <port>\n";
+            cp::println(stderr, "Usage: {} <port>", args[0]);
             ret = -1;
 
             return ret;
@@ -41,7 +42,7 @@ int main(
             port, BASE);
         if (ec != std::errc{})
         {
-            std::cerr << "Invalid port format\n";
+            cp::println(stderr, "Invalid port format");
             ret = -2;
 
             return ret;
@@ -54,10 +55,13 @@ int main(
     }
     catch (const std::exception& e)
     {
-        std::cerr << "Exception: " << e.what() << '\n';
+        cp::safe_error(e.what());
         ret = -3;
-
-        return ret;
+    }
+    catch (...)
+    {
+        cp::safe_error(nullptr);
+        ret = -4;
     }
 
     return ret;

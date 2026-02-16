@@ -16,6 +16,7 @@
 #include <system_error> // std::error_code
 #include <vector> // std::vector
 
+#include <custom_print.hpp>
 #include <ip_filter.hpp>
 
 // ("",  '.') -> [""]
@@ -147,8 +148,7 @@ void print(std::span<const std::vector<std::string>> ip_pool)
 #ifdef __cpp_lib_ranges_to_container
     for (const auto& ip_address : ip_pool)
     {
-        std::cout << std::format("{}\n", ip_address
-            | std::views::join_with(std::string_view("."))
+        cp::println("{}", ip_address | std::views::join_with(std::string_view("."))
             | std::ranges::to<std::string>());
     }
 #else
@@ -156,14 +156,14 @@ void print(std::span<const std::vector<std::string>> ip_pool)
     {
         for (std::size_t i = 0; i < ip_address.size(); ++i)
         {
-            std::cout << ip_address[i];
+            cp::print("{}", ip_address[i]);
             if (i + 1 < ip_address.size())
             {
-                std::cout << ".";
+                cp::print("{}", '.');
             }
         }
 
-        std::cout << '\n';
+        cp::println();
     }
 #endif
 }

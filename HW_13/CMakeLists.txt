@@ -27,6 +27,7 @@ if (PROJECT_IS_TOP_LEVEL)
     include(../cmake/clang-tidy.cmake)
     include(../cmake/fetch_googletest.cmake)
     include(../cmake/warning_flags.cmake)
+    include(../common/custom_print.cmake)
     list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
@@ -37,7 +38,7 @@ endif()
 include(../cmake/fetch_eigen3.cmake)
 
 add_library(mlp_lib STATIC lib/mlp.cpp)
-target_link_libraries(mlp_lib PRIVATE Eigen3::Eigen)
+target_link_libraries(mlp_lib PRIVATE custom_print Eigen3::Eigen)
 target_include_directories(mlp_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_compile_options(mlp_lib PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_13_COMPILE_WARNING_FLAGS})
@@ -46,7 +47,7 @@ if (NOT MSVC)
 endif()
 
 add_executable(fashio_mnist src/main.cpp)
-target_link_libraries(fashio_mnist mlp_lib)
+target_link_libraries(fashio_mnist PRIVATE custom_print mlp_lib)
 target_compile_options(fashio_mnist PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_13_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)
@@ -74,12 +75,16 @@ set_smart_tidy(mlp_lib
     "-cppcoreguidelines-avoid-magic-numbers"
     "-llvm-prefer-static-over-anonymous-namespace"
     "-readability-magic-numbers"
-    "${CLANG_TIDY_HW_13_OPTS}")
+    "${CLANG_TIDY_HW_13_OPTS}"
+  EXTRA_INCLUDES
+    "${CUSTOM_PRINT_INCLUDE_DIR}")
 
 set_smart_tidy(fashio_mnist
   EXCLUDE
     "-llvm-prefer-static-over-anonymous-namespace"
     "${CLANG_TIDY_HW_13_OPTS}"
+  EXTRA_INCLUDES
+    "${CUSTOM_PRINT_INCLUDE_DIR}"
   HAS_EXCEPTIONS)
 
 set_smart_tidy(fashio_mnist_test

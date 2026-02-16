@@ -1,7 +1,63 @@
 #ifndef MATRIX_HPP
 #define MATRIX_HPP
 
+#include <format>
 #include <unordered_map>
+
+template <typename T, T DefaultValue>
+class Matrix;
+
+template <typename T, T DefaultValue>
+class ProxyCell
+{
+    Matrix<T, DefaultValue>* matrix_;
+    int row_;
+    int col_;
+
+public:
+    ProxyCell(
+        Matrix<T, DefaultValue>* matrix,
+        const int                row, // NOLINT(bugprone-easily-swappable-parameters)
+        const int                col)
+        :
+        matrix_(matrix),
+        row_(row),
+        col_(col) {}
+    ~ProxyCell() = default;
+    ProxyCell(const ProxyCell&) = delete;
+    ProxyCell& operator=(const ProxyCell& other)
+    {
+        if (this != &other)
+        {
+            *this = static_cast<T>(other);
+        }
+
+        return *this;
+    }
+    ProxyCell(ProxyCell&&) = default;
+    ProxyCell& operator=(ProxyCell&&) = delete;
+
+    ProxyCell& operator=(const T& value)
+    {
+        if (value == DefaultValue)
+        {
+            matrix_->data.erase({row_, col_});
+        }
+        else
+        {
+            matrix_->data[{row_, col_}] = value;
+        }
+
+        return *this;
+    }
+
+    operator T() const // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
+    {
+        auto iter = matrix_->data.find({row_, col_});
+
+        return (iter != matrix_->data.end() ? iter->second : DefaultValue);
+    }
+};
 
 template <typename T, T DefaultValue>
 class Matrix
@@ -16,89 +72,25 @@ class Matrix
     };
 
     std::unordered_map<std::pair<int, int>, T, PairHash> data;
+    friend class ProxyCell<T, DefaultValue>;
 
     class ProxyRow
     {
         Matrix* matrix_;
         int row_;
-
     public:
         ProxyRow(
-            Matrix*   matrix,
-            int const row)
+            Matrix *const matrix,
+            int const     row)
             :
             matrix_(matrix),
             row_(row) {}
 
-        class ProxyCell
+        ProxyCell<T, DefaultValue> operator[](const int col)
         {
-            Matrix* matrix_;
-            int row_;
-            int col_;
-
-        public:
-            ProxyCell(
-                Matrix*   matrix,
-                int const row, // NOLINT(bugprone-easily-swappable-parameters)
-                int const col)
-                :
-                matrix_(matrix),
-                row_(row),
-                col_(col) {}
-
-            ProxyCell(const ProxyCell&) = delete;
-            ProxyCell(ProxyCell&&) = delete;
-            ProxyCell& operator=(ProxyCell&&) = delete;
-            ~ProxyCell() = default;
-
-            ProxyCell& operator=(const T& value)
-            {
-                const std::pair<int, int> key{row_, col_};
-
-                if (value == DefaultValue)
-                {
-                    matrix_->data.erase(key);
-                }
-                else
-                {
-                    matrix_->data[key] = value;
-                }
-
-                return *this;
-            }
-
-            // NOLINTNEXTLINE(google-explicit-constructor,hicpp-explicit-conversions)
-            operator T() const
-            {
-                const std::pair<int, int> key{row_, col_};
-                auto iter = matrix_->data.find(key);
-
-                if (iter != matrix_->data.end())
-                {
-                    return iter->second;
-                }
-
-                return DefaultValue;
-            }
-
-            ProxyCell& operator=(const ProxyCell& other)
-            {
-                if (this != &other)
-                {
-                    T value = other;
-                    *this = value;
-                }
-
-                return *this;
-            }
-        };
-
-        ProxyCell operator[](int col)
-        {
-            return ProxyCell(matrix_, row_, col);
+            return ProxyCell<T, DefaultValue>(matrix_, row_, col);
         }
     };
-
 public:
     Matrix() : data() {}
 
@@ -148,6 +140,42 @@ public:
     [[nodiscard]] iterator end() const noexcept
     {
         return iterator(data.end());
+    }
+};
+
+template <typename T, T DefaultValue>
+// NOLINTNEXTLINE(cert-dcl58-cpp)
+struct std::formatter<ProxyCell<T, DefaultValue>> : std::formatter<T>
+{
+    auto format(
+        const ProxyCell<T, DefaultValue>& cell,
+        std::format_context&              ctx) const
+    {
+        return std::formatter<T>::format(static_cast<T>(cell), ctx);
+    }
+};
+
+template <typename T, T DefaultValue>
+// NOLINTNEXTLINE(cert-dcl58-cpp)
+struct std::formatter<Matrix<T, DefaultValue>>
+{
+    constexpr auto parse(std::format_parse_context& ctx)
+    {
+        return ctx.begin();
+    }
+
+    auto format(
+        const Matrix<T, DefaultValue>& matrix,
+        std::format_context&           ctx) const -> decltype(ctx.out())
+    {
+        auto out = ctx.out();
+
+        for (auto const& [row, col, value] : matrix)
+        {
+            out = std::format_to(out, "{} {} {}\n", row, col, value);
+        }
+
+        return out;
     }
 };
 

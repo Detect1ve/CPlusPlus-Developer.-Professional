@@ -1,7 +1,7 @@
 #include <cstddef> // std::size_t
-#include <iostream>
 #include <utility> // std::move
 
+#include <custom_print.hpp>
 #include <model/document.hpp> // editor::model::Document
 #include <model/primitive.hpp> // editor::model::Primitive
 #include <view/document_view.hpp>
@@ -18,13 +18,13 @@ namespace editor::view
     {
         if (document_ == nullptr)
         {
-            std::cout << "No document to render\n";
+            cp::println("No document to render");
 
             return;
         }
 
-        std::cout << "Rendering document: " << document_->getName() << '\n';
-        std::cout << "Number of primitives: " << primitiveViews_.size() << '\n';
+        cp::println("Rendering document: {}", document_->getName());
+        cp::println("Number of primitives: {}", primitiveViews_.size());
 
         for (const auto& view : primitiveViews_)
         {

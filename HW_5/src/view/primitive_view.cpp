@@ -1,7 +1,7 @@
-#include <iostream>
 #include <memory> // std::unique_ptr
 #include <string> // std::string
 
+#include <custom_print.hpp>
 #include <model/primitive.hpp> // editor::model::Primitive
 #include <model/primitives/line.hpp>
 #include <view/primitive_view.hpp>
@@ -24,9 +24,9 @@ namespace editor::view
             const auto* line = dynamic_cast<const model::Line*>(getPrimitive());
             if (line != nullptr)
             {
-                std::cout << "Rendering Line from (" << line->getX1() << ","
-                    << line->getY1() << ") to (" << line->getX2() << "," << line->getY2()
-                    << ") with thickness " << line->getThickness() << '\n';
+                cp::println("Rendering Line from ({},{}) to ({},{}) with thickness {}",
+                    line->getX1(), line->getY1(), line->getX2(), line->getY2(),
+                    line->getThickness());
             }
         }
     };

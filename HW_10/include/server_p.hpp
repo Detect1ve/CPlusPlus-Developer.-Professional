@@ -1,13 +1,12 @@
 #ifndef SERVER_P_HPP
 #define SERVER_P_HPP
 
-#include <iostream>
-
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/read_until.hpp>
 #include <boost/asio/streambuf.hpp>
 
+#include <custom_print.hpp>
 #include <server.hpp>
 
 namespace async
@@ -25,8 +24,7 @@ namespace async
                 boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
             bulk_size_(bulk_size)
         {
-            std::cout << "Server started on port " << port << " with bulk size "
-                << bulk_size << '\n';
+            cp::println("Server started on port {} with bulk size {}", port, bulk_size);
         }
         ~ServerImpl() = default;
         ServerImpl(const ServerImpl&) = delete;
@@ -51,7 +49,7 @@ namespace async
                     }
                     else
                     {
-                        std::cerr << "Accept error: " << error.message() << '\n';
+                        cp::println(stderr, "Accept error: {}", error.message());
                     }
 
                     start_accept();
@@ -161,7 +159,7 @@ namespace async
             }
             else
             {
-                std::cerr << "Error: " << error.message() << '\n';
+                cp::println(stderr, "Error: {}", error.message());
             }
         }
 

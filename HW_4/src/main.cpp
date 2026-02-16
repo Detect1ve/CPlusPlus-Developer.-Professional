@@ -16,6 +16,7 @@
 #include <tuple> // std::make_tuple
 #include <vector> // std::vector
 
+#include <custom_print.hpp> // cp::safe_error
 #include <sfinae_ip_address.hpp>
 
 /**
@@ -29,7 +30,7 @@
  *
  * @return 0
  */
-int main() // NOLINT(bugprone-exception-escape)
+int main()
 {
     try
     {
@@ -44,13 +45,13 @@ int main() // NOLINT(bugprone-exception-escape)
     }
     catch (const std::exception& e)
     {
-        std::cerr << "Unhandled exception: " << e.what() << '\n';
+        cp::safe_error(e.what());
 
         return EXIT_FAILURE;
     }
     catch (...)
     {
-        std::cerr << "Unknown exception occurred\n";
+        cp::safe_error(nullptr);
 
         return EXIT_FAILURE;
     }

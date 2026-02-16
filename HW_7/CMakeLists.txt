@@ -29,6 +29,7 @@ if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/warning_flags.cmake)
   include(../common/attribute_wrapper.cmake)
   include(../common/capture.cmake)
+  include(../common/custom_print.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
@@ -38,7 +39,9 @@ endif()
 
 add_library(taskmanager STATIC lib/taskmanager.cpp)
 target_include_directories(taskmanager PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(taskmanager PUBLIC attribute_wrapper)
+target_link_libraries(taskmanager
+  PRIVATE custom_print
+  PUBLIC attribute_wrapper)
 target_compile_options(taskmanager PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_7_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)
@@ -48,7 +51,7 @@ if (NOT MSVC)
 endif()
 
 add_executable(bulk src/main.cpp)
-target_link_libraries(bulk PRIVATE taskmanager)
+target_link_libraries(bulk PRIVATE custom_print taskmanager)
 target_compile_options(bulk PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_7_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)
@@ -58,7 +61,8 @@ if (NOT MSVC)
 endif()
 
 add_executable(taskmanager_test test/taskmanager_test.cpp)
-target_link_libraries(taskmanager_test PRIVATE capture GTest::gtest_main taskmanager)
+target_link_libraries(taskmanager_test PRIVATE
+  capture custom_print GTest::gtest_main taskmanager)
 target_compile_options(taskmanager_test PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_7_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)
@@ -77,6 +81,7 @@ set_smart_tidy(taskmanager
     "${CLANG_TIDY_HW_7_OPTS}"
   EXTRA_INCLUDES
     "${ATTRIBUTE_WRAPPER_INCLUDE_DIR}"
+    "${CUSTOM_PRINT_INCLUDE_DIR}"
   HAS_EXCEPTIONS)
 
 set_smart_tidy(bulk
@@ -84,6 +89,7 @@ set_smart_tidy(bulk
     "${CLANG_TIDY_HW_7_OPTS}"
   EXTRA_INCLUDES
     "${ATTRIBUTE_WRAPPER_INCLUDE_DIR}"
+    "${CUSTOM_PRINT_INCLUDE_DIR}"
   HAS_EXCEPTIONS)
 
 set_smart_tidy(taskmanager_test
@@ -93,6 +99,7 @@ set_smart_tidy(taskmanager_test
   EXTRA_INCLUDES
     "${ATTRIBUTE_WRAPPER_INCLUDE_DIR}"
     "${CAPTURE_INCLUDE_DIR}"
+    "${CUSTOM_PRINT_INCLUDE_DIR}"
   HAS_EXCEPTIONS)
 
 enable_testing()

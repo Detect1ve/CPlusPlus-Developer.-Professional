@@ -1,10 +1,10 @@
 #include <cstdlib> // EXIT_FAILURE
 #include <exception> // std::exception
 #include <functional> // std::less
-#include <iostream>
 #include <map>
 #include <utility> // std::pair
 
+#include <custom_print.hpp>
 #include <my_allocator.hpp>
 #include <my_list.hpp>
 
@@ -25,7 +25,6 @@ namespace
     }
 } // namespace
 
-// NOLINTNEXTLINE(bugprone-exception-escape)
 int main()
 {
     try
@@ -48,7 +47,7 @@ int main()
 
         for (const auto& elem : map_with_custom_alloc)
         {
-            std::cout << elem.first << " " << elem.second << '\n';
+            cp::println("{} {}", elem.first, elem.second);
         }
 
         MyList<unsigned> my_list_with_standard_alloc;
@@ -67,20 +66,20 @@ int main()
 
         for (const auto elem : my_list_with_custom_alloc)
         {
-            std::cout << elem << '\n';
+            cp::println("{}", elem);
         }
 
         return 0;
     }
     catch (const std::exception& e)
     {
-        std::cerr << "Unhandled exception: " << e.what() << '\n';
+        cp::safe_error(e.what());
 
         return EXIT_FAILURE;
     }
     catch (...)
     {
-        std::cerr << "Unknown exception occurred\n";
+        cp::safe_error(nullptr);
 
         return EXIT_FAILURE;
     }

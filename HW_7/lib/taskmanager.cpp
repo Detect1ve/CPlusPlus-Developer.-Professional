@@ -2,6 +2,7 @@
 #if !defined(_WIN32) && !defined(_MSC_VER)
 #include <csignal>
 #endif
+#include <cstdio> // stderr
 #include <exception> // std::exception
 #include <filesystem>
 #include <fstream>
@@ -18,6 +19,7 @@
 #include <cstddef> // std::size_t
 #endif
 
+#include <custom_print.hpp>
 #include <taskmanager.hpp>
 
 namespace bulk::io
@@ -178,7 +180,7 @@ namespace bulk
 
         if (!file.is_open())
         {
-            std::cerr << "Failed to open file\n";
+            cp::println(stderr, "Failed to open file");
             ret = -1;
 
             return ret;
@@ -233,7 +235,7 @@ namespace bulk
                 {
                     if (this->add_task(line) != 0)
                     {
-                        std::cerr << "Error processing command: " << line << '\n';
+                        cp::println(stderr, "Error processing command: {}", line);
                     }
                 }
                 else if (input.eof() || input.fail())
@@ -244,7 +246,7 @@ namespace bulk
         }
         catch (const std::exception& e)
         {
-            std::cerr << "Fatal error: " << e.what() << '\n';
+            cp::println(stderr, "Fatal error: {}", e.what());
             ret = -1;
         }
 
@@ -268,27 +270,28 @@ namespace bulk
         sigaction_info.sa_flags = 0;
         if (sigaction(SIGHUP, &sigaction_info, nullptr) == -1)
         {
-            std::cerr << "Failed to register SIGHUP handler, but continue anyway\n";
+            cp::println(stderr, "Failed to register SIGHUP handler, but continue anyway");
         }
 
         if (sigaction(SIGINT, &sigaction_info, nullptr) == -1)
         {
-            std::cerr << "Failed to register SIGINT handler, but continue anyway\n";
+            cp::println(stderr, "Failed to register SIGINT handler, but continue anyway");
         }
 
         if (sigaction(SIGQUIT, &sigaction_info, nullptr) == -1)
 // NOLINTEND(misc-include-cleaner)
         {
-            std::cerr << "Failed to register SIGQUIT handler, but continue anyway\n";
+            cp::println(stderr,
+                "Failed to register SIGQUIT handler, but continue anyway");
         }
 
         if (sigaction(SIGTERM, &sigaction_info, nullptr) == -1)
         {
-            std::cerr << "Failed to register SIGTERM handler, but continue anyway\n";
+            cp::println(stderr,
+                "Failed to register SIGTERM handler, but continue anyway");
         }
 #endif
     }
-    // NOLINTNEXTLINE(bugprone-exception-escape)
     taskmanager::~taskmanager() noexcept
     {
         try
@@ -300,11 +303,11 @@ namespace bulk
         }
         catch (const std::exception& e)
         {
-            std::cerr << "error in destructor: " << e.what() << '\n';
+            cp::safe_error(e.what());
         }
         catch (...)
         {
-            std::cerr << "error in destructor: unknown\n";
+            cp::safe_error("error in destructor");
         }
     }
 } // namespace bulk

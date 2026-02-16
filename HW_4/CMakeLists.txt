@@ -27,10 +27,11 @@ if (PROJECT_IS_TOP_LEVEL)
 endif()
 
 if (PROJECT_IS_TOP_LEVEL)
-  include(../common/capture.cmake)
   include(../cmake/clang-tidy.cmake)
   include(../cmake/fetch_googletest.cmake)
   include(../cmake/warning_flags.cmake)
+  include(../common/capture.cmake)
+  include(../common/custom_print.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
@@ -40,6 +41,7 @@ endif()
 
 add_library(ip_address INTERFACE)
 target_include_directories(ip_address INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_link_libraries(ip_address INTERFACE custom_print)
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS_EQUAL 9.4)
     target_compile_options(ip_address INTERFACE -fconcepts)
@@ -73,14 +75,17 @@ set(CLANG_TIDY_HW_4_OPTS
 set_smart_tidy(print_ip
   BUILD_PATH "${CMAKE_BINARY_DIR}"
   EXCLUDE
-    "${CLANG_TIDY_HW_4_OPTS}")
+    "${CLANG_TIDY_HW_4_OPTS}"
+  EXTRA_INCLUDES
+    "${CUSTOM_PRINT_INCLUDE_DIR}")
 
 set_smart_tidy(print_ip_test
   BUILD_PATH "${CMAKE_BINARY_DIR}"
   EXCLUDE
     "${CLANG_TIDY_HW_4_OPTS}"
   EXTRA_INCLUDES
-    "${CAPTURE_INCLUDE_DIR}")
+    "${CAPTURE_INCLUDE_DIR}"
+    "${CUSTOM_PRINT_INCLUDE_DIR}")
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN AND PATCH_COMPILE_COMMANDS)
   add_custom_target(patch_compile_commands ALL

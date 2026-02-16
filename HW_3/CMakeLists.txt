@@ -21,6 +21,7 @@ if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/fetch_googletest.cmake)
   include(../cmake/fetch_gsl.cmake)
   include(../cmake/warning_flags.cmake)
+  include(../common/custom_print.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
@@ -34,7 +35,7 @@ target_include_directories(list_and_allocator
 target_link_libraries(list_and_allocator INTERFACE Microsoft.GSL::GSL)
 
 add_executable(main src/main.cpp)
-target_link_libraries(main PRIVATE list_and_allocator)
+target_link_libraries(main PRIVATE custom_print list_and_allocator)
 if (NOT MSVC)
   target_link_libraries(main PRIVATE -static)
 endif()
@@ -66,6 +67,8 @@ set_smart_tidy(main
   EXCLUDE
     "-llvm-prefer-static-over-anonymous-namespace"
     "${CLANG_TIDY_HW_3_OPTS}"
+  EXTRA_INCLUDES
+    "${CUSTOM_PRINT_INCLUDE_DIR}"
   HAS_EXCEPTIONS)
 
 set_smart_tidy(my_allocator_test

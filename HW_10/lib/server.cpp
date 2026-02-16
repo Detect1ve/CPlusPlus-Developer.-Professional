@@ -8,6 +8,9 @@
 #include <boost/asio/io_context.hpp> // boost::asio::io_context
 #include <boost/asio/ip/tcp.hpp> // boost::asio::ip::tcp
 
+#if !defined(_WIN32) && !defined(_MSC_VER)
+#include <custom_print.hpp> // cp::println
+#endif
 #include <server.hpp>
 #include <server_p.hpp>
 
@@ -67,23 +70,25 @@ namespace async
         sigaction_info.sa_flags = 0;
         if (sigaction(SIGHUP, &sigaction_info, nullptr) == -1)
         {
-            std::cerr << "Failed to register SIGHUP handler, but continue anyway\n";
+            cp::println(stderr, "Failed to register SIGHUP handler, but continue anyway");
         }
 
         if (sigaction(SIGINT, &sigaction_info, nullptr) == -1)
         {
-            std::cerr << "Failed to register SIGINT handler, but continue anyway\n";
+            cp::println(stderr, "Failed to register SIGINT handler, but continue anyway");
         }
 
         if (sigaction(SIGQUIT, &sigaction_info, nullptr) == -1)
 // NOLINTEND(misc-include-cleaner)
         {
-            std::cerr << "Failed to register SIGQUIT handler, but continue anyway\n";
+            cp::println(stderr,
+                "Failed to register SIGQUIT handler, but continue anyway");
         }
 
         if (sigaction(SIGTERM, &sigaction_info, nullptr) == -1)
         {
-            std::cerr << "Failed to register SIGTERM handler, but continue anyway\n";
+            cp::println(stderr,
+                "Failed to register SIGTERM handler, but continue anyway");
         }
 #endif
     }
