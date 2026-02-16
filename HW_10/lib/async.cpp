@@ -1,13 +1,21 @@
+#include <atomic> // std::atomic
 #if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
 #include <chrono>
 #endif
 #include <condition_variable>
+#include <cstddef> // std::size_t
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <memory> // std::unique_ptr
 #include <mutex>
 #include <queue>
 #include <sstream>
+#include <string> // std::string
+#include <string_view> // std::string_view
+#include <thread> // std::thread
+#include <utility> // std::move
+#include <vector> // std::vector
 
 #include "async.h"
 

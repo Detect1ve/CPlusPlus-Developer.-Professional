@@ -15,6 +15,7 @@
 #include <ranges>
 #include <utility>
 #include <vector>
+#include <version>
 
 #include <attribute_wrapper.hpp>
 

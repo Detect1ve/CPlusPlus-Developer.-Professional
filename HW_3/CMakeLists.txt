@@ -57,43 +57,29 @@ if (NOT MSVC)
   target_compile_options(my_list_test PRIVATE -Wno-global-constructors)
 endif()
 
-if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
-  if (MSVC)
-    set(CLANG_TIDY_MSVC_OPTS ";--extra-arg=/EHsc")
-  endif()
+set(CLANG_TIDY_HW_3_OPTS
+    "-altera-struct-pack-align"
+    "-fuchsia-overloaded-operator"
+    "-modernize-use-trailing-return-type")
 
-  set(CLANG_TIDY_HW_3_OPTS
-    "-altera-id-dependent-backward-branch,\
-     -altera-struct-pack-align,\
-     -altera-unroll-loops,\
-     -fuchsia-overloaded-operator,\
-     -llvmlibc-inline-function-decl,\
-     -llvmlibc-restrict-system-libc-headers,\
-     -modernize-use-trailing-return-type;--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+set_smart_tidy(main
+  EXCLUDE
+    "-llvm-prefer-static-over-anonymous-namespace"
+    "${CLANG_TIDY_HW_3_OPTS}"
+  HAS_EXCEPTIONS)
 
-  set_target_properties(main PROPERTIES
-    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      -llvm-prefer-static-over-anonymous-namespace,\
-      -llvmlibc-callee-namespace,\
-      -llvmlibc-implementation-in-namespace,\
-      -misc-include-cleaner,\
-      ${CLANG_TIDY_HW_3_OPTS}${CLANG_TIDY_MSVC_OPTS}")
+set_smart_tidy(my_allocator_test
+  EXCLUDE
+    "-cert-err58-cpp"
+    "-cppcoreguidelines-owning-memory"
+    "-fuchsia-default-arguments-calls"
+    "-fuchsia-statically-constructed-objects"
+    "${CLANG_TIDY_HW_3_OPTS}"
+  HAS_EXCEPTIONS)
 
-  set_target_properties(my_allocator_test PROPERTIES
-    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      -cert-err58-cpp,\
-      -cppcoreguidelines-owning-memory,\
-      -fuchsia-default-arguments-calls,\
-      -fuchsia-statically-constructed-objects,\
-      -llvmlibc-implementation-in-namespace,\
-      -misc-include-cleaner,\
-      ${CLANG_TIDY_HW_3_OPTS}${CLANG_TIDY_MSVC_OPTS}")
-
-  set_target_properties(my_list_test PROPERTIES
-    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      -llvmlibc-callee-namespace,\
-      ${CLANG_TIDY_HW_3_OPTS}")
-endif()
+set_smart_tidy(my_list_test
+  EXCLUDE
+    "${CLANG_TIDY_HW_3_OPTS}")
 
 enable_testing()
 add_test(NAME HW_3.my_allocator_test COMMAND $<TARGET_FILE:my_allocator_test>)

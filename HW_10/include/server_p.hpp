@@ -3,7 +3,10 @@
 
 #include <iostream>
 
-#include <boost/asio.hpp>
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/read_until.hpp>
+#include <boost/asio/streambuf.hpp>
 
 #include <server.hpp>
 

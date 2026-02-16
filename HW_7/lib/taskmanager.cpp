@@ -1,9 +1,22 @@
+#include <chrono> // std::chrono::system_clock
 #if !defined(_WIN32) && !defined(_MSC_VER)
 #include <csignal>
 #endif
+#include <exception> // std::exception
 #include <filesystem>
 #include <fstream>
+#include <iostream>
+#include <string> // std::string
+#include <string_view> // std::string_view
+#include <type_traits> // std::remove_reference_t
+#include <vector> // std::vector
+#include <version> // IWYU pragma: keep
+
+#ifdef __cpp_lib_ranges_to_container
 #include <ranges>
+#else
+#include <cstddef> // std::size_t
+#endif
 
 #include <taskmanager.hpp>
 
@@ -247,6 +260,7 @@ namespace bulk
     {
         get_task_manager_instance() = this;
 #if !defined(_WIN32) && !defined(_MSC_VER)
+// NOLINTBEGIN(misc-include-cleaner)
         struct sigaction sigaction_info {};
 
         sigaction_info.sa_handler = signal_handler;
@@ -263,6 +277,7 @@ namespace bulk
         }
 
         if (sigaction(SIGQUIT, &sigaction_info, nullptr) == -1)
+// NOLINTEND(misc-include-cleaner)
         {
             std::cerr << "Failed to register SIGQUIT handler, but continue anyway\n";
         }

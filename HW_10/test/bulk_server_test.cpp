@@ -2,11 +2,23 @@
 #include <algorithm>
 #endif
 #include <charconv>
+#include <chrono> // std::chrono::milliseconds
+#include <cstddef> // std::size_t
+#include <cstdint> // std::uint16_t
+#include <exception> // std::exception
 #include <filesystem>
 #include <fstream>
+#include <memory> // std::unique_ptr
+#include <optional> // std::optional
 #include <regex>
+#include <sstream> // std::stringstream
+#include <string_view> // std::string_view
+#include <system_error> // std::errc
+#include <thread> // std::thread
+#include <vector> // std::vector
 
 #include <gtest/gtest.h>
+#include <absl/strings/match.h>
 
 #include <capture.hpp>
 #include <server.hpp>

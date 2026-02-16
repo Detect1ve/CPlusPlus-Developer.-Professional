@@ -1,4 +1,6 @@
+#include <cstddef> // std::size_t
 #include <iostream>
+#include <span> // std::span
 #include <utility>
 
 #include <bayan.hpp>

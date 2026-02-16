@@ -1,4 +1,10 @@
+#include <memory> // std::make_unique
+#include <string> // std::string
+#include <utility> // std::move
+
 #include <controller/document_controller.hpp>
+#include <controller/primitive_controller.hpp> // editor::controller::PrimitiveController
+#include <model/document.hpp> // editor::model::Document
 
 namespace editor::controller
 {

@@ -1,6 +1,11 @@
+#include <cstddef> // std::size_t
 #include <iostream>
+#include <utility> // std::move
 
+#include <model/document.hpp> // editor::model::Document
+#include <model/primitive.hpp> // editor::model::Primitive
 #include <view/document_view.hpp>
+#include <view/primitive_view.hpp> // editor::view::PrimitiveViewFactory
 
 namespace editor::view
 {

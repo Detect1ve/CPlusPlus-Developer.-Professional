@@ -5,6 +5,8 @@
 #if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
 #include <string>
 #endif
+#include <string_view> // std::string_view
+#include <system_error> // std::errc
 
 namespace
 {

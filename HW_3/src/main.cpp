@@ -1,5 +1,9 @@
+#include <cstdlib> // EXIT_FAILURE
+#include <exception> // std::exception
+#include <functional> // std::less
 #include <iostream>
 #include <map>
+#include <utility> // std::pair
 
 #include <my_allocator.hpp>
 #include <my_list.hpp>

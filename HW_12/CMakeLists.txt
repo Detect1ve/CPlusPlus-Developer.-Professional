@@ -60,40 +60,33 @@ if (MSVC OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_compile_options(reducer PRIVATE /wd4100)
   endif()
 
-  if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
-    set(CLANG_TIDY_HW_12_OPTS
-      "-altera-unroll-loops,\
-       -fuchsia-default-arguments-calls,\
-       -llvmlibc-callee-namespace,\
-       -llvmlibc-implementation-in-namespace,\
-       -llvmlibc-restrict-system-libc-headers,\
-       -misc-include-cleaner,\
-       -modernize-use-trailing-return-type")
+  set(CLANG_TIDY_HW_12_OPTS
+      "-fuchsia-default-arguments-calls"
+      "-modernize-use-trailing-return-type")
 
-    set_target_properties(mapper PROPERTIES
-      CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-        -clang-diagnostic-unused-parameter,\
-        -llvm-prefer-static-over-anonymous-namespace,\
-        -misc-unused-parameters,\
-        -performance-avoid-endl,\
-        ${CLANG_TIDY_HW_12_OPTS}")
+  set_smart_tidy(mapper
+    EXCLUDE
+      "-clang-diagnostic-unused-parameter"
+      "-llvm-prefer-static-over-anonymous-namespace"
+      "-misc-unused-parameters"
+      "-performance-avoid-endl"
+      "${CLANG_TIDY_HW_12_OPTS}")
 
-    set_target_properties(reducer PROPERTIES
-      CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-        -clang-diagnostic-unused-parameter,\
-        -misc-unused-parameters,\
-        -performance-avoid-endl,\
-        ${CLANG_TIDY_HW_12_OPTS}")
+  set_smart_tidy(reducer
+    EXCLUDE
+      "-clang-diagnostic-unused-parameter"
+      "-misc-unused-parameters"
+      "-performance-avoid-endl"
+      "${CLANG_TIDY_HW_12_OPTS}")
 
-    set_target_properties(mapper_variance PROPERTIES
-      CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-        -llvm-prefer-static-over-anonymous-namespace,\
-        ${CLANG_TIDY_HW_12_OPTS}")
+  set_smart_tidy(mapper_variance
+    EXCLUDE
+      "-llvm-prefer-static-over-anonymous-namespace"
+      "${CLANG_TIDY_HW_12_OPTS}")
 
-    set_target_properties(reducer_variance PROPERTIES
-      CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-        ${CLANG_TIDY_HW_12_OPTS}")
-  endif()
+  set_smart_tidy(reducer_variance
+    EXCLUDE
+      "${CLANG_TIDY_HW_12_OPTS}")
 else()
   add_custom_target(mapreduce_all ALL
     COMMAND make -f ${CMAKE_CURRENT_SOURCE_DIR}/Makefile all

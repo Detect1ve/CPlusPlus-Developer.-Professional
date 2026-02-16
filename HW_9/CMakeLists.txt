@@ -71,63 +71,48 @@ if (NOT MSVC)
     -Wno-unsafe-buffer-usage -Wno-global-constructors)
 endif()
 
-if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
-  set(CLANG_TIDY_HW_9_OPTS
-    "-llvm-header-guard,\
-     -llvm-namespace-comment,\
-     -llvmlibc-callee-namespace,\
-     -llvmlibc-implementation-in-namespace,\
-     -llvmlibc-restrict-system-libc-headers,\
-     -misc-include-cleaner,\
-     -modernize-use-trailing-return-type,\
-     -portability-avoid-pragma-once")
+set(CLANG_TIDY_HW_9_OPTS
+    "-llvm-header-guard"
+    "-llvm-namespace-comment"
+    "-modernize-use-trailing-return-type"
+    "-portability-avoid-pragma-once")
 
-  set_target_properties(async PROPERTIES
-    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      -altera-id-dependent-backward-branch,\
-      -altera-struct-pack-align,\
-      -altera-unroll-loops,\
-      -fuchsia-default-arguments-calls,\
-      -llvm-prefer-static-over-anonymous-namespace,\
-      ${CLANG_TIDY_HW_9_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+set_smart_tidy(async
+  EXCLUDE
+    "-altera-struct-pack-align"
+    "-fuchsia-default-arguments-calls"
+    "-llvm-prefer-static-over-anonymous-namespace"
+    "${CLANG_TIDY_HW_9_OPTS}")
 
-  set_target_properties(async_static PROPERTIES
-    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      -altera-id-dependent-backward-branch,\
-      -altera-struct-pack-align,\
-      -altera-unroll-loops,\
-      -fuchsia-default-arguments-calls,\
-      -llvm-prefer-static-over-anonymous-namespace,\
-      ${CLANG_TIDY_HW_9_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+set_smart_tidy(async_static
+  EXCLUDE
+    "-altera-struct-pack-align"
+    "-fuchsia-default-arguments-calls"
+    "-llvm-prefer-static-over-anonymous-namespace"
+    "${CLANG_TIDY_HW_9_OPTS}")
 
-  set_target_properties(async_cli PROPERTIES
-    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      -cppcoreguidelines-avoid-magic-numbers,\
-      -hicpp-named-parameter,\
-      -llvm-qualified-auto,\
-      -misc-const-correctness,\
-      -readability-identifier-length,\
-      -readability-magic-numbers,\
-      -readability-named-parameter,\
-      -readability-qualified-auto,\
-      ${CLANG_TIDY_HW_9_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+set_smart_tidy(async_cli
+  EXCLUDE
+    "-cppcoreguidelines-avoid-magic-numbers"
+    "-hicpp-named-parameter"
+    "-llvm-qualified-auto"
+    "-misc-const-correctness"
+    "-misc-include-cleaner"
+    "-readability-identifier-length"
+    "-readability-magic-numbers"
+    "-readability-named-parameter"
+    "-readability-qualified-auto"
+    "${CLANG_TIDY_HW_9_OPTS}")
 
-  set_target_properties(async_test PROPERTIES
-    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      -altera-unroll-loops,\
-      -fuchsia-default-arguments-calls,\
-      -llvm-prefer-static-over-anonymous-namespace,\
-      -llvmlibc-inline-function-decl,\
-      ${CLANG_TIDY_HW_9_OPTS};--config=\
-      {\
-        CheckOptions:\
-        [\
-          {\
-            key: readability-function-cognitive-complexity.IgnoreMacros, value: 'true'\
-          }\
-        ]\
-      };--header-filter=(${CMAKE_CURRENT_SOURCE_DIR}/include/.*|${CAPTURE_INCLUDE_DIR}/.*)")
-endif()
+set_smart_tidy(async_test
+  COGNITIVE_IGNORE_MACROS
+  EXCLUDE
+    "-fuchsia-default-arguments-calls"
+    "-llvm-prefer-static-over-anonymous-namespace"
+    "${CLANG_TIDY_HW_9_OPTS}"
+  EXTRA_INCLUDES
+    "${CAPTURE_INCLUDE_DIR}"
+  HAS_EXCEPTIONS)
 
 enable_testing()
 add_test(NAME HW_9.async_test COMMAND $<TARGET_FILE:async_test>)

@@ -2,8 +2,14 @@
  || __GNUC__ < 14
 #include <charconv>
 #endif
+#include <cstddef> // std::size_t
+#include <cstdint> // std::int16_t
+#include <exception> // std::exception
 #include <iostream>
 #include <ranges>
+#include <span> // std::span
+#include <string_view> // std::string_view
+#include <system_error> // std::errc
 
 #include <server.hpp>
 // NOLINTNEXTLINE(bugprone-exception-escape)

@@ -3,8 +3,17 @@
  || __cplusplus <=  202002L
 #include <charconv>
 #endif
+#include <chrono> // std::chrono::system_clock
+#include <cstddef> // std::size_t
+#include <cstdint> // std::int64_t
 #include <filesystem>
 #include <fstream>
+#include <optional> // std::optional
+#include <sstream> // std::stringstream
+#include <string> // std::string
+#include <string_view> // std::string_view
+#include <system_error> // std::errc
+#include <vector> // std::vector
 
 #include <gtest/gtest.h>
 #include <absl/strings/match.h>

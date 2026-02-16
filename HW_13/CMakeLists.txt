@@ -65,38 +65,26 @@ endif()
 target_compile_definitions(fashio_mnist_test PRIVATE
   PROJECT_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
-if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
-  if (MSVC)
-    set(CLANG_TIDY_MSVC_OPTS ";--extra-arg=/EHsc")
-  endif()
+set(CLANG_TIDY_HW_13_OPTS
+    "-fuchsia-default-arguments-calls"
+    "-modernize-use-trailing-return-type")
 
-  set(CLANG_TIDY_HW_13_OPTS
-    "-fuchsia-default-arguments-calls,\
-     -llvmlibc-callee-namespace,\
-     -llvmlibc-restrict-system-libc-headers,\
-     -misc-include-cleaner,\
-     -modernize-use-trailing-return-type;--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+set_smart_tidy(mlp_lib
+  EXCLUDE
+    "-cppcoreguidelines-avoid-magic-numbers"
+    "-llvm-prefer-static-over-anonymous-namespace"
+    "-readability-magic-numbers"
+    "${CLANG_TIDY_HW_13_OPTS}")
 
-  set_target_properties(mlp_lib PROPERTIES
-    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      -altera-id-dependent-backward-branch,\
-      -altera-unroll-loops,\
-      -cppcoreguidelines-avoid-magic-numbers,\
-      -llvm-prefer-static-over-anonymous-namespace,\
-      -llvmlibc-implementation-in-namespace,\
-      -readability-magic-numbers,\
-      ${CLANG_TIDY_HW_13_OPTS}")
+set_smart_tidy(fashio_mnist
+  EXCLUDE
+    "-llvm-prefer-static-over-anonymous-namespace"
+    "${CLANG_TIDY_HW_13_OPTS}"
+  HAS_EXCEPTIONS)
 
-  set_target_properties(fashio_mnist PROPERTIES
-    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      -llvm-prefer-static-over-anonymous-namespace,\
-      -llvmlibc-implementation-in-namespace,\
-      ${CLANG_TIDY_HW_13_OPTS}${CLANG_TIDY_MSVC_OPTS}")
-
-  set_target_properties(fashio_mnist_test PROPERTIES
-    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      ${CLANG_TIDY_HW_13_OPTS}")
-endif()
+set_smart_tidy(fashio_mnist_test
+  EXCLUDE
+    "${CLANG_TIDY_HW_13_OPTS}")
 
 enable_testing()
 add_test(NAME HW_13.fashio_mnist_test COMMAND $<TARGET_FILE:fashio_mnist_test>)

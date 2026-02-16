@@ -1,3 +1,5 @@
+#include <cstdlib> // EXIT_FAILURE
+#include <exception> // std::exception
 #include <iostream>
 
 #include <ip_filter.hpp>

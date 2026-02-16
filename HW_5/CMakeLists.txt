@@ -45,16 +45,11 @@ if (NOT MSVC)
   target_compile_options(editor PRIVATE -Wno-effc++)
 endif()
 
-if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
-  set_target_properties(editor PROPERTIES
-    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      -altera-struct-pack-align,\
-      -altera-unroll-loops,\
-      -fuchsia-default-arguments-calls,\
-      -llvmlibc-callee-namespace,\
-      -llvmlibc-implementation-in-namespace,\
-      -llvmlibc-inline-function-decl,\
-      -llvmlibc-restrict-system-libc-headers,\
-      -misc-include-cleaner,\
-      -modernize-use-trailing-return-type;--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
-endif()
+set_smart_tidy(editor
+  EXCLUDE
+    "-altera-struct-pack-align"
+    "-fuchsia-default-arguments-calls"
+    "-modernize-use-trailing-return-type"
+  EXTRA_INCLUDES
+    "${ATTRIBUTE_WRAPPER_INCLUDE_DIR}"
+  HAS_EXCEPTIONS)

@@ -1,7 +1,11 @@
 #if __GNUC__ < 14
 #include <charconv>
 #endif
+#include <cstddef> // std::size_t
 #include <ranges>
+#include <span> // std::span
+#include <string_view> // std::string_view
+#include <system_error> // std::errc
 
 #include <taskmanager.hpp>
 

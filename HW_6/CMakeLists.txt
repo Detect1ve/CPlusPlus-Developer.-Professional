@@ -52,38 +52,28 @@ if (NOT MSVC)
   target_compile_options(matrix_test PRIVATE -Wno-global-constructors)
 endif()
 
-if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
-  set(CLANG_TIDY_HW_6_OPTS
-    "-altera-unroll-loops,\
-     -fuchsia-overloaded-operator,\
-     -llvmlibc-callee-namespace,\
-     -llvmlibc-implementation-in-namespace,\
-     -llvmlibc-inline-function-decl,\
-     -llvmlibc-restrict-system-libc-headers,\
-     -modernize-use-trailing-return-type")
+set(CLANG_TIDY_HW_6_OPTS
+  "-altera-struct-pack-align"
+  "-fuchsia-overloaded-operator"
+  "-modernize-use-trailing-return-type")
 
-  set_target_properties(matrix PROPERTIES
-    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      ${CLANG_TIDY_HW_6_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+set_smart_tidy(matrix
+  EXCLUDE
+    "${CLANG_TIDY_HW_6_OPTS}"
+  HAS_EXCEPTIONS)
 
-  set_target_properties(matrix_test PROPERTIES
-    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      -cppcoreguidelines-avoid-magic-numbers,\
-      -fuchsia-default-arguments-calls,\
-      -misc-include-cleaner,\
-      -performance-avoid-endl,\
-      -readability-identifier-length,\
-      -readability-magic-numbers,\
-      ${CLANG_TIDY_HW_6_OPTS};--config=\
-      {\
-        CheckOptions:\
-        [\
-          {\
-            key: readability-function-cognitive-complexity.IgnoreMacros, value: 'true'\
-          }\
-        ]\
-      };--header-filter=(${CMAKE_CURRENT_SOURCE_DIR}/include/.*|${CAPTURE_INCLUDE_DIR}/.*)")
-endif()
+set_smart_tidy(matrix_test
+  COGNITIVE_IGNORE_MACROS
+  EXCLUDE
+    "-cppcoreguidelines-avoid-magic-numbers"
+    "-fuchsia-default-arguments-calls"
+    "-performance-avoid-endl"
+    "-readability-identifier-length"
+    "-readability-magic-numbers"
+    "${CLANG_TIDY_HW_6_OPTS}"
+  EXTRA_INCLUDES
+    "${CAPTURE_INCLUDE_DIR}"
+  HAS_EXCEPTIONS)
 
 enable_testing()
 add_test(NAME HW_6.matrix_test COMMAND $<TARGET_FILE:matrix_test>)

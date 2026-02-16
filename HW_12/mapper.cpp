@@ -2,6 +2,8 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <string_view> // std::string_view
+#include <system_error> // std::errc
 
 namespace
 {

@@ -1,4 +1,10 @@
+#include <cstddef> // std::size_t
+#include <memory> // std::make_unique
+#include <utility> // std::move
+
 #include <controller/primitive_controller.hpp>
+#include <model/document.hpp> // editor::model::Document
+#include <model/primitive.hpp> // Point
 #include <model/primitives/line.hpp>
 
 namespace editor::controller

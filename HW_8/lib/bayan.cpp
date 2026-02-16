@@ -1,9 +1,33 @@
+#include <algorithm> // std::ranges::transform
+#include <cctype> // std::tolower
+#include <cstddef> // std::size_t
+#include <cstdint> // uintmax_t
+#include <exception> // std::exception
+#include <fstream> // std::ifstream
+#include <functional> // std::function
 #include <iostream>
+#include <iterator> // std::back_inserter
+#include <memory> // std::unique_ptr
+#include <regex> // std::regex
+#include <span> // std::span
+#include <stdexcept> // std::invalid_argument
+#include <string> // std::string
+#include <string_view> // std::string_view
+#include <unordered_map> // std::unordered_map
+#include <utility> // std::move
+#include <vector> // std::vector
 
 #include <boost/algorithm/hex.hpp>
 #include <boost/crc.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/program_options.hpp>
+#include <boost/filesystem/directory.hpp>
+#include <boost/filesystem/exception.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/program_options/errors.hpp>
+#include <boost/program_options/options_description.hpp>
+#include <boost/program_options/parsers.hpp>
+#include <boost/program_options/value_semantic.hpp>
+#include <boost/program_options/variables_map.hpp>
 #include <boost/uuid/detail/md5.hpp>
 
 #include <attribute_wrapper.hpp>
@@ -595,7 +619,7 @@ std::pair<ProcessStatus, Options> option_process(std::span<const char *const> ar
                 "hashing algorithm to use (allowed values: crc32, md5)");
 
         cmdline_options.add(mandatory_options).add(optional_options);
-
+        // NOLINTNEXTLINE(misc-include-cleaner)
         boost::program_options::store(boost::program_options::parse_command_line(
             static_cast<int>(argv.size()), argv.data(), cmdline_options), variables_map);
 

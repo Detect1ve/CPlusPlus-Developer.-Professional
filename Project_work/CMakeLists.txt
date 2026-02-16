@@ -48,39 +48,21 @@ target_link_libraries(queue_performance_test PRIVATE data_queue)
 target_compile_options(queue_performance_test PRIVATE
   ${COMPILE_WARNING_FLAGS} ${PROJECT_WORK_COMPILE_WARNING_FLAGS})
 
-if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
-  set(CLANG_TIDY_PROJECT_WORK_OPTS
-    "-altera-id-dependent-backward-branch,\
-     -altera-struct-pack-align,\
-     -altera-unroll-loops,\
-     -fuchsia-default-arguments-calls,\
-     -fuchsia-default-arguments-declarations,\
-     -fuchsia-overloaded-operator,\
-     -llvmlibc-callee-namespace,\
-     -llvmlibc-implementation-in-namespace,\
-     -llvmlibc-inline-function-decl,\
-     -llvmlibc-restrict-system-libc-headers,\
-     -misc-include-cleaner,\
-     -modernize-use-trailing-return-type;--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+set(CLANG_TIDY_PROJECT_WORK_OPTS
+    "-altera-struct-pack-align"
+    "-fuchsia-default-arguments-calls"
+    "-fuchsia-default-arguments-declarations"
+    "-fuchsia-overloaded-operator"
+    "-modernize-use-trailing-return-type")
 
-  if (MSVC)
-    set(CLANG_TIDY_PROJECT_WORK_OPTS "${CLANG_TIDY_PROJECT_WORK_OPTS};--extra-arg=/EHsc")
-  endif()
+set_smart_tidy(queue_test
+  COGNITIVE_IGNORE_MACROS
+  EXCLUDE
+    "${CLANG_TIDY_PROJECT_WORK_OPTS}"
+  HAS_EXCEPTIONS)
 
-  set_target_properties(queue_test PROPERTIES
-    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      ${CLANG_TIDY_PROJECT_WORK_OPTS};--config=\
-      {\
-        CheckOptions:\
-        [\
-          {\
-            key: readability-function-cognitive-complexity.IgnoreMacros, value: 'true'\
-          }\
-        ]\
-      }")
-
-  set_target_properties(queue_performance_test PROPERTIES
-    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      -llvm-prefer-static-over-anonymous-namespace,\
-      ${CLANG_TIDY_PROJECT_WORK_OPTS}")
-endif()
+set_smart_tidy(queue_performance_test
+  EXCLUDE
+    "-llvm-prefer-static-over-anonymous-namespace"
+    "${CLANG_TIDY_PROJECT_WORK_OPTS}"
+  HAS_EXCEPTIONS)

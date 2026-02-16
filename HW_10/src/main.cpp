@@ -1,6 +1,12 @@
 #include <charconv>
+#include <cstddef> // std::size_t
+#include <cstdint> // std::uint16_t
+#include <exception> // std::exception
 #include <iostream>
 #include <ranges>
+#include <span> // std::span
+#include <string_view> // std::string_view
+#include <system_error> // std::errc
 
 #include <server.hpp>
 // NOLINTNEXTLINE(bugprone-exception-escape)

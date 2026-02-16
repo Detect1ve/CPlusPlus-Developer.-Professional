@@ -1,4 +1,10 @@
+#include <cstddef> // std::size_t
+#include <memory> // std::unique_ptr
+#include <string> // std::string
+#include <utility> // std::move
+
 #include <model/document.hpp>
+#include <model/primitive.hpp> // editor::model::Primitive
 
 namespace editor::model
 {

@@ -1,3 +1,8 @@
+#include <cstdint> // std::uint16_t
+#include <iostream> // std::cout
+#include <string> // std::string
+#include <tuple> // std::tie
+
 #include <gtest/gtest.h>
 
 #include <capture.hpp>

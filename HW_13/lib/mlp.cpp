@@ -1,11 +1,18 @@
 #if __GNUC__ < 14\
-|| __cplusplus <=  202002L
+ || __cplusplus <=  202002L
 #include <charconv>
 #endif
+#include <cstddef> // std::size_t
 #include <fstream>
 #include <iostream>
+#include <memory> // std::make_unique
+#include <sstream> // std::istringstream
+#include <string> // std::string
+#include <string_view> // std::string_view
+#include <system_error> // std::errc
+#include <vector> // std::vector
 
-#include <Eigen/Dense>
+#include <Eigen/Core>
 
 #include <mlp.hpp>
 

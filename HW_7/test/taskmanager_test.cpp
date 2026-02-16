@@ -2,7 +2,16 @@
 #include <charconv>
 #endif
 #include <chrono>
+#include <cstddef> // std::size_t
+#include <cstdint> // std::int64_t
 #include <filesystem>
+#include <optional> // std::optional
+#include <sstream> // std::istringstream
+#include <string> // std::string
+#include <string_view> // std::string_view
+#include <system_error> // std::errc
+#include <thread> // std::this_thread::sleep_for
+#include <vector> // std::vector
 
 #include <gtest/gtest.h>
 

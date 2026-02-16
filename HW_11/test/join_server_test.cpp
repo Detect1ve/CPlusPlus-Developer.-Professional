@@ -1,4 +1,8 @@
+#include <cstdint> // std::uint16_t
+#include <exception> // std::exception
 #include <future>
+#include <memory> // std::unique_ptr
+#include <string> // std::string
 #include <thread>
 
 #include <gtest/gtest.h>
