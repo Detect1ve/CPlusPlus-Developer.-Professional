@@ -1,9 +1,12 @@
+#include <cstddef> // std::size_t
+#include <exception> // std::exception
 #include <iostream>
 #if defined(__clang__)\
  || defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)\
  || __GNUC__ < 14
 #include <span>
 #endif
+#include <string> // std::string
 
 #include <mlp.hpp>
 

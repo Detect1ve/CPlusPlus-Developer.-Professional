@@ -1,8 +1,20 @@
 #include <algorithm>
+#include <charconv> // std::from_chars
+#include <cstddef> // std::size_t
+#if !((defined(__clang_analyzer__) || defined(__clang__)) && (__clang_major__ <= 18))
+#include <expected> // std::expected
+#endif
+#include <functional> // std::identity
 #include <iostream>
+#include <ranges> // std::ranges::views::take
+#include <stdexcept> // std::out_of_range
 #if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
 #include <string>
 #endif
+#include <span> // std::span
+#include <string_view> // std::string_view
+#include <system_error> // std::error_code
+#include <vector> // std::vector
 
 #include <ip_filter.hpp>
 

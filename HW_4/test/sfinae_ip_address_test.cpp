@@ -1,3 +1,9 @@
+#include <cstdint> // int8_t
+#include <list> // std::list
+#include <string> // std::string
+#include <tuple> // std::make_tuple
+#include <vector> // std::vector
+
 #include <gtest/gtest.h>
 
 #include <capture.hpp>

@@ -1,3 +1,5 @@
+#include <string> // std::string
+
 #include <gtest/gtest.h>
 
 #include <mlp.hpp>

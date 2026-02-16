@@ -62,41 +62,38 @@ target_link_libraries(taskmanager_test PRIVATE capture GTest::gtest_main taskman
 target_compile_options(taskmanager_test PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_7_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)
-  target_compile_options(taskmanager_test
-    PRIVATE -Wno-unsafe-buffer-usage -Wno-global-constructors)
+  target_compile_options(taskmanager_test PRIVATE
+    -Wno-unsafe-buffer-usage -Wno-global-constructors)
 endif()
 
-if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
-  if (MSVC)
-    set(CLANG_TIDY_MSVC_OPTS ";--extra-arg=/EHsc")
-  endif()
+set(CLANG_TIDY_HW_7_OPTS
+  "-fuchsia-default-arguments-calls"
+  "-modernize-use-trailing-return-type")
 
-  set(CLANG_TIDY_HW_7_OPTS
-    "-fuchsia-default-arguments-calls,\
-     -llvmlibc-callee-namespace,\
-     -llvmlibc-implementation-in-namespace,\
-     -llvmlibc-inline-function-decl,\
-     -llvmlibc-restrict-system-libc-headers,\
-     -misc-include-cleaner,\
-     -modernize-use-trailing-return-type")
+set_smart_tidy(taskmanager
+  EXCLUDE
+    "-fuchsia-overloaded-operator"
+    "-llvm-prefer-static-over-anonymous-namespace"
+    "${CLANG_TIDY_HW_7_OPTS}"
+  EXTRA_INCLUDES
+    "${ATTRIBUTE_WRAPPER_INCLUDE_DIR}"
+  HAS_EXCEPTIONS)
 
-  set_target_properties(taskmanager PROPERTIES
-    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      -altera-unroll-loops,\
-      -fuchsia-overloaded-operator,\
-      -llvm-prefer-static-over-anonymous-namespace,\
-      ${CLANG_TIDY_HW_7_OPTS}${CLANG_TIDY_MSVC_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+set_smart_tidy(bulk
+  EXCLUDE
+    "${CLANG_TIDY_HW_7_OPTS}"
+  EXTRA_INCLUDES
+    "${ATTRIBUTE_WRAPPER_INCLUDE_DIR}"
+  HAS_EXCEPTIONS)
 
-  set_target_properties(bulk PROPERTIES
-    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      ${CLANG_TIDY_HW_7_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
-
-  set_target_properties(taskmanager_test PROPERTIES
-    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      -altera-unroll-loops,\
-      -llvm-prefer-static-over-anonymous-namespace,\
-      ${CLANG_TIDY_HW_7_OPTS};--header-filter=(${CMAKE_CURRENT_SOURCE_DIR}/include/.*|${CAPTURE_INCLUDE_DIR}/.*)")
-endif()
+set_smart_tidy(taskmanager_test
+  EXCLUDE
+    "-llvm-prefer-static-over-anonymous-namespace"
+    "${CLANG_TIDY_HW_7_OPTS}"
+  EXTRA_INCLUDES
+    "${ATTRIBUTE_WRAPPER_INCLUDE_DIR}"
+    "${CAPTURE_INCLUDE_DIR}"
+  HAS_EXCEPTIONS)
 
 enable_testing()
 add_test(NAME HW_7.taskmanager_test COMMAND $<TARGET_FILE:taskmanager_test>)

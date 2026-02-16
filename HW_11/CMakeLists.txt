@@ -69,40 +69,29 @@ if (NOT MSVC)
     PRIVATE -Wno-effc++ -Wno-strict-overflow -Wno-global-constructors)
 endif()
 
-if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
-  if (MSVC)
-    set(CLANG_TIDY_MSVC_OPTS ";--extra-arg=/EHsc")
-  endif()
+set(CLANG_TIDY_HW_11_OPTS
+    "-modernize-use-trailing-return-type")
 
-  set(CLANG_TIDY_HW_11_OPTS
-    "-llvmlibc-callee-namespace,\
-     -llvmlibc-implementation-in-namespace,\
-     -llvmlibc-restrict-system-libc-headers,\
-     -misc-include-cleaner,\
-     -modernize-use-trailing-return-type")
+set_smart_tidy(server_and_database
+  EXCLUDE
+    "-altera-struct-pack-align"
+    "-fuchsia-default-arguments-calls"
+    "-llvm-prefer-static-over-anonymous-namespace"
+    "-misc-no-recursion"
+    "${CLANG_TIDY_HW_11_OPTS}")
 
-  set_target_properties(server_and_database PROPERTIES
-    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      -altera-struct-pack-align,\
-      -altera-unroll-loops,\
-      -fuchsia-default-arguments-calls,\
-      -llvm-prefer-static-over-anonymous-namespace,\
-      -llvmlibc-inline-function-decl,\
-      -misc-no-recursion,\
-      ${CLANG_TIDY_HW_11_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+set_smart_tidy(join_server
+  EXCLUDE
+    "${CLANG_TIDY_HW_11_OPTS}"
+  HAS_EXCEPTIONS)
 
-  set_target_properties(join_server PROPERTIES
-    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      ${CLANG_TIDY_HW_11_OPTS}${CLANG_TIDY_MSVC_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
-
-  set_target_properties(join_server_test PROPERTIES
-    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      -altera-id-dependent-backward-branch,\
-      -altera-unroll-loops,\
-      -fuchsia-default-arguments-calls,\
-      -llvmlibc-inline-function-decl,\
-      ${CLANG_TIDY_HW_11_OPTS}${CLANG_TIDY_MSVC_OPTS};--header-filter=(${CMAKE_CURRENT_SOURCE_DIR}/include/.*|${SOCKET_WRAPPER_INCLUDE_DIR}/.*)")
-endif()
+set_smart_tidy(join_server_test
+  EXCLUDE
+    "-fuchsia-default-arguments-calls"
+    "${CLANG_TIDY_HW_11_OPTS}"
+  EXTRA_INCLUDES
+    "${SOCKET_WRAPPER_INCLUDE_DIR}"
+  HAS_EXCEPTIONS)
 
 enable_testing()
 add_test(NAME HW_11.join_server_test COMMAND $<TARGET_FILE:join_server_test>)

@@ -82,60 +82,41 @@ if (NOT MSVC)
   endif()
 endif()
 
-if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
-  if (MSVC)
-    set(CLANG_TIDY_MSVC_OPTS ";--extra-arg=/EHsc")
-  endif()
+set(CLANG_TIDY_HW_10_OPTS
+    "-llvm-header-guard"
+    "-llvm-namespace-comment"
+    "-modernize-use-trailing-return-type"
+    "-portability-avoid-pragma-once")
 
-  set(CLANG_TIDY_HW_10_OPTS
-    "-llvm-header-guard,\
-     -llvm-namespace-comment,\
-     -llvmlibc-callee-namespace,\
-     -llvmlibc-implementation-in-namespace,\
-     -llvmlibc-restrict-system-libc-headers,\
-     -misc-include-cleaner,\
-     -modernize-use-trailing-return-type,\
-     -portability-avoid-pragma-once")
+set_smart_tidy(server_async
+  EXCLUDE
+    "-altera-struct-pack-align"
+    "-fuchsia-default-arguments-calls"
+    "-llvm-prefer-static-over-anonymous-namespace"
+    "${CLANG_TIDY_HW_10_OPTS}")
 
-  set_target_properties(server_async PROPERTIES
-    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      -altera-id-dependent-backward-branch,\
-      -altera-struct-pack-align,\
-      -altera-unroll-loops,\
-      -fuchsia-default-arguments-calls,\
-      -llvm-prefer-static-over-anonymous-namespace,\
-      ${CLANG_TIDY_HW_10_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+set_smart_tidy(server
+  EXCLUDE
+    "-fuchsia-default-arguments-calls"
+    "-llvm-prefer-static-over-anonymous-namespace"
+    "-misc-no-recursion"
+    "${CLANG_TIDY_HW_10_OPTS}")
 
-  set_target_properties(server PROPERTIES
-    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      -altera-unroll-loops,\
-      -fuchsia-default-arguments-calls,\
-      -llvm-prefer-static-over-anonymous-namespace,\
-      -llvmlibc-inline-function-decl,\
-      -misc-no-recursion,\
-      ${CLANG_TIDY_HW_10_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+set_smart_tidy(bulk_server
+  EXCLUDE
+    "${CLANG_TIDY_HW_10_OPTS}"
+  HAS_EXCEPTIONS)
 
-  set_target_properties(bulk_server PROPERTIES
-    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      ${CLANG_TIDY_HW_10_OPTS}${CLANG_TIDY_MSVC_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
-
-  set_target_properties(bulk_server_test PROPERTIES
-    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      -altera-id-dependent-backward-branch,\
-      -altera-unroll-loops,\
-      -fuchsia-default-arguments-calls,\
-      -llvm-prefer-static-over-anonymous-namespace,\
-      -llvmlibc-inline-function-decl,\
-      ${CLANG_TIDY_HW_10_OPTS}${CLANG_TIDY_MSVC_OPTS};--config=\
-      {\
-        CheckOptions:\
-        [\
-          {\
-            key: readability-function-cognitive-complexity.IgnoreMacros, value: 'true'\
-          }\
-        ]\
-      };--header-filter=(${CMAKE_CURRENT_SOURCE_DIR}/include/.*|${CAPTURE_INCLUDE_DIR}/.*|${SOCKET_WRAPPER_INCLUDE_DIR}/.*)")
-endif()
+set_smart_tidy(bulk_server_test
+  COGNITIVE_IGNORE_MACROS
+  EXCLUDE
+    "-fuchsia-default-arguments-calls"
+    "-llvm-prefer-static-over-anonymous-namespace"
+    "${CLANG_TIDY_HW_10_OPTS}"
+  EXTRA_INCLUDES
+    "${CAPTURE_INCLUDE_DIR}"
+    "${SOCKET_WRAPPER_INCLUDE_DIR}"
+  HAS_EXCEPTIONS)
 
 enable_testing()
 add_test(NAME HW_10.bulk_server_test COMMAND $<TARGET_FILE:bulk_server_test>)

@@ -1,3 +1,8 @@
+#include <iterator> // std::back_inserter
+#include <span> // std::span
+#include <string> // std::string
+#include <string_view> // std::string_view
+
 #include <gtest/gtest.h>
 #include <boost/algorithm/hex.hpp>
 #include <boost/uuid/detail/md5.hpp>

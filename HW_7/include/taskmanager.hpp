@@ -3,7 +3,6 @@
 
 #include <atomic>
 #include <chrono>
-#include <iostream>
 #if __GNUC__ < 14
 #include <vector>
 #endif

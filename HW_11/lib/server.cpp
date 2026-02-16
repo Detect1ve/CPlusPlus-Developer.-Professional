@@ -1,7 +1,25 @@
 #if !defined(_WIN32) && !defined(_MSC_VER)
 #include <csignal>
 #endif
+#include <cstddef> // std::size_t
+#include <cstdint> // std::uint16_t
+#include <future> // std::promise
 #include <iostream>
+#include <istream> // std::ws
+#include <memory> // std::unique_ptr
+#include <sstream> // std::istringstream
+#include <string> // std::string
+#include <string_view> // std::string_view
+#include <utility> // std::move
+#include <vector> // std::vector
+
+#include <boost/asio/buffer.hpp>
+#include <boost/asio/error.hpp>
+#include <boost/asio/ip/tcp.hpp> // boost::asio::ip::tcp
+#include <boost/asio/read_until.hpp>
+#include <boost/asio/streambuf.hpp>
+#include <boost/asio/write.hpp>
+#include <boost/system/detail/error_code.hpp>
 
 #include <server.hpp>
 #include <server_p.hpp>
@@ -249,6 +267,7 @@ void Server::setup_signal_handling()
 {
     get_server_instance() = this;
 #if !defined(_WIN32) && !defined(_MSC_VER)
+// NOLINTBEGIN(misc-include-cleaner)
     struct sigaction sigaction_info {};
 
     sigaction_info.sa_handler = signal_handler;
@@ -265,6 +284,7 @@ void Server::setup_signal_handling()
     }
 
     if (sigaction(SIGQUIT, &sigaction_info, nullptr) == -1)
+// NOLINTEND(misc-include-cleaner)
     {
         std::cerr << "Failed to register SIGQUIT handler, but continue anyway\n";
     }

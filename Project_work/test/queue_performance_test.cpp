@@ -7,8 +7,12 @@
 #include <string>
 #endif
 #include <cmath>
+#include <cstddef> // std::size_t
+#include <cstdlib> // EXIT_FAILURE
+#include <exception> // std::exception
 #include <iomanip>
 #include <iostream>
+#include <vector> // std::vector
 
 #include <queue.hpp>
 

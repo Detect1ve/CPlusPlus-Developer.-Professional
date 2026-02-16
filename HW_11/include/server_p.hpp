@@ -1,7 +1,8 @@
 #ifndef SERVER_P_HPP
 #define SERVER_P_HPP
 
-#include <boost/asio.hpp>
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/ip/tcp.hpp>
 
 #include <database.hpp>
 #include <server.hpp>

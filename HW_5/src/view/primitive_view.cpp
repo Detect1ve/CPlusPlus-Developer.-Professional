@@ -1,5 +1,8 @@
 #include <iostream>
+#include <memory> // std::unique_ptr
+#include <string> // std::string
 
+#include <model/primitive.hpp> // editor::model::Primitive
 #include <model/primitives/line.hpp>
 #include <view/primitive_view.hpp>
 

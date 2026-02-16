@@ -1,6 +1,12 @@
+#include <atomic> // std::atomic
+#include <chrono> // std::chrono::milliseconds
+#include <cstddef> // std::size_t
+#include <mutex> // std::mutex
+#include <string> // std::string
 #if __cplusplus <= 201703L
 #include <thread>
 #endif
+#include <vector> // std::vector
 
 #include <gtest/gtest.h>
 

@@ -5,8 +5,13 @@
  || __GNUC__ < 14
 #include <charconv>
 #endif
+#include <mutex> // std::scoped_lock
 #include <set>
 #include <sstream>
+#include <string> // std::string
+#include <string_view> // std::string_view
+#include <system_error> // std::errc
+#include <vector> // std::vector
 
 #include <database.hpp>
 

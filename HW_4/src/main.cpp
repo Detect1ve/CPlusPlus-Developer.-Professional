@@ -9,7 +9,14 @@
  * specialized version of the print_ip function is used.
  */
 
- #include <sfinae_ip_address.hpp>
+#include <cstdint> // int8_t
+#include <cstdlib> // EXIT_FAILURE
+#include <exception> // std::exception
+#include <list> // std::list
+#include <tuple> // std::make_tuple
+#include <vector> // std::vector
+
+#include <sfinae_ip_address.hpp>
 
 /**
  * @brief The main function of the program

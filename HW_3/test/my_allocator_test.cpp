@@ -1,3 +1,6 @@
+#include <new> // std::bad_alloc
+#include <vector> // std::vector
+
 #include <gtest/gtest.h>
 
 #include <my_allocator.hpp>

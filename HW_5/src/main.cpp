@@ -1,6 +1,8 @@
 #include <iostream>
+#include <memory> // std::make_unique
 
 #include <controller/document_controller.hpp>
+#include <model/primitive.hpp> // Point
 #include <view/document_view.hpp>
 
 int main()

@@ -97,57 +97,58 @@ if (NOT MSVC)
     )
 endif()
 
-if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
-    set_target_properties(helloworld_cli PROPERTIES
-        CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-            -hicpp-named-parameter,\
-            -llvmlibc-callee-namespace,\
-            -llvmlibc-implementation-in-namespace,\
-            -llvmlibc-restrict-system-libc-headers,\
-            -llvm-header-guard,\
-            -modernize-use-trailing-return-type,\
-            -performance-avoid-endl,\
-            -readability-named-parameter"
-    )
+set(CLANG_TIDY_HW_1_OPTS
+    "-llvm-header-guard"
+    "-modernize-use-trailing-return-type"
+    "-portability-avoid-pragma-once"
+)
 
-    set_target_properties(helloworld PROPERTIES
-        CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-            -cppcoreguidelines-macro-to-enum,\
-            -cppcoreguidelines-macro-usage,\
-            -llvmlibc-implementation-in-namespace,\
-            -llvm-header-guard,\
-            -modernize-macro-to-enum,\
-            -modernize-use-trailing-return-type"
-    )
+set_smart_tidy(helloworld_cli
+    EXCLUDE
+        "-hicpp-named-parameter"
+        "-performance-avoid-endl"
+        "-readability-named-parameter"
+        "${CLANG_TIDY_HW_1_OPTS}"
+    MAIN_INCLUDE_DIR
+        "${CMAKE_CURRENT_SOURCE_DIR}"
+)
 
-    set_target_properties(test_version PROPERTIES
-        CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-            -altera-unroll-loops,\
-            -cert-err58-cpp,\
-            -cppcoreguidelines-avoid-do-while,\
-            -cppcoreguidelines-macro-usage,\
-            -cppcoreguidelines-pro-type-vararg,\
-            -fuchsia-default-arguments-calls,\
-            -fuchsia-statically-constructed-objects,\
-            -hicpp-vararg,\
-            -llvmlibc-callee-namespace,\
-            -llvmlibc-implementation-in-namespace,\
-            -llvmlibc-restrict-system-libc-headers,\
-            -misc-include-cleaner,\
-            -readability-identifier-length"
-    )
+set_smart_tidy(helloworld
+    EXCLUDE
+        "-cppcoreguidelines-macro-to-enum"
+        "-cppcoreguidelines-macro-usage"
+        "-modernize-macro-to-enum"
+        "${CLANG_TIDY_HW_1_OPTS}"
+    MAIN_INCLUDE_DIR
+        "${CMAKE_CURRENT_SOURCE_DIR}"
+)
 
-    set_target_properties(g_test_version PROPERTIES
-        CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-            -cert-err58-cpp,\
-            -cppcoreguidelines-owning-memory,\
-            -fuchsia-default-arguments-calls,\
-            -fuchsia-statically-constructed-objects,\
-            -llvmlibc-callee-namespace,\
-            -llvmlibc-restrict-system-libc-headers,\
-            -modernize-use-trailing-return-type"
-    )
-endif()
+set_smart_tidy(test_version
+    EXCLUDE
+        "-cert-err58-cpp"
+        "-cppcoreguidelines-avoid-do-while"
+        "-cppcoreguidelines-macro-usage"
+        "-cppcoreguidelines-pro-type-vararg"
+        "-fuchsia-default-arguments-calls"
+        "-fuchsia-statically-constructed-objects"
+        "-hicpp-vararg"
+        "-misc-include-cleaner"
+        "-readability-identifier-length"
+        "${CLANG_TIDY_HW_1_OPTS}"
+    MAIN_INCLUDE_DIR
+        "${CMAKE_CURRENT_SOURCE_DIR}"
+)
+
+set_smart_tidy(g_test_version
+    EXCLUDE
+        "-cert-err58-cpp"
+        "-cppcoreguidelines-owning-memory"
+        "-fuchsia-default-arguments-calls"
+        "-fuchsia-statically-constructed-objects"
+        "${CLANG_TIDY_HW_1_OPTS}"
+    MAIN_INCLUDE_DIR
+        "${CMAKE_CURRENT_SOURCE_DIR}"
+)
 
 install(TARGETS helloworld_cli RUNTIME DESTINATION bin
                                        COMPONENT "${PROJECT_NAME}"

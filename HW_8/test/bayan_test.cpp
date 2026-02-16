@@ -1,10 +1,13 @@
 #if defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
 #include <array>
 #endif
+#include <fstream> // std::ofstream
+#include <string> // std::string
 
 #include <gtest/gtest.h>
 #include <absl/strings/match.h>
-#include <boost/filesystem.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
 
 #include <bayan.hpp>
 #include <capture.hpp>

@@ -42,15 +42,94 @@ if (ENABLE_CLANG_TIDY)
     message(STATUS "clang-tidy version: ${CLANG_TIDY_VERSION}")
     string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" CLANG_TIDY_VERSION_NUMBER
       "${CLANG_TIDY_VERSION}")
+    set(CLANG_TIDY_BASE_ARGS "")
     if (CLANG_TIDY_VERSION_NUMBER VERSION_GREATER_EQUAL 14)
-      set(CLANG_TIDY_OPTS "${CLANG_TIDY_BIN};--use-color;--warnings-as-errors=*;-checks=*,-clang-diagnostic-unused-command-line-argument")
-    else()
-      set(CLANG_TIDY_OPTS "${CLANG_TIDY_BIN};--warnings-as-errors=*;-checks=*,-clang-diagnostic-unused-command-line-argument")
+      list(APPEND CLANG_TIDY_BASE_ARGS "--use-color")
     endif()
 
+    list(APPEND CLANG_TIDY_BASE_ARGS "--warnings-as-errors=*")
+
+    set(CLANG_TIDY_CHECKS_LIST
+      "*"
+      "-altera-id-dependent-backward-branch"
+      "-altera-unroll-loops"
+      "-clang-diagnostic-c++98-compat*"
+      "-llvmlibc-*")
   else()
     message(STATUS "clang-tidy not found, static analysis will be skipped.")
   endif()
 else()
   message(STATUS "clang-tidy disabled by user.")
 endif()
+
+function(set_smart_tidy TARGET_NAME)
+  if (NOT ENABLE_CLANG_TIDY OR NOT CLANG_TIDY_BIN)
+    return()
+  endif()
+
+  cmake_parse_arguments(TIDY
+    "COGNITIVE_IGNORE_MACROS;HAS_EXCEPTIONS"
+    "BUILD_PATH;MAIN_INCLUDE_DIR"
+    "EXCLUDE;EXTRA_INCLUDES"
+    ${ARGN})
+
+  set(TIDY_COMMAND "${CLANG_TIDY_BIN}")
+  list(APPEND TIDY_COMMAND ${CLANG_TIDY_BASE_ARGS})
+
+  set(CURRENT_CHECKS "${CLANG_TIDY_CHECKS_LIST}")
+  if (TIDY_EXCLUDE)
+    list(APPEND CURRENT_CHECKS ${TIDY_EXCLUDE})
+  endif()
+
+  list(JOIN CURRENT_CHECKS "," CHECKS_STR)
+  list(APPEND TIDY_COMMAND "-checks=${CHECKS_STR}")
+
+  if (TIDY_HAS_EXCEPTIONS AND MSVC)
+    list(APPEND TIDY_COMMAND "--extra-arg=/EHsc")
+  endif()
+
+  if (MSVC)
+    list(APPEND TIDY_COMMAND "--extra-arg=-Qunused-arguments")
+  endif()
+
+  if (NOT TIDY_MAIN_INCLUDE_DIR)
+    if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/include")
+      set(BASE_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
+    endif()
+  else()
+    set(BASE_INCLUDE_DIR "${TIDY_MAIN_INCLUDE_DIR}")
+  endif()
+
+  set(FILTER_REGEX "")
+  if (BASE_INCLUDE_DIR OR TIDY_EXTRA_INCLUDES)
+    set(FILTER_REGEX "(")
+
+    if (BASE_INCLUDE_DIR)
+      string(APPEND FILTER_REGEX "${BASE_INCLUDE_DIR}/.*")
+    endif()
+
+    foreach(DIR IN LISTS TIDY_EXTRA_INCLUDES)
+      if (NOT FILTER_REGEX STREQUAL "(" AND NOT FILTER_REGEX MATCHES "\\|$")
+        string(APPEND FILTER_REGEX "|")
+      endif()
+      string(APPEND FILTER_REGEX "${DIR}/.*")
+    endforeach()
+
+    string(APPEND FILTER_REGEX ")")
+  endif()
+
+  if (NOT FILTER_REGEX STREQUAL "()")
+    list(APPEND TIDY_COMMAND "--header-filter=${FILTER_REGEX}")
+  endif()
+
+  if (TIDY_COGNITIVE_IGNORE_MACROS)
+    list(APPEND TIDY_COMMAND "--config={CheckOptions: [{key: readability-function-cognitive-complexity.IgnoreMacros, value: 'true'}]}")
+  endif()
+
+  if (TIDY_BUILD_PATH)
+    list(APPEND TIDY_COMMAND "-p" "${TIDY_BUILD_PATH}")
+  endif()
+
+  set_target_properties(${TARGET_NAME} PROPERTIES
+    CXX_CLANG_TIDY "${TIDY_COMMAND}")
+endfunction()

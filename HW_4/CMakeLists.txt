@@ -63,37 +63,33 @@ if (NOT MSVC)
   target_compile_options(print_ip_test PRIVATE -Wno-global-constructors)
 endif()
 
-if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
-  set(CLANG_TIDY_HW_4_OPTS
-    "-altera-unroll-loops,\
-     -cppcoreguidelines-avoid-magic-numbers,\
-     -fuchsia-default-arguments-calls,\
-     -google-runtime-int,\
-     -llvmlibc-callee-namespace,\
-     -llvmlibc-restrict-system-libc-headers,\
-     -misc-include-cleaner,\
-     -modernize-use-trailing-return-type,\
-     -readability-magic-numbers;-p;${CMAKE_BINARY_DIR}")
+set(CLANG_TIDY_HW_4_OPTS
+    "-cppcoreguidelines-avoid-magic-numbers"
+    "-fuchsia-default-arguments-calls"
+    "-google-runtime-int"
+    "-modernize-use-trailing-return-type"
+    "-readability-magic-numbers")
 
-  set_target_properties(print_ip PROPERTIES
-    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      -llvmlibc-implementation-in-namespace,\
-      ${CLANG_TIDY_HW_4_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+set_smart_tidy(print_ip
+  BUILD_PATH "${CMAKE_BINARY_DIR}"
+  EXCLUDE
+    "${CLANG_TIDY_HW_4_OPTS}")
 
-  set_target_properties(print_ip_test PROPERTIES
-    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      -llvmlibc-inline-function-decl,\
-      ${CLANG_TIDY_HW_4_OPTS};--header-filter=(${CMAKE_CURRENT_SOURCE_DIR}/include/.*|${CAPTURE_INCLUDE_DIR}/.*)")
+set_smart_tidy(print_ip_test
+  BUILD_PATH "${CMAKE_BINARY_DIR}"
+  EXCLUDE
+    "${CLANG_TIDY_HW_4_OPTS}"
+  EXTRA_INCLUDES
+    "${CAPTURE_INCLUDE_DIR}")
 
-  if (PATCH_COMPILE_COMMANDS)
-    add_custom_target(patch_compile_commands ALL
-      COMMAND sed -i 's/-fconcepts//g' ${CMAKE_BINARY_DIR}/compile_commands.json
-      DEPENDS ${CMAKE_BINARY_DIR}/compile_commands.json
-      COMMENT "Patching compile_commands.json for clang-tidy")
+if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN AND PATCH_COMPILE_COMMANDS)
+  add_custom_target(patch_compile_commands ALL
+    COMMAND sed -i 's/-fconcepts//g' ${CMAKE_BINARY_DIR}/compile_commands.json
+    DEPENDS ${CMAKE_BINARY_DIR}/compile_commands.json
+    COMMENT "Patching compile_commands.json for clang-tidy")
 
-    add_dependencies(print_ip patch_compile_commands)
-    add_dependencies(print_ip_test patch_compile_commands)
-  endif()
+  add_dependencies(print_ip patch_compile_commands)
+  add_dependencies(print_ip_test patch_compile_commands)
 endif()
 
 enable_testing()

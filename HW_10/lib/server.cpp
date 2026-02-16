@@ -1,7 +1,14 @@
 #if !defined(_WIN32) && !defined(_MSC_VER)
 #include <csignal>
 #endif
+#include <cstddef> // std::size_t
+#include <cstdint> // std::uint16_t
+#include <memory> // std::make_unique
 
+#include <boost/asio/io_context.hpp> // boost::asio::io_context
+#include <boost/asio/ip/tcp.hpp> // boost::asio::ip::tcp
+
+#include <server.hpp>
 #include <server_p.hpp>
 
 namespace
@@ -52,6 +59,7 @@ namespace async
     {
         get_server_instance() = this;
 #if !defined(_WIN32) && !defined(_MSC_VER)
+// NOLINTBEGIN(misc-include-cleaner)
         struct sigaction sigaction_info {};
 
         sigaction_info.sa_handler = signal_handler;
@@ -68,6 +76,7 @@ namespace async
         }
 
         if (sigaction(SIGQUIT, &sigaction_info, nullptr) == -1)
+// NOLINTEND(misc-include-cleaner)
         {
             std::cerr << "Failed to register SIGQUIT handler, but continue anyway\n";
         }

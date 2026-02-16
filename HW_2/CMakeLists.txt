@@ -64,38 +64,35 @@ if (NOT MSVC)
   target_compile_options(ip_filter_test PRIVATE -Wno-global-constructors)
 endif()
 
-if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN)
-  if (MSVC)
-    set(CLANG_TIDY_MSVC_OPTS ";--extra-arg=/EHsc")
-  endif()
+set(CLANG_TIDY_HW_2_OPTS
+  "-modernize-use-trailing-return-type")
 
-  set(CLANG_TIDY_HW_2_OPTS
-    "-altera-id-dependent-backward-branch,\
-     -altera-unroll-loops,\
-     -llvmlibc-callee-namespace,\
-     -llvmlibc-implementation-in-namespace,\
-     -llvmlibc-inline-function-decl,\
-     -llvmlibc-restrict-system-libc-headers,\
-     -misc-include-cleaner,\
-     -modernize-use-trailing-return-type")
+set_smart_tidy(ip_filter_lib
+  EXCLUDE
+    "-fuchsia-default-arguments-calls"
+    "-llvm-prefer-static-over-anonymous-namespace"
+    "${CLANG_TIDY_HW_2_OPTS}"
+  EXTRA_INCLUDES
+    "${ATTRIBUTE_WRAPPER_INCLUDE_DIR}"
+  HAS_EXCEPTIONS)
 
-  set_target_properties(ip_filter_lib PROPERTIES
-    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      -fuchsia-default-arguments-calls,\
-      -llvm-prefer-static-over-anonymous-namespace,\
-      ${CLANG_TIDY_HW_2_OPTS}${CLANG_TIDY_MSVC_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
+set_smart_tidy(ip_filter
+  EXCLUDE
+    "-google-readability-todo"
+    "${CLANG_TIDY_HW_2_OPTS}"
+  EXTRA_INCLUDES
+    "${ATTRIBUTE_WRAPPER_INCLUDE_DIR}"
+  HAS_EXCEPTIONS)
 
-  set_target_properties(ip_filter PROPERTIES
-    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      -google-readability-todo,\
-      ${CLANG_TIDY_HW_2_OPTS}${CLANG_TIDY_MSVC_OPTS};--header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/.*")
-
-  set_target_properties(ip_filter_test PROPERTIES
-    CXX_CLANG_TIDY "${CLANG_TIDY_OPTS},\
-      -fuchsia-default-arguments-calls,\
-      -llvm-prefer-static-over-anonymous-namespace,\
-      ${CLANG_TIDY_HW_2_OPTS};--header-filter=(${CMAKE_CURRENT_SOURCE_DIR}/include/.*|${CAPTURE_INCLUDE_DIR}/.*)")
-endif()
+set_smart_tidy(ip_filter_test
+  EXCLUDE
+    "-fuchsia-default-arguments-calls"
+    "-llvm-prefer-static-over-anonymous-namespace"
+    "${CLANG_TIDY_HW_2_OPTS}"
+  EXTRA_INCLUDES
+    "${ATTRIBUTE_WRAPPER_INCLUDE_DIR}"
+    "${CAPTURE_INCLUDE_DIR}"
+  HAS_EXCEPTIONS)
 
 enable_testing()
 add_test(
