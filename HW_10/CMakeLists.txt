@@ -24,12 +24,13 @@ if (PROJECT_IS_TOP_LEVEL)
 endif()
 
 if (PROJECT_IS_TOP_LEVEL)
-  include(../common/capture.cmake)
-  include(../common/socket_wrapper.cmake)
   include(../cmake/clang-tidy.cmake)
   include(../cmake/fetch_boost.cmake)
   include(../cmake/fetch_googletest.cmake)
   include(../cmake/warning_flags.cmake)
+  include(../common/capture.cmake)
+  include(../common/custom_print.cmake)
+  include(../common/socket_wrapper.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
@@ -39,6 +40,7 @@ endif()
 
 add_library(server_async STATIC lib/async.cpp)
 target_include_directories(server_async PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_link_libraries(server_async PRIVATE custom_print)
 target_compile_options(server_async PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_10_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)
@@ -47,7 +49,7 @@ endif()
 
 add_library(server STATIC lib/server.cpp)
 target_include_directories(server PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(server PRIVATE Boost::asio server_async)
+target_link_libraries(server PRIVATE Boost::asio server_async custom_print)
 target_compile_options(server PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_10_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)
@@ -55,7 +57,7 @@ if (NOT MSVC)
 endif()
 
 add_executable(bulk_server src/main.cpp)
-target_link_libraries(bulk_server PRIVATE server)
+target_link_libraries(bulk_server PRIVATE custom_print server)
 target_compile_options(bulk_server PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_10_COMPILE_WARNING_FLAGS})
 if (MSVC)
@@ -93,18 +95,24 @@ set_smart_tidy(server_async
     "-altera-struct-pack-align"
     "-fuchsia-default-arguments-calls"
     "-llvm-prefer-static-over-anonymous-namespace"
-    "${CLANG_TIDY_HW_10_OPTS}")
+    "${CLANG_TIDY_HW_10_OPTS}"
+  EXTRA_INCLUDES
+    "${CUSTOM_PRINT_INCLUDE_DIR}")
 
 set_smart_tidy(server
   EXCLUDE
     "-fuchsia-default-arguments-calls"
     "-llvm-prefer-static-over-anonymous-namespace"
     "-misc-no-recursion"
-    "${CLANG_TIDY_HW_10_OPTS}")
+    "${CLANG_TIDY_HW_10_OPTS}"
+  EXTRA_INCLUDES
+    "${CUSTOM_PRINT_INCLUDE_DIR}")
 
 set_smart_tidy(bulk_server
   EXCLUDE
     "${CLANG_TIDY_HW_10_OPTS}"
+  EXTRA_INCLUDES
+    "${CUSTOM_PRINT_INCLUDE_DIR}"
   HAS_EXCEPTIONS)
 
 set_smart_tidy(bulk_server_test

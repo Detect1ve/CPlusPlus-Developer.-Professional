@@ -1,10 +1,10 @@
+#include <cstdio> // stderr
 #include <cstdlib> // EXIT_FAILURE
 #include <exception> // std::exception
-#include <iostream>
 
+#include <custom_print.hpp>
 #include <ip_filter.hpp>
 
-// NOLINTNEXTLINE(bugprone-exception-escape)
 int main(
     int          /*argc*/,
     char const * /*argv*/[])
@@ -14,8 +14,7 @@ int main(
         auto parse_result = stdin_to_vector();
         if (!parse_result)
         {
-            std::cerr << "Cannot parse stdin: " << parse_result.error().message()
-                << '\n';
+            cp::println(stderr, "Cannot parse stdin: {}", parse_result.error().message());
 
             return -1;
         }
@@ -38,7 +37,7 @@ int main(
         auto ip_result = filter(parse_result.value(), 1);
         if (!ip_result)
         {
-            std::cerr << std::format("Filter error: {}\n", ip_result.error().message());
+            cp::println(stderr, "Filter error: {}", ip_result.error().message());
 
             return -2;
         }
@@ -55,7 +54,7 @@ int main(
         ip_result = filter(parse_result.value(), 46, 70);
         if (!ip_result)
         {
-            std::cerr << std::format("Filter error: {}\n", ip_result.error().message());
+            cp::println(stderr, "Filter error: {}", ip_result.error().message());
 
             return -3;
         }
@@ -71,7 +70,7 @@ int main(
         ip_result = filter_any(parse_result.value(), 46);
         if (!ip_result)
         {
-            std::cerr << "Filter_any error\n";
+            cp::println(stderr, "filter_any error");
 
             return -4;
         }
@@ -118,13 +117,13 @@ int main(
     }
     catch (const std::exception& e)
     {
-        std::cerr << "Unhandled exception: " << e.what() << '\n';
+        cp::safe_error(e.what());
 
         return EXIT_FAILURE;
     }
     catch (...)
     {
-        std::cerr << "Unknown exception occurred\n";
+        cp::safe_error(nullptr);
 
         return EXIT_FAILURE;
     }

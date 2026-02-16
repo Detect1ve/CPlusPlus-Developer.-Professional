@@ -3,8 +3,8 @@
 #endif
 #include <cstddef> // std::size_t
 #include <cstdint> // std::uint16_t
+#include <cstdio> // stderr
 #include <future> // std::promise
-#include <iostream>
 #include <istream> // std::ws
 #include <memory> // std::unique_ptr
 #include <sstream> // std::istringstream
@@ -21,6 +21,7 @@
 #include <boost/asio/write.hpp>
 #include <boost/system/detail/error_code.hpp>
 
+#include <custom_print.hpp>
 #include <server.hpp>
 #include <server_p.hpp>
 
@@ -127,7 +128,7 @@ void SessionImpl::do_read()
             }
             else if (error_code != boost::asio::error::eof)
             {
-                std::cerr << "Error: " << error_code.message() << '\n';
+                cp::println(stderr, "Error: {}", error_code.message());
             }
         });
 }
@@ -141,7 +142,7 @@ void SessionImpl::do_write(std::string_view message)
         {
             if (error_code)
             {
-                std::cerr << "Error: " << error_code.message() << '\n';
+                cp::println(stderr, "Error: {}", error_code.message());
             }
         });
 }
@@ -275,23 +276,23 @@ void Server::setup_signal_handling()
     sigaction_info.sa_flags = 0;
     if (sigaction(SIGHUP, &sigaction_info, nullptr) == -1)
     {
-        std::cerr << "Failed to register SIGHUP handler, but continue anyway\n";
+        cp::println(stderr, "Failed to register SIGHUP handler, but continue anyway");
     }
 
     if (sigaction(SIGINT, &sigaction_info, nullptr) == -1)
     {
-        std::cerr << "Failed to register SIGINT handler, but continue anyway\n";
+        cp::println(stderr, "Failed to register SIGINT handler, but continue anyway");
     }
 
     if (sigaction(SIGQUIT, &sigaction_info, nullptr) == -1)
 // NOLINTEND(misc-include-cleaner)
     {
-        std::cerr << "Failed to register SIGQUIT handler, but continue anyway\n";
+        cp::println(stderr, "Failed to register SIGQUIT handler, but continue anyway");
     }
 
     if (sigaction(SIGTERM, &sigaction_info, nullptr) == -1)
     {
-        std::cerr << "Failed to register SIGTERM handler, but continue anyway\n";
+        cp::println(stderr, "Failed to register SIGTERM handler, but continue anyway");
     }
 #endif
 }

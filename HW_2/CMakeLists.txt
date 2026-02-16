@@ -30,6 +30,7 @@ if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/warning_flags.cmake)
   include(../common/attribute_wrapper.cmake)
   include(../common/capture.cmake)
+  include(../common/custom_print.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
@@ -39,7 +40,9 @@ endif()
 
 add_library(ip_filter_lib STATIC lib/ip_filter.cpp)
 target_include_directories(ip_filter_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(ip_filter_lib PUBLIC attribute_wrapper)
+target_link_libraries(ip_filter_lib
+  PRIVATE custom_print
+  PUBLIC attribute_wrapper)
 target_compile_options(ip_filter_lib PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_2_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)
@@ -48,7 +51,7 @@ if (NOT MSVC)
 endif()
 
 add_executable(ip_filter src/main.cpp)
-target_link_libraries(ip_filter PRIVATE ip_filter_lib)
+target_link_libraries(ip_filter PRIVATE custom_print ip_filter_lib)
 if (NOT MSVC)
   target_link_libraries(ip_filter PRIVATE -static)
 endif()
@@ -74,6 +77,7 @@ set_smart_tidy(ip_filter_lib
     "${CLANG_TIDY_HW_2_OPTS}"
   EXTRA_INCLUDES
     "${ATTRIBUTE_WRAPPER_INCLUDE_DIR}"
+    "${CUSTOM_PRINT_INCLUDE_DIR}"
   HAS_EXCEPTIONS)
 
 set_smart_tidy(ip_filter
@@ -82,6 +86,7 @@ set_smart_tidy(ip_filter
     "${CLANG_TIDY_HW_2_OPTS}"
   EXTRA_INCLUDES
     "${ATTRIBUTE_WRAPPER_INCLUDE_DIR}"
+    "${CUSTOM_PRINT_INCLUDE_DIR}"
   HAS_EXCEPTIONS)
 
 set_smart_tidy(ip_filter_test

@@ -24,10 +24,11 @@ if (PROJECT_IS_TOP_LEVEL)
 endif()
 
 if (PROJECT_IS_TOP_LEVEL)
-  include(../common/capture.cmake)
   include(../cmake/clang-tidy.cmake)
   include(../cmake/fetch_googletest.cmake)
   include(../cmake/warning_flags.cmake)
+  include(../common/capture.cmake)
+  include(../common/custom_print.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
@@ -37,6 +38,7 @@ endif()
 
 add_executable(matrix src/main.cpp)
 target_include_directories(matrix PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_link_libraries(matrix PRIVATE custom_print)
 if (NOT MSVC)
   target_link_libraries(matrix PRIVATE -static)
 endif()
@@ -60,6 +62,8 @@ set(CLANG_TIDY_HW_6_OPTS
 set_smart_tidy(matrix
   EXCLUDE
     "${CLANG_TIDY_HW_6_OPTS}"
+  EXTRA_INCLUDES
+    "${CUSTOM_PRINT_INCLUDE_DIR}"
   HAS_EXCEPTIONS)
 
 set_smart_tidy(matrix_test

@@ -5,7 +5,6 @@
 #include <condition_variable>
 #include <cstddef> // std::size_t
 #include <fstream>
-#include <iostream>
 #include <map>
 #include <memory> // std::unique_ptr
 #include <mutex>
@@ -16,6 +15,8 @@
 #include <thread> // std::thread
 #include <utility> // std::move
 #include <vector> // std::vector
+
+#include <custom_print.hpp>
 
 #include "async.h"
 
@@ -217,6 +218,7 @@ void process_command(ConnectionContext* context, const std::string& command) {
 
 void log_worker() {
     while (true) {
+        constexpr std::string_view delimiter = ", ";
         OutputTask task;
         {
             std::unique_lock<std::mutex> lock(taskmanager::queue_mutex());
@@ -235,17 +237,16 @@ void log_worker() {
         }
 
         if (!task.get_commands().empty()) {
-            std::cout << TASK_MANAGER_NAME() << ": ";
+            cp::print("{}: ", TASK_MANAGER_NAME());
 
-            const std::string_view delimiter = ", ";
-            for (std::size_t i = 0; i < task.get_commands().size(); ++i) {
-                std::cout << task.get_commands()[i];
+            for (std::size_t i = 0; i < task.get_commands().size(); i++) {
+                cp::print("{}", task.get_commands()[i]);
                 if (i < task.get_commands().size() - 1) {
-                    std::cout << delimiter;
+                    cp::print("{}", delimiter);
                 }
             }
 
-            std::cout << '\n';
+            cp::println();
         }
     }
 }

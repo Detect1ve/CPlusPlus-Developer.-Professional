@@ -10,7 +10,7 @@ if (PROJECT_IS_TOP_LEVEL)
     endif()
   endif()
 
-  set(MINIMUM_CXX_STANDARD 17)
+  set(MINIMUM_CXX_STANDARD 20)
   include(../cmake/cxx_standard.cmake)
   set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 endif()
@@ -19,11 +19,12 @@ if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
   include(../cmake/fetch_googletest.cmake)
   include(../cmake/warning_flags.cmake)
+  include(../common/custom_print.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  set(PROJECT_WORK_COMPILE_WARNING_FLAGS -Wc++11-compat-pedantic)
+  set(PROJECT_WORK_COMPILE_WARNING_FLAGS -Wc++20-compat-pedantic)
 endif()
 
 add_library(data_queue INTERFACE)
@@ -44,7 +45,7 @@ enable_testing()
 add_test(NAME Project_work.queue_test COMMAND $<TARGET_FILE:queue_test>)
 
 add_executable(queue_performance_test test/queue_performance_test.cpp)
-target_link_libraries(queue_performance_test PRIVATE data_queue)
+target_link_libraries(queue_performance_test PRIVATE custom_print data_queue)
 target_compile_options(queue_performance_test PRIVATE
   ${COMPILE_WARNING_FLAGS} ${PROJECT_WORK_COMPILE_WARNING_FLAGS})
 
@@ -65,4 +66,6 @@ set_smart_tidy(queue_performance_test
   EXCLUDE
     "-llvm-prefer-static-over-anonymous-namespace"
     "${CLANG_TIDY_PROJECT_WORK_OPTS}"
+  EXTRA_INCLUDES
+    "${CUSTOM_PRINT_INCLUDE_DIR}"
   HAS_EXCEPTIONS)

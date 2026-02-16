@@ -1,15 +1,17 @@
 #include <charconv>
 #include <cstddef> // std::size_t
 #include <cstdint> // std::uint16_t
+#include <cstdio> // stderr
+#include <cstdlib> // EXIT_FAILURE
 #include <exception> // std::exception
-#include <iostream>
 #include <ranges>
 #include <span> // std::span
 #include <string_view> // std::string_view
 #include <system_error> // std::errc
 
+#include <custom_print.hpp>
 #include <server.hpp>
-// NOLINTNEXTLINE(bugprone-exception-escape)
+
 int main(
     const int   argc,
     const char *argv[])
@@ -29,7 +31,7 @@ int main(
 
         if (args.size() != 3)
         {
-            std::cerr << "Usage: " << args[0] << " <port> <bulk_size>\n";
+            cp::println(stderr, "Usage: {} <port> <bulk_size>", args[0]);
             ret = -1;
 
             return ret;
@@ -41,7 +43,7 @@ int main(
                 args[1].data() + args[1].size(), port, BASE);
             if (ec != std::errc{})
             {
-                std::cerr << "Invalid port format\n";
+                cp::println(stderr, "Invalid port format");
                 ret = -2;
 
                 return ret;
@@ -54,7 +56,7 @@ int main(
                 args[2].data() + args[2].size(), bulk_size, BASE);
             if (ec != std::errc{})
             {
-                std::cerr << "Invalid bulk_size format\n";
+                cp::println(stderr, "Invalid bulk_size format");
                 ret = -3;
 
                 return ret;
@@ -68,9 +70,13 @@ int main(
     }
     catch (std::exception& e)
     {
-        std::cerr << "Exception: " << e.what() << '\n';
-
+        cp::safe_error(e.what());
         ret = -4;
+    }
+    catch (...)
+    {
+        cp::safe_error(nullptr);
+        ret = EXIT_FAILURE;
     }
 
     return ret;

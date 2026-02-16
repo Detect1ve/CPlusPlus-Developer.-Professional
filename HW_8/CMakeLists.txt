@@ -31,6 +31,7 @@ if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/warning_flags.cmake)
   include(../common/attribute_wrapper.cmake)
   include(../common/capture.cmake)
+  include(../common/custom_print.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
@@ -42,7 +43,7 @@ add_library(bayan_lib STATIC lib/bayan.cpp)
 target_include_directories(bayan_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(bayan_lib PRIVATE
   attribute_wrapper Boost::algorithm Boost::crc Boost::filesystem Boost::program_options
-  Boost::uuid)
+  Boost::uuid custom_print)
 target_compile_options(bayan_lib PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_8_COMPILE_WARNING_FLAGS})
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -51,7 +52,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 endif()
 
 add_executable(bayan src/main.cpp)
-target_link_libraries(bayan PRIVATE bayan_lib)
+target_link_libraries(bayan PRIVATE bayan_lib custom_print)
 if (NOT MSVC)
   target_link_libraries(bayan PRIVATE -static)
 endif()
@@ -80,11 +81,14 @@ set_smart_tidy(bayan_lib
     "${CLANG_TIDY_HW_8_OPTS}"
   EXTRA_INCLUDES
     "${ATTRIBUTE_WRAPPER_INCLUDE_DIR}"
+    "${CUSTOM_PRINT_INCLUDE_DIR}"
   HAS_EXCEPTIONS)
 
 set_smart_tidy(bayan
   EXCLUDE
     "${CLANG_TIDY_HW_8_OPTS}"
+  EXTRA_INCLUDES
+    "${CUSTOM_PRINT_INCLUDE_DIR}"
   HAS_EXCEPTIONS)
 
 set_smart_tidy(bayan_test

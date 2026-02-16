@@ -21,9 +21,11 @@
 #if __GNUC__ < 14
 #include <tuple>
 #endif
-#include <iostream>
 #include <list>
 #include <vector>
+
+#include <custom_print.hpp>
+
 /**
  * @brief Output IP address for string type
  *
@@ -37,7 +39,7 @@
 template <typename T>
 void print_ip(T const& ip_address) requires(std::is_same_v<T, std::string>)
 {
-    std::cout << ip_address << std::endl;
+    cp::println("{}", ip_address);
 }
 
 /**
@@ -61,15 +63,15 @@ void print_ip(T const& ip_address) requires(std::is_integral_v<T>)
         const auto byte = static_cast<std::uint8_t>(
             static_cast<std::make_unsigned_t<T>>(ip_address) >> ((size - 1 - i) * 8));
 
-        std::cout << +byte;
+        cp::print("{}", byte);
 
         if (i < size - 1)
         {
-            std::cout << '.';
+            cp::print("{}", '.');
         }
     }
 
-    std::cout << '\n';
+    cp::println();
 }
 
 /**
@@ -106,9 +108,8 @@ void print_ip(T const& ip_address) requires is_monotype_tuple<T>::value
     std::apply([](const auto&... args)
     {
         std::size_t idx = 0;
-
-        ((std::cout << (idx++ == 0 ? "" : ".") << args), ...);
-        std::cout << '\n';
+        (cp::print("{}{}", (idx++ == 0 ? "" : "."), args), ...);
+        cp::println();
     }, ip_address);
 }
 
@@ -149,14 +150,14 @@ void print_ip(T const &ip_address)
 
     for (auto octet : ip_address)
     {
-        std::cout << octet;
+        cp::print("{}", octet);
         if (--size)
         {
-            std::cout << '.';
+            cp::print("{}", '.');
         }
     }
 
-    std::cout << '\n';
+    cp::println();
 }
 
 #endif // SFINAE_IP_ADDRESS_HPP

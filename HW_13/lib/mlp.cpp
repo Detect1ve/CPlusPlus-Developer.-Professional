@@ -3,8 +3,8 @@
 #include <charconv>
 #endif
 #include <cstddef> // std::size_t
+#include <cstdio> // stderr
 #include <fstream>
-#include <iostream>
 #include <memory> // std::make_unique
 #include <sstream> // std::istringstream
 #include <string> // std::string
@@ -14,6 +14,7 @@
 
 #include <Eigen/Core>
 
+#include <custom_print.hpp>
 #include <mlp.hpp>
 
 namespace
@@ -48,7 +49,7 @@ MLP::MLP(
 {
     if (!loadWeights(w1_path, w2_path))
     {
-        std::cerr << "Failed to load weights!\n";
+        cp::println(stderr, "Failed to load weights!");
     }
 }
 
@@ -68,7 +69,7 @@ bool MLP::loadWeights(
 
     if (!w1_file.is_open())
     {
-        std::cerr << "Could not open file: " << w1_path << '\n';
+        cp::println(stderr, "Could not open file: {}", w1_path);
 
         return false;
     }
@@ -94,7 +95,7 @@ bool MLP::loadWeights(
 
     if (!w2_file.is_open())
     {
-        std::cerr << "Could not open file: " << w2_path << '\n';
+        cp::println(stderr, "Could not open file: {}", w2_path);
 
         return false;
     }
@@ -162,13 +163,13 @@ float MLP::evaluate_with_predictions(
 
     if (!test_file.is_open())
     {
-        std::cerr << "Could not open test file: " << test_data_path << '\n';
+        cp::println(stderr, "Could not open test file: {}", test_data_path);
         return 0.0F;
     }
 
     if (!pred_file.is_open())
     {
-        std::cerr << "Could not open predictions file: " << predictions_path << '\n';
+        cp::println(stderr, "Could not open predictions file: {}", predictions_path);
 
         return 0.0F;
     }
@@ -183,7 +184,7 @@ float MLP::evaluate_with_predictions(
 
         if (!std::getline(test_iss, token, ','))
         {
-            std::cerr << "Error reading class label from test file\n";
+            cp::println(stderr, "Error reading class label from test file");
             continue;
         }
 
@@ -193,7 +194,7 @@ float MLP::evaluate_with_predictions(
             token_sv.data() + token_sv.size(), true_label);
         if (ec != std::errc{})
         {
-            std::cerr << "Error converting class label from test file: " << token << '\n';
+            cp::println(stderr, "Error converting class label from test file: {}", token);
             continue;
         }
 
@@ -222,7 +223,7 @@ float MLP::evaluate(const std::string& test_data_path)
 
     if (!test_file.is_open())
     {
-        std::cerr << "Could not open file: " << test_data_path << '\n';
+        cp::println(stderr, "Could not open file: {}", test_data_path);
 
         return 0.0F;
     }
@@ -237,7 +238,7 @@ float MLP::evaluate(const std::string& test_data_path)
 
         if (!std::getline(iss, token, ','))
         {
-            std::cerr << "Error reading class label\n";
+            cp::println(stderr, "Error reading class label");
             continue;
         }
 
@@ -248,7 +249,7 @@ float MLP::evaluate(const std::string& test_data_path)
                 token_sv.data() + token_sv.size(), true_label);
             if (ec != std::errc{})
             {
-                std::cerr << "Error converting class label: " << token << '\n';
+                cp::println(stderr, "Error converting class label: {}", token);
                 continue;
             }
         }
@@ -259,7 +260,7 @@ float MLP::evaluate(const std::string& test_data_path)
 
             if (!std::getline(iss, token, ','))
             {
-                std::cerr << "Error reading pixel at position " << i << '\n';
+                cp::println(stderr, "Error reading pixel at position {}", i);
                 break;
             }
 
@@ -269,8 +270,8 @@ float MLP::evaluate(const std::string& test_data_path)
                 token_sv.data() + token_sv.size(), pixel_value);
             if (ec != std::errc{})
             {
-                std::cerr << "Error converting pixel at position " << i << ": "
-                    << token_sv << '\n';
+                cp::println(stderr, "Error converting pixel at position {}: {}", i,
+                    token_sv);
                 pixel_value = 0.0F;
             }
 

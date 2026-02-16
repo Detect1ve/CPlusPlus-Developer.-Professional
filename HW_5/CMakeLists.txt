@@ -21,6 +21,7 @@ if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
   include(../cmake/warning_flags.cmake)
   include(../common/attribute_wrapper.cmake)
+  include(../common/custom_print.cmake)
 endif()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -37,7 +38,7 @@ add_executable(editor
   src/view/primitive_view.cpp
   src/main.cpp)
 target_include_directories(editor PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(editor PRIVATE attribute_wrapper)
+target_link_libraries(editor PRIVATE attribute_wrapper custom_print)
 target_compile_options(editor PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_5_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)
@@ -52,4 +53,5 @@ set_smart_tidy(editor
     "-modernize-use-trailing-return-type"
   EXTRA_INCLUDES
     "${ATTRIBUTE_WRAPPER_INCLUDE_DIR}"
+    "${CUSTOM_PRINT_INCLUDE_DIR}"
   HAS_EXCEPTIONS)

@@ -24,11 +24,12 @@ if (PROJECT_IS_TOP_LEVEL)
 endif()
 
 if (PROJECT_IS_TOP_LEVEL)
-  include(../common/socket_wrapper.cmake)
   include(../cmake/clang-tidy.cmake)
   include(../cmake/fetch_boost.cmake)
   include(../cmake/fetch_googletest.cmake)
   include(../cmake/warning_flags.cmake)
+  include(../common/custom_print.cmake)
+  include(../common/socket_wrapper.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
@@ -38,7 +39,7 @@ endif()
 
 add_library(server_and_database STATIC lib/server.cpp lib/database.cpp)
 target_include_directories(server_and_database PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(server_and_database PRIVATE Boost::asio)
+target_link_libraries(server_and_database PRIVATE Boost::asio custom_print)
 target_compile_options(server_and_database PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_11_COMPILE_WARNING_FLAGS})
 if (MSVC)
@@ -50,7 +51,7 @@ else()
 endif()
 
 add_executable(join_server src/main.cpp)
-target_link_libraries(join_server PRIVATE server_and_database)
+target_link_libraries(join_server PRIVATE custom_print server_and_database)
 target_compile_options(join_server PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_11_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)
@@ -78,11 +79,15 @@ set_smart_tidy(server_and_database
     "-fuchsia-default-arguments-calls"
     "-llvm-prefer-static-over-anonymous-namespace"
     "-misc-no-recursion"
-    "${CLANG_TIDY_HW_11_OPTS}")
+    "${CLANG_TIDY_HW_11_OPTS}"
+  EXTRA_INCLUDES
+    "${CUSTOM_PRINT_INCLUDE_DIR}")
 
 set_smart_tidy(join_server
   EXCLUDE
     "${CLANG_TIDY_HW_11_OPTS}"
+  EXTRA_INCLUDES
+    "${CUSTOM_PRINT_INCLUDE_DIR}"
   HAS_EXCEPTIONS)
 
 set_smart_tidy(join_server_test

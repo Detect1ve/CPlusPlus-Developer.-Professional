@@ -24,11 +24,12 @@ if (PROJECT_IS_TOP_LEVEL)
 endif()
 
 if (PROJECT_IS_TOP_LEVEL)
-  include(../common/capture.cmake)
   include(../cmake/clang-tidy.cmake)
   include(../cmake/fetch_absl.cmake)
   include(../cmake/fetch_googletest.cmake)
   include(../cmake/warning_flags.cmake)
+  include(../common/capture.cmake)
+  include(../common/custom_print.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
@@ -38,6 +39,7 @@ endif()
 
 add_library(async SHARED lib/async.cpp include/async.h)
 target_include_directories(async PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_link_libraries(async PRIVATE custom_print)
 target_compile_options(async PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_9_COMPILE_WARNING_FLAGS})
 if (MSVC)
@@ -48,6 +50,7 @@ endif()
 
 add_library(async_static STATIC lib/async.cpp)
 target_include_directories(async_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_link_libraries(async_static PRIVATE custom_print)
 target_compile_options(async_static PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_9_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)
@@ -82,14 +85,18 @@ set_smart_tidy(async
     "-altera-struct-pack-align"
     "-fuchsia-default-arguments-calls"
     "-llvm-prefer-static-over-anonymous-namespace"
-    "${CLANG_TIDY_HW_9_OPTS}")
+    "${CLANG_TIDY_HW_9_OPTS}"
+  EXTRA_INCLUDES
+    "${CUSTOM_PRINT_INCLUDE_DIR}")
 
 set_smart_tidy(async_static
   EXCLUDE
     "-altera-struct-pack-align"
     "-fuchsia-default-arguments-calls"
     "-llvm-prefer-static-over-anonymous-namespace"
-    "${CLANG_TIDY_HW_9_OPTS}")
+    "${CLANG_TIDY_HW_9_OPTS}"
+  EXTRA_INCLUDES
+    "${CUSTOM_PRINT_INCLUDE_DIR}")
 
 set_smart_tidy(async_cli
   EXCLUDE
