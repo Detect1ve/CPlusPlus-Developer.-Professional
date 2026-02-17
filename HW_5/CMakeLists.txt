@@ -18,6 +18,7 @@ endif()
 
 if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
+  include(../cmake/lto_enable.cmake)
   include(../cmake/warning_flags.cmake)
   include(../common/attribute_wrapper.cmake)
   include(../common/custom_print.cmake)
@@ -44,6 +45,8 @@ if (NOT MSVC)
   target_link_libraries(editor PRIVATE -static)
   target_compile_options(editor PRIVATE -Wno-effc++)
 endif()
+
+enable_lto(editor)
 
 set_smart_tidy(editor
   EXCLUDE

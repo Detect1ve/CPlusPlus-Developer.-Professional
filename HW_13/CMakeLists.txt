@@ -24,11 +24,12 @@ if (PROJECT_IS_TOP_LEVEL)
 endif()
 
 if (PROJECT_IS_TOP_LEVEL)
-    include(../cmake/clang-tidy.cmake)
-    include(../cmake/fetch_googletest.cmake)
-    include(../cmake/warning_flags.cmake)
-    include(../common/custom_print.cmake)
-    list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
+  include(../cmake/clang-tidy.cmake)
+  include(../cmake/fetch_googletest.cmake)
+  include(../cmake/lto_enable.cmake)
+  include(../cmake/warning_flags.cmake)
+  include(../common/custom_print.cmake)
+  list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -65,6 +66,8 @@ endif()
 
 target_compile_definitions(fashio_mnist_test PRIVATE
   PROJECT_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+
+enable_lto(fashio_mnist fashio_mnist_test mlp_lib)
 
 set(CLANG_TIDY_HW_13_OPTS
     "-fuchsia-default-arguments-calls"

@@ -27,6 +27,7 @@ if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
   include(../cmake/fetch_boost.cmake)
   include(../cmake/fetch_googletest.cmake)
+  include(../cmake/lto_enable.cmake)
   include(../cmake/warning_flags.cmake)
   include(../common/attribute_wrapper.cmake)
   include(../common/capture.cmake)
@@ -66,6 +67,8 @@ target_compile_options(ip_filter_test PRIVATE
 if (NOT MSVC)
   target_compile_options(ip_filter_test PRIVATE -Wno-global-constructors)
 endif()
+
+enable_lto(ip_filter ip_filter_lib ip_filter_test)
 
 set(CLANG_TIDY_HW_2_OPTS
   "-modernize-use-trailing-return-type")

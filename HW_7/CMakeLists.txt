@@ -26,6 +26,7 @@ endif()
 if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
   include(../cmake/fetch_googletest.cmake)
+  include(../cmake/lto_enable.cmake)
   include(../cmake/warning_flags.cmake)
   include(../common/attribute_wrapper.cmake)
   include(../common/capture.cmake)
@@ -69,6 +70,8 @@ if (NOT MSVC)
   target_compile_options(taskmanager_test PRIVATE
     -Wno-unsafe-buffer-usage -Wno-global-constructors)
 endif()
+
+enable_lto(bulk taskmanager taskmanager_test)
 
 set(CLANG_TIDY_HW_7_OPTS
   "-fuchsia-default-arguments-calls"

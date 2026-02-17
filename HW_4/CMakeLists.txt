@@ -29,6 +29,7 @@ endif()
 if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
   include(../cmake/fetch_googletest.cmake)
+  include(../cmake/lto_enable.cmake)
   include(../cmake/warning_flags.cmake)
   include(../common/capture.cmake)
   include(../common/custom_print.cmake)
@@ -56,6 +57,8 @@ if (NOT MSVC)
 endif()
 target_compile_options(print_ip PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_4_COMPILE_WARNING_FLAGS})
+
+enable_lto(print_ip)
 
 add_executable(print_ip_test test/sfinae_ip_address_test.cpp)
 target_link_libraries(print_ip_test PRIVATE capture GTest::gtest_main ip_address)

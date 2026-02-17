@@ -24,6 +24,7 @@ list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 include(cmake/clang-tidy.cmake)
 include(cmake/fetch_boost.cmake)
 include(cmake/fetch_googletest.cmake)
+include(cmake/lto_enable.cmake)
 include(cmake/warning_flags.cmake)
 
 include(common/attribute_wrapper.cmake)

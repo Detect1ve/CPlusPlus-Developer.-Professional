@@ -43,6 +43,7 @@ if (PROJECT_IS_TOP_LEVEL)
     include(../cmake/clang-tidy.cmake)
     include(../cmake/fetch_boost.cmake)
     include(../cmake/fetch_googletest.cmake)
+    include(../cmake/lto_enable.cmake)
     include(../cmake/warning_flags.cmake)
     list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
@@ -80,6 +81,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         -Wno-suggest-attribute=const
     )
 endif()
+enable_lto(g_test_version helloworld helloworld_cli test_version)
 target_compile_options(test_version PRIVATE
     ${COMPILE_WARNING_FLAGS} ${HW_1_COMPILE_WARNING_FLAGS}
 )

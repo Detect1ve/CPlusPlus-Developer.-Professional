@@ -28,6 +28,7 @@ if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/fetch_absl.cmake)
   include(../cmake/fetch_boost.cmake)
   include(../cmake/fetch_googletest.cmake)
+  include(../cmake/lto_enable.cmake)
   include(../cmake/warning_flags.cmake)
   include(../common/attribute_wrapper.cmake)
   include(../common/capture.cmake)
@@ -70,6 +71,8 @@ target_compile_options(bayan_test PRIVATE
 if (NOT MSVC)
   target_compile_options(bayan_test PRIVATE -Wno-global-constructors)
 endif()
+
+enable_lto(bayan bayan_lib bayan_test)
 
 set(CLANG_TIDY_HW_8_OPTS
     "-altera-struct-pack-align"

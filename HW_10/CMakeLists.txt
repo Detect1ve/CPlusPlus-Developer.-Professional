@@ -27,6 +27,7 @@ if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
   include(../cmake/fetch_boost.cmake)
   include(../cmake/fetch_googletest.cmake)
+  include(../cmake/lto_enable.cmake)
   include(../cmake/warning_flags.cmake)
   include(../common/capture.cmake)
   include(../common/custom_print.cmake)
@@ -82,6 +83,8 @@ if (NOT MSVC)
       -Wno-unsafe-buffer-usage -Wno-global-constructors)
   endif()
 endif()
+
+enable_lto(bulk_server bulk_server_test server server_async)
 
 set(CLANG_TIDY_HW_10_OPTS
     "-llvm-header-guard"

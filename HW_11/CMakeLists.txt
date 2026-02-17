@@ -27,6 +27,7 @@ if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
   include(../cmake/fetch_boost.cmake)
   include(../cmake/fetch_googletest.cmake)
+  include(../cmake/lto_enable.cmake)
   include(../cmake/warning_flags.cmake)
   include(../common/custom_print.cmake)
   include(../common/socket_wrapper.cmake)
@@ -68,6 +69,8 @@ if (NOT MSVC)
   target_compile_options(join_server_test PRIVATE
     -Wno-effc++ -Wno-strict-overflow -Wno-global-constructors)
 endif()
+
+enable_lto(join_server join_server_test server_and_database)
 
 set(CLANG_TIDY_HW_11_OPTS
     "-modernize-use-trailing-return-type")
