@@ -1,5 +1,6 @@
 #include <memory> // std::make_unique
 #include <string> // std::string
+#include <string_view> // std::string_view
 #include <utility> // std::move
 
 #include <controller/document_controller.hpp>
@@ -22,7 +23,7 @@ namespace editor::controller
         primitiveController_ = std::make_unique<PrimitiveController>(document_.get());
     }
 
-    bool DocumentController::saveDocument(const std::string& filename)
+    bool DocumentController::saveDocument(const std::string_view filename)
     {
         if (!document_) {
             return false;
@@ -31,7 +32,7 @@ namespace editor::controller
         return model::Document::saveToFile(*document_, filename);
     }
 
-    bool DocumentController::loadDocument(const std::string& filename)
+    bool DocumentController::loadDocument(const std::string_view filename)
     {
         auto newDocument = model::Document::loadFromFile(filename);
 

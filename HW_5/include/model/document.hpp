@@ -11,6 +11,8 @@ namespace editor::model
 {
     class Document
     {
+        std::string name_;
+        std::vector<std::unique_ptr<Primitive>> primitives_;
     public:
         explicit Document(std::string name);
         ~Document() = default;
@@ -26,18 +28,14 @@ namespace editor::model
             const;
         ATTRIBUTE_PURE [[nodiscard]] std::size_t getPrimitiveCount() const;
 
-        ATTRIBUTE_CONST [[nodiscard]] const std::string& getName() const;
-        void setName(const std::string& name);
+        ATTRIBUTE_CONST [[nodiscard]] std::string_view getName() const;
+        void setName(std::string_view name);
 
         ATTRIBUTE_CONST [[nodiscard]] static bool saveToFile(
-            const Document&    document,
-            const std::string& filename);
+            const Document&  document,
+            std::string_view filename);
 
-        static std::unique_ptr<Document> loadFromFile(const std::string& filename);
-
-    private:
-        std::string name_;
-        std::vector<std::unique_ptr<Primitive>> primitives_;
+        static std::unique_ptr<Document> loadFromFile(std::string_view filename);
     };
 } // namespace editor::model
 

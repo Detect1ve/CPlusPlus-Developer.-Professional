@@ -94,7 +94,7 @@ class Matrix
 public:
     Matrix() : data() {}
 
-    ProxyRow operator[](int row)
+    ProxyRow operator[](const int row)
     {
         return ProxyRow(this, row);
     }
@@ -121,7 +121,7 @@ public:
 
         iterator& operator++()
         {
-            ++it;
+            it++;
 
             return *this;
         }

@@ -5,6 +5,7 @@
 #include <cstddef> // std::size_t
 #include <cstdio> // stderr
 #include <fstream>
+#include <limits> // std::numeric_limits
 #include <memory> // std::make_unique
 #include <sstream> // std::istringstream
 #include <string> // std::string
@@ -78,7 +79,7 @@ bool MLP::loadWeights(
 
     while (std::getline(w1_file, line) && row < 784)
     {
-        float value = NAN;
+        float value = std::numeric_limits<float>::quiet_NaN();
         int col = 0;
         std::istringstream iss(line);
 
@@ -105,7 +106,7 @@ bool MLP::loadWeights(
     row = 0;
     while (std::getline(w2_file, line) && row < 128)
     {
-        float value = NAN;
+        float value = std::numeric_limits<float>::quiet_NaN();
         int col = 0;
         std::istringstream iss(line);
 
@@ -164,6 +165,7 @@ float MLP::evaluate_with_predictions(
     if (!test_file.is_open())
     {
         cp::println(stderr, "Could not open test file: {}", test_data_path);
+
         return 0.0F;
     }
 
@@ -189,10 +191,9 @@ float MLP::evaluate_with_predictions(
         }
 
         const std::string_view token_sv(token);
-        auto [ptr, ec] = std::from_chars(token_sv.data(),
-            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-            token_sv.data() + token_sv.size(), true_label);
-        if (ec != std::errc{})
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        if (std::from_chars(token_sv.data(), token_sv.data() + token_sv.size(),
+            true_label).ec != std::errc{})
         {
             cp::println(stderr, "Error converting class label from test file: {}", token);
             continue;
@@ -244,17 +245,16 @@ float MLP::evaluate(const std::string& test_data_path)
 
         {
             const std::string_view token_sv(token);
-            auto [ptr, ec] = std::from_chars(token_sv.data(),
-                // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-                token_sv.data() + token_sv.size(), true_label);
-            if (ec != std::errc{})
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+            if (std::from_chars(token_sv.data(), token_sv.data() + token_sv.size(),
+                true_label).ec != std::errc{})
             {
                 cp::println(stderr, "Error converting class label: {}", token);
                 continue;
             }
         }
 
-        for (std::size_t i = 0; i < 784; ++i)
+        for (std::size_t i = 0; i < 784; i++)
         {
             float pixel_value = 0.0F;
 
@@ -265,10 +265,9 @@ float MLP::evaluate(const std::string& test_data_path)
             }
 
             const std::string_view token_sv(token);
-            auto [ptr, ec] = std::from_chars(token_sv.data(),
-                // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-                token_sv.data() + token_sv.size(), pixel_value);
-            if (ec != std::errc{})
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+            if (std::from_chars(token_sv.data(), token_sv.data() + token_sv.size(),
+                pixel_value).ec != std::errc{})
             {
                 cp::println(stderr, "Error converting pixel at position {}: {}", i,
                     token_sv);

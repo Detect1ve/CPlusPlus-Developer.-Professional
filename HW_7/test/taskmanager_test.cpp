@@ -53,10 +53,10 @@ namespace
 
                 const std::string_view timestamp_sv = timestamp_str;
                 std::int64_t timestamp_seconds = 0;
-                auto [ptr, ec] = std::from_chars(timestamp_sv.data(),
+                if (std::from_chars(timestamp_sv.data(),
                     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-                    timestamp_sv.data() + timestamp_sv.size(), timestamp_seconds, BASE);
-                if (ec != std::errc())
+                    timestamp_sv.data() + timestamp_sv.size(), timestamp_seconds,
+                    BASE).ec != std::errc{})
                 {
                     continue;
                 }

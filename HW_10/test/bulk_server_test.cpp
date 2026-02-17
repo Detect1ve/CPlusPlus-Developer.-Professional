@@ -15,6 +15,7 @@
 #include <string_view> // std::string_view
 #include <system_error> // std::errc
 #include <thread> // std::thread
+#include <unordered_set>
 #include <vector> // std::vector
 
 #include <gtest/gtest.h>
@@ -34,8 +35,8 @@ namespace
     constexpr std::uint16_t DEFAULT_PORT = 9000;
 
     void run_client_task(
-        const std::string&  cmds,
-        const std::uint16_t port)
+        const std::string_view cmds,
+        const std::uint16_t    port)
     {
         try
         {
@@ -73,10 +74,10 @@ namespace
                     filename.substr(4, first_underscore - 4);
                 const std::string_view timestamp_sv = timestamp_str;
                 std::int64_t timestamp_val = 0;
-                auto [ptr, ec] = std::from_chars(timestamp_sv.data(),
+                if (std::from_chars(timestamp_sv.data(),
                     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-                    timestamp_sv.data() + timestamp_sv.size(), timestamp_val, BASE);
-                if (ec != std::errc())
+                    timestamp_sv.data() + timestamp_sv.size(), timestamp_val,
+                    BASE).ec != std::errc{})
                 {
                     continue;
                 }
@@ -202,18 +203,22 @@ TEST_F(HW10, CombinedConnectionTest)
     {
         const auto single_conn_start_time = std::chrono::system_clock::now();
         const std::regex num_regex("(\\d+)");
-        std::set<int> expected_nums;
-        std::set<int> received_nums;
-        std::set<int> received_nums_from_stdout;
         std::string all_logs_content;
         std::stringstream commands_stream;
         std::stringstream commands1_stream;
         std::stringstream commands2_stream;
+        std::unordered_set<int> expected_nums;
+        std::unordered_set<int> received_nums;
+        std::unordered_set<int> received_nums_from_stdout;
         std::vector<std::string> file_contents;
+
+        expected_nums.reserve(COMMAND_COUNT);
+        received_nums.reserve(COMMAND_COUNT);
+        received_nums_from_stdout.reserve(COMMAND_COUNT);
 
         StdoutCapture::Begin();
 
-        for (int i = 0; i < COMMAND_COUNT; ++i)
+        for (int i = 0; i < COMMAND_COUNT; i++)
         {
             commands_stream << i << '\n';
         }
@@ -251,14 +256,14 @@ TEST_F(HW10, CombinedConnectionTest)
 
         StdoutCapture::Begin();
 
-        for (int i = 0; i < COMMAND_COUNT; ++i)
+        for (int i = 0; i < COMMAND_COUNT; i++)
         {
             commands1_stream << i << '\n';
         }
 
         const std::string commands1 = commands1_stream.str();
 
-        for (int i = COMMAND_COUNT; i < TOTAL_COMMANDS; ++i)
+        for (int i = COMMAND_COUNT; i < TOTAL_COMMANDS; i++)
         {
             commands2_stream << i << '\n';
         }
@@ -291,21 +296,20 @@ TEST_F(HW10, CombinedConnectionTest)
             all_logs_content.end(), num_regex);
         auto words_end = std::sregex_iterator();
 
-        for (std::sregex_iterator i = words_begin; i != words_end; ++i)
+        for (std::sregex_iterator i = words_begin; i != words_end; i++)
         {
             const std::string number_str = (*i).str();
             const std::string_view number_sv(number_str);
             int value{};
-
-            if (const auto [ptr, ec] = std::from_chars(number_sv.data(),
-                // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-                number_sv.data() + number_sv.size(), value); ec == std::errc())
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+            if (std::from_chars(number_sv.data(), number_sv.data() + number_sv.size(),
+                value).ec == std::errc{})
             {
                 received_nums.insert(value);
             }
         }
 
-        for (int i = 0; i < TOTAL_COMMANDS; ++i)
+        for (int i = 0; i < TOTAL_COMMANDS; i++)
         {
             expected_nums.insert(i);
         }
@@ -316,15 +320,14 @@ TEST_F(HW10, CombinedConnectionTest)
             two_conn_output.end(), num_regex);
         auto words_end_stdout = std::sregex_iterator();
 
-        for (std::sregex_iterator i = words_begin_stdout; i != words_end_stdout; ++i)
+        for (std::sregex_iterator i = words_begin_stdout; i != words_end_stdout; i++)
         {
             const std::string number_str = (*i).str();
             const std::string_view number_sv(number_str);
             int value{};
-
-            if (const auto [ptr, ec] = std::from_chars(number_sv.data(),
-                // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-                number_sv.data() + number_sv.size(), value); ec == std::errc())
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+            if (std::from_chars(number_sv.data(), number_sv.data() + number_sv.size(),
+                value).ec == std::errc{})
             {
                 received_nums_from_stdout.insert(value);
             }
@@ -343,10 +346,6 @@ TEST_F(HW10, DynamicBlockTest)
     try
     {
         const auto test_start_time = std::chrono::system_clock::now();
-        const std::set<std::string> expected_static_cmds =
-        {
-            "cmd1_1", "cmd1_2", "cmd1_3", "cmd2_1", "cmd2_2", "cmd2_3"
-        };
         const std::string commands1 =
             "cmd1_1\n"
             "cmd1_2\n"
@@ -366,12 +365,18 @@ TEST_F(HW10, DynamicBlockTest)
             "cmd2_3\n";
         const std::string dynamic_block1 = "bulk: dyn1_1, dyn1_2, dyn1_3\n";
         const std::string dynamic_block2 = "bulk: dyn2_1, dyn2_2\n";
-        std::set<std::string> received_static_cmds;
+        const std::unordered_set<std::string> expected_static_cmds =
+        {
+            "cmd1_1", "cmd1_2", "cmd1_3", "cmd2_1", "cmd2_2", "cmd2_3"
+        };
         std::string static_content;
         std::string word;
         std::thread client1(run_client_task, commands1, get_port());
         std::thread client2(run_client_task, commands2, get_port());
+        std::unordered_set<std::string> received_static_cmds;
         std::vector<std::string> file_contents;
+
+        received_static_cmds.reserve(expected_static_cmds.size());
 
         client1.join();
         client2.join();

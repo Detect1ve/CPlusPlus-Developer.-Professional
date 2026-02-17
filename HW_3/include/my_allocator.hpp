@@ -8,6 +8,7 @@
 template <typename T, const std::size_t size>
 class MyAllocator
 {
+    std::size_t memory_alloc = 0;
 public:
     using value_type = T;
 
@@ -45,9 +46,6 @@ public:
         memory_alloc -= n;
         free(ptr); // NOLINT(cppcoreguidelines-no-malloc,hicpp-no-malloc)
     }
-
-private:
-    std::size_t memory_alloc = 0;
 };
 
 #endif // MY_ALLOCATOR_HPP

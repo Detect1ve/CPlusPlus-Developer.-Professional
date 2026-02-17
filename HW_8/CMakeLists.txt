@@ -47,8 +47,8 @@ target_link_libraries(bayan_lib PRIVATE
 target_compile_options(bayan_lib PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_8_COMPILE_WARNING_FLAGS})
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  target_compile_options(bayan_lib
-    PRIVATE -Wno-alloc-zero -Wno-effc++ -Wno-strict-overflow)
+  target_compile_options(bayan_lib PRIVATE
+    -Wno-alloc-zero -Wno-effc++ -Wno-null-dereference -Wno-strict-overflow)
 endif()
 
 add_executable(bayan src/main.cpp)

@@ -1,6 +1,6 @@
-#include <cmath>
 #include <cstdint>
 #include <iostream>
+#include <limits> // std::numeric_limits
 #include <sstream>
 #include <string> // std::string
 
@@ -13,8 +13,8 @@ int main()
 
     while (std::getline(std::cin, line))
     {
-        double price = std::nan("");
-        double price_squared = std::nan("");
+        double price = std::numeric_limits<double>::quiet_NaN();
+        double price_squared = std::numeric_limits<double>::quiet_NaN();
         std::istringstream iss(line);
         std::string key;
         std::uint16_t value_count = 0;

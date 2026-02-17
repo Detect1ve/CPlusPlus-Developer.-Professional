@@ -2,7 +2,7 @@
 Apply the knowledge acquired about templates by implementing overloaded template functions using the SFINAE mechanism. Connect the doxygen utility to the assembly farm.
 
 ### **Implement the function of printing a conditional IP address.**
-Its conditionality lies in the fact that the number of elements does not necessarily have to be equal to 4 or 8, and each element does not necessarily have to be a number from the range 0..255. The only thing left from the idea of ​​an IP address is the output of elements through `.` (the dot symbol).
+Its conditionality lies in the fact that the number of elements does not necessarily have to be equal to 4 or 8, and each element does not necessarily have to be a number from the range 0..255. The only thing left from the idea of an IP address is the output of elements through `.` (the dot symbol).
 
 The function must be implemented for various input parameters using the SFINAE mechanism. In total, 3 mandatory and one optional version of the function must be executed.
 

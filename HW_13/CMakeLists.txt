@@ -51,7 +51,7 @@ target_link_libraries(fashio_mnist PRIVATE custom_print mlp_lib)
 target_compile_options(fashio_mnist PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_13_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)
-  target_link_libraries(fashio_mnist -static)
+  target_link_libraries(fashio_mnist PRIVATE -static)
   target_compile_options(fashio_mnist PRIVATE -Wno-unsafe-buffer-usage-in-container)
 endif()
 

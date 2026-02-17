@@ -26,6 +26,8 @@ namespace bulk::io
 {
     class composite_stream
     {
+        std::ostream& s1;
+        std::ostream& s2;
     public:
         composite_stream(
             std::ostream& stream1,
@@ -65,10 +67,6 @@ namespace bulk::io
 
             return *this;
         }
-
-    private:
-        std::ostream& s1;
-        std::ostream& s2;
     };
 } // namespace bulk::io
 
@@ -99,7 +97,7 @@ namespace bulk
         return dynamic_block_nesting_level > 0;
     }
 
-    int taskmanager::add_task(std::string_view task)
+    int taskmanager::add_task(const std::string_view task)
     {
         static constexpr std::string_view CLOSE_BRACKET = "}";
         static constexpr std::string_view OPEN_BRACKET = "{";
@@ -190,14 +188,14 @@ namespace bulk
 
         output << std::filesystem::path(task_manager_name).filename().string() << ": ";
 
-        const std::string_view delimiter = ", ";
+        constexpr std::string_view delimiter = ", ";
 #ifdef __cpp_lib_ranges_to_container
         const std::string result = block_task | std::views::join_with(delimiter)
             | std::ranges::to<std::string>();
 #else
         std::string result;
 
-        for (std::size_t i = 0; i < block_task.size(); ++i)
+        for (std::size_t i = 0; i < block_task.size(); i++)
         {
             result += block_task[i];
             if (i + 1 < block_task.size())

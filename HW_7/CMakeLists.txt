@@ -56,8 +56,8 @@ target_compile_options(bulk PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_7_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)
   target_link_libraries(bulk PRIVATE -static)
-  target_compile_options(bulk
-    PRIVATE -Wno-unsafe-buffer-usage-in-container -Wno-unsafe-buffer-usage)
+  target_compile_options(bulk PRIVATE
+    -Wno-unsafe-buffer-usage-in-container -Wno-unsafe-buffer-usage)
 endif()
 
 add_executable(taskmanager_test test/taskmanager_test.cpp)

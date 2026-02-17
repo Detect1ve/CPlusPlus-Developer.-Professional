@@ -25,9 +25,9 @@ Optionally implement compatibility with STL containers, including iterators, hel
 - fill with 10 elements, where the key is a number from 0 to 9, and the value is the factorial of the key
 - create an instance of `std::map<int, int>` with a new allocator limited to 10 elements
 - fill with 10 elements, where the key is a number from 0 to 9, and the value is the factorial of the key
-- print all the values ​​(the key and value are separated by a space) stored in the container
+- print all the values (the key and value are separated by a space) stored in the container
 - create an instance of your container to store `int` values
 - fill with 10 elements from 0 to 9
-- create an instance of your container to store `int` values ​​with a new allocator limited to 10 elements
+- create an instance of your container to store `int` values with a new allocator limited to 10 elements
 - fill with 10 elements from 0 to 9
 - print all the values ​​stored in the container

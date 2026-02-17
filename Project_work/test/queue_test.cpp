@@ -3,9 +3,7 @@
 #include <cstddef> // std::size_t
 #include <mutex> // std::mutex
 #include <string> // std::string
-#if __cplusplus <= 201703L
-#include <thread>
-#endif
+#include <thread> // std::thread
 #include <vector> // std::vector
 
 #include <gtest/gtest.h>
@@ -158,7 +156,7 @@ TEST(ProjectWork, SingleProducerSingleConsumer)
         }
     });
 
-    for (auto i = 0; i < items_to_produce; ++i)
+    for (auto i = 0; i < items_to_produce; i++)
     {
         ASSERT_TRUE(queue.push(i));
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -169,7 +167,7 @@ TEST(ProjectWork, SingleProducerSingleConsumer)
     consumer.join();
 
     ASSERT_EQ(consumed.size(), items_to_produce);
-    for (std::size_t i = 0; i < consumed.size(); ++i)
+    for (std::size_t i = 0; i < consumed.size(); i++)
     {
         ASSERT_EQ(consumed[i], i);
     }
@@ -189,7 +187,7 @@ TEST(ProjectWork, MultiProducerMultiConsumer)
 
     consumers.reserve(numConsumers);
 
-    for (auto i = 0; i < numConsumers; ++i)
+    for (auto i = 0; i < numConsumers; i++)
     {
         consumers.emplace_back([&]()
         {
@@ -209,11 +207,11 @@ TEST(ProjectWork, MultiProducerMultiConsumer)
 
     producers.reserve(numProducers);
 
-    for (auto i = 0; i < numProducers; ++i)
+    for (auto i = 0; i < numProducers; i++)
     {
         producers.emplace_back([&, i]()
         {
-            for (auto j = 0; j < itemsPerProducer; ++j)
+            for (auto j = 0; j < itemsPerProducer; j++)
             {
                 queue.push((i * itemsPerProducer) + j);
                 totalProduced++;

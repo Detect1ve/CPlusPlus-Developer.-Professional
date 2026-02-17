@@ -14,7 +14,7 @@ constexpr std::uint16_t TEST_VALUE_2 = 217;
 TEST(HW6, Matrix)
 {
     int value = 0;
-    // infinite matrix int filled with values ​​-1
+    // infinite matrix int filled with values -1
     Matrix<int, -1> matrix;
     std::string capturedStdout;
 

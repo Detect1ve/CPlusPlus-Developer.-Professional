@@ -50,7 +50,7 @@ protected:
     {
         const test_util::ClientSocket socket("127.0.0.1", port_);
 
-        socket.send_data(message + "\n");
+        socket.send_data(message + '\n');
 
         return socket.receive_data();
     }
