@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.25..4.2.3)
 project(HW_5 LANGUAGES CXX)
 
 if (PROJECT_IS_TOP_LEVEL)
-  set(CMAKE_BUILD_TYPE MinSizeRel)
   if (NOT MSVC)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
       add_compile_options(-fcolor-diagnostics)

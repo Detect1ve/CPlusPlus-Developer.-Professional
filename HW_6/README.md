@@ -2,7 +2,7 @@
 
 Implement an infinite sparse matrix using the Proxy pattern.
 
-Design a 2-dimensional sparse infinite matrix filled with default values. The matrix should store only occupied elements - those whose values ​​have been assigned at least once. Assigning a default value to a cell frees the cell.
+Design a 2-dimensional sparse infinite matrix filled with default values. The matrix should store only occupied elements - those whose values have been assigned at least once. Assigning a default value to a cell frees the cell.
 
 💡 It is necessary to be able to answer the question - how many cells are occupied?
 
@@ -12,7 +12,7 @@ Design a 2-dimensional sparse infinite matrix filled with default values. The ma
 
 **Example:**
 ```cpp
-// infinite matrix int filled with values ​​-1
+// infinite matrix int filled with values -1
 Matrix<int, -1> matrix;
 assert(matrix.size() == 0); // all cells are free
 auto a = matrix[0][0];

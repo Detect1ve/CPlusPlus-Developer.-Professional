@@ -20,9 +20,9 @@ namespace
     };
 
     std::string extract_price_field(
-        std::string_view str_view,
-        const Delimiter  delimiter,
-        const FieldIndex field_index)
+        const std::string_view str_view,
+        const Delimiter        delimiter,
+        const FieldIndex       field_index)
     {
         bool in_quotes = false;
         int current_index = 0;
@@ -62,19 +62,21 @@ int main(int argc, char ** argv)
     {
         const std::string price_field =
             extract_price_field(line, {','}, {PRICE_FIELD_INDEX});
+        double price = 0.0;
 
-        if (!price_field.empty())
+        if (price_field.empty())
         {
-            const std::string_view price_field_sv(price_field);
-            double price = 0.0;
-            auto [ptr, ec] = std::from_chars(price_field_sv.data(),
-                // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-                price_field_sv.data() + price_field_sv.size(), price,
-                std::chars_format::general);
-            if (ec == std::errc())
-            {
-                price_counts[price]++;
-            }
+            continue;
+        }
+
+        const std::string_view price_field_sv(price_field);
+
+        if (std::from_chars(price_field_sv.data(),
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+            price_field_sv.data() + price_field_sv.size(), price,
+            std::chars_format::general).ec == std::errc{})
+        {
+            price_counts[price]++;
         }
     }
 

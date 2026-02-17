@@ -20,8 +20,8 @@ namespace editor::controller
 
         // NOLINTNEXTLINE(fuchsia-default-arguments-declarations)
         void createNewDocument(const std::string& name = "Untitled");
-        ATTRIBUTE_PURE bool saveDocument(const std::string& filename);
-        bool loadDocument(const std::string& filename);
+        ATTRIBUTE_PURE bool saveDocument(std::string_view filename);
+        bool loadDocument(std::string_view filename);
 
         ATTRIBUTE_PURE [[nodiscard]] model::Document* getDocument() const;
         ATTRIBUTE_PURE [[nodiscard]] PrimitiveController* getPrimitiveController() const;

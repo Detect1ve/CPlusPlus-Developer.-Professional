@@ -71,10 +71,6 @@ namespace std
 ATTRIBUTE_PURE [[nodiscard]]
     std::expected<std::uint8_t, std::error_code> from_chars(std::string_view chars);
 
-[[nodiscard]] std::vector<std::string> split(
-    const std::string& str,
-    char               d); // NOLINT(readability-identifier-length)
-
 void reverse_lexicographic_sort(std::vector<std::vector<std::string>>& ip_pool);
 
 void print(std::span<const std::vector<std::string>> ip_pool);
@@ -123,7 +119,7 @@ std::expected<std::vector<std::vector<std::string>>, std::error_code> filter(
         auto common_range = std::min(a_octet.size(), ip_address.size());
         bool match = true;
 
-        for (std::size_t idx = 0; idx < common_range; ++idx)
+        for (std::size_t idx = 0; idx < common_range; idx++)
         {
             auto res = from_chars(ip_address[idx]);
             if (  !res

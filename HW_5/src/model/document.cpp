@@ -1,6 +1,7 @@
 #include <cstddef> // std::size_t
 #include <memory> // std::unique_ptr
 #include <string> // std::string
+#include <string_view> // std::string_view
 #include <utility> // std::move
 
 #include <model/document.hpp>
@@ -40,24 +41,24 @@ namespace editor::model
         return primitives_.size();
     }
 
-    const std::string& Document::getName() const
+    std::string_view Document::getName() const
     {
         return name_;
     }
 
-    void Document::setName(const std::string& name)
+    void Document::setName(const std::string_view name)
     {
         name_ = name;
     }
 
     bool Document::saveToFile(
-        const Document&    /*document*/,
-        const std::string& /*filename*/)
+        const Document&        /*document*/,
+        const std::string_view /*filename*/)
     {
         return true;
     }
 
-    std::unique_ptr<Document> Document::loadFromFile(const std::string&  /*filename*/)
+    std::unique_ptr<Document> Document::loadFromFile(const std::string_view /*filename*/)
     {
         return std::make_unique<Document>("Loaded Document");
     }

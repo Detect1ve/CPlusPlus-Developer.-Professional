@@ -64,8 +64,8 @@ if (MSVC)
   target_compile_definitions(server PRIVATE _WIN32_WINNT=0x0A00)
   target_compile_definitions(bulk_server PRIVATE _WIN32_WINNT=0x0A00)
 else()
-  target_compile_options(bulk_server
-    PRIVATE -Wno-unsafe-buffer-usage-in-container -Wno-unsafe-buffer-usage)
+  target_compile_options(bulk_server PRIVATE
+    -Wno-unsafe-buffer-usage-in-container -Wno-unsafe-buffer-usage)
   target_link_libraries(bulk_server PRIVATE -static)
 endif()
 
@@ -76,11 +76,10 @@ target_compile_options(bulk_server_test PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_10_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)
   if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(bulk_server_test
-      PRIVATE -Wno-alloc-zero -Wno-strict-overflow)
+    target_compile_options(bulk_server_test PRIVATE -Wno-alloc-zero -Wno-strict-overflow)
   else()
-    target_compile_options(bulk_server_test
-      PRIVATE -Wno-unsafe-buffer-usage -Wno-global-constructors)
+    target_compile_options(bulk_server_test PRIVATE
+      -Wno-unsafe-buffer-usage -Wno-global-constructors)
   endif()
 endif()
 

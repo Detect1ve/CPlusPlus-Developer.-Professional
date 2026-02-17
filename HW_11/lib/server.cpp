@@ -133,12 +133,12 @@ void SessionImpl::do_read()
         });
 }
 
-void SessionImpl::do_write(std::string_view message)
+void SessionImpl::do_write(const std::string_view message)
 {
     boost::asio::async_write(socket_, boost::asio::buffer(message),
         [](
             const boost::system::error_code& error_code,
-            std::size_t                      /*length*/)
+            const std::size_t                /*length*/)
         {
             if (error_code)
             {
@@ -157,10 +157,11 @@ void SessionImpl::do_write(const std::vector<std::string>& messages)
     do_write("OK\n");
 }
 
-void SessionImpl::process_command(std::string_view command)
+void SessionImpl::process_command(const std::string_view command)
 {
     std::istringstream iss((std::string(command)));
     std::string cmd;
+    std::string table;
 
     iss >> cmd;
 
@@ -168,7 +169,6 @@ void SessionImpl::process_command(std::string_view command)
     {
         int record_id = 0;
         std::string name;
-        std::string table;
 
         iss >> table >> record_id;
         std::getline(iss >> std::ws, name);
@@ -183,8 +183,6 @@ void SessionImpl::process_command(std::string_view command)
     }
     else if (cmd == "TRUNCATE")
     {
-        std::string table;
-
         iss >> table;
         database_->truncate(table);
         do_write("OK\n");

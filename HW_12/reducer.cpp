@@ -1,6 +1,6 @@
-#include <cmath>
 #include <cstddef> // size_t
 #include <iostream>
+#include <limits> // std::numeric_limits
 #include <sstream>
 #include <string>
 
@@ -11,10 +11,10 @@ int main(int argc, char ** argv)
     float sum = 0.0;
     while (std::getline(std::cin, line))
     {
+        float price = std::numeric_limits<float>::quiet_NaN();
         std::istringstream iss(line);
-        std::string key;
-        float price = NAN;
         std::size_t value_count = 0;
+        std::string key;
 
         if (iss >> key >> price >> value_count)
         {

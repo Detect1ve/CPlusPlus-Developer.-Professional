@@ -58,7 +58,7 @@ void print_ip(T const& ip_address) requires(std::is_integral_v<T>)
 {
     constexpr std::size_t size = sizeof(T);
 
-    for (std::size_t i = 0; i < size; ++i)
+    for (std::size_t i = 0; i < size; i++)
     {
         const auto byte = static_cast<std::uint8_t>(
             static_cast<std::make_unsigned_t<T>>(ip_address) >> ((size - 1 - i) * 8));

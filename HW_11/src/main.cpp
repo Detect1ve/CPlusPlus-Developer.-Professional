@@ -38,9 +38,8 @@ int main(
             return ret;
         }
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-        auto [ptr, ec] = std::from_chars(args[1].data(), args[1].data() + args[1].size(),
-            port, BASE);
-        if (ec != std::errc{})
+        if (std::from_chars(args[1].data(), args[1].data() + args[1].size(), port,
+            BASE).ec != std::errc{})
         {
             cp::println(stderr, "Invalid port format");
             ret = -2;

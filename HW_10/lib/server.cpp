@@ -94,7 +94,7 @@ namespace async
     }
 
     Session::Session(
-        void*             socket,
+        void *const       socket,
         ServerImpl&       server,
         const std::size_t bulk_size)
         :

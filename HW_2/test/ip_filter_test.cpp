@@ -12,7 +12,7 @@
 
 namespace
 {
-    std::string compute_md5(std::string_view input)
+    std::string compute_md5(const std::string_view input)
     {
         boost::uuids::detail::md5 hash;
         boost::uuids::detail::md5::digest_type digest;

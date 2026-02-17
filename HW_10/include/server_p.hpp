@@ -13,6 +13,11 @@ namespace async
 {
     class ServerImpl
     {
+        friend class Server;
+        std::unique_ptr<boost::asio::io_context> io_context_;
+        boost::asio::ip::tcp::acceptor acceptor_;
+        std::size_t bulk_size_;
+        std::vector<std::shared_ptr<Session>> sessions_;
     public:
         ServerImpl(
             std::unique_ptr<boost::asio::io_context> io_context,
@@ -60,17 +65,16 @@ namespace async
         {
             std::erase(sessions_, session);
         }
-
-    private:
-        friend class Server;
-        std::unique_ptr<boost::asio::io_context> io_context_;
-        boost::asio::ip::tcp::acceptor acceptor_;
-        std::size_t bulk_size_;
-        std::vector<std::shared_ptr<Session>> sessions_;
     };
 
     class SessionImpl
     {
+        boost::asio::ip::tcp::socket socket_;
+        std::size_t bulk_size_;
+        handle_t handle_{nullptr};
+        ServerImpl& server_;
+        Session& session_;
+        std::unique_ptr<boost::asio::streambuf> buffer_;
     public:
         SessionImpl(
             boost::asio::ip::tcp::socket& socket,
@@ -162,14 +166,6 @@ namespace async
                 cp::println(stderr, "Error: {}", error.message());
             }
         }
-
-    private:
-        boost::asio::ip::tcp::socket socket_;
-        std::size_t bulk_size_;
-        handle_t handle_{nullptr};
-        ServerImpl& server_;
-        Session& session_;
-        std::unique_ptr<boost::asio::streambuf> buffer_;
     };
 } // namespace async
 

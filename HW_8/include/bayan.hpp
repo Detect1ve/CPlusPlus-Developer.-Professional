@@ -50,12 +50,12 @@ private:
 
 struct BlockSize
 {
-    uintmax_t value;
+    std::uintmax_t value;
 };
 
 struct MinFileSize
 {
-    uintmax_t value;
+    std::uintmax_t value;
 };
 
 struct ExcludeDirs
@@ -85,11 +85,11 @@ struct Options
 {
     bool scan_level{};
     HashAlgorithm hash_algorithm;
+    std::uintmax_t block_size{};
+    std::uintmax_t min_file_size{};
     std::vector<std::string> exclude_dirs;
     std::vector<std::string> file_masks;
     std::vector<std::string> scan_dirs;
-    uintmax_t block_size{};
-    uintmax_t min_file_size{};
 };
 
 std::pair<ProcessStatus, Options> option_process(std::span<const char *const> argv);

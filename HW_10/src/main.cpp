@@ -36,31 +36,23 @@ int main(
 
             return ret;
         }
-
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        if (std::from_chars(args[1].data(), args[1].data() + args[1].size(), port,
+            BASE).ec != std::errc{})
         {
-            auto [ptr, ec] = std::from_chars(args[1].data(),
-                // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-                args[1].data() + args[1].size(), port, BASE);
-            if (ec != std::errc{})
-            {
-                cp::println(stderr, "Invalid port format");
-                ret = -2;
+            cp::println(stderr, "Invalid port format");
+            ret = -2;
 
-                return ret;
-            }
+            return ret;
         }
-
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        if (std::from_chars(args[2].data(), args[2].data() + args[2].size(), bulk_size,
+            BASE).ec != std::errc{})
         {
-            auto [ptr, ec] = std::from_chars(args[2].data(),
-                // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-                args[2].data() + args[2].size(), bulk_size, BASE);
-            if (ec != std::errc{})
-            {
-                cp::println(stderr, "Invalid bulk_size format");
-                ret = -3;
+            cp::println(stderr, "Invalid bulk_size format");
+            ret = -3;
 
-                return ret;
-            }
+            return ret;
         }
 
         async::Server server(port, bulk_size);
@@ -68,7 +60,7 @@ int main(
         server.setup_signal_handling();
         server.run();
     }
-    catch (std::exception& e)
+    catch (const std::exception& e)
     {
         cp::safe_error(e.what());
         ret = -4;

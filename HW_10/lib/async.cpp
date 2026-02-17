@@ -61,7 +61,7 @@ public:
     explicit taskmanager(const std::size_t max_task_count):
         max_static_task_count(max_task_count) {}
 
-    void add_task(std::string_view task) {
+    void add_task(const std::string_view task) {
         if (static_block_task.empty()) {
             static_block_timestamp = std::chrono::system_clock::now();
         }
@@ -186,7 +186,7 @@ std::unique_ptr<taskmanager>& shared_task_manager() {
     return *manager;
 }
 
-void process_command(ConnectionContext* context, const std::string& command) {
+void process_command(ConnectionContext* context, const std::string_view command) {
     if (command == "{") {
         if (context->dynamic_block_nesting_level == 0) {
             if (shared_task_manager()) {
@@ -236,18 +236,20 @@ void log_worker() {
             }
         }
 
-        if (!task.get_commands().empty()) {
-            cp::print("{}: ", TASK_MANAGER_NAME());
-
-            for (std::size_t i = 0; i < task.get_commands().size(); i++) {
-                cp::print("{}", task.get_commands()[i]);
-                if (i < task.get_commands().size() - 1) {
-                    cp::print("{}", delimiter);
-                }
-            }
-
-            cp::println();
+        if (task.get_commands().empty()) {
+            continue;
         }
+
+        cp::print("{}: ", TASK_MANAGER_NAME());
+
+        for (std::size_t i = 0; i < task.get_commands().size(); i++) {
+            cp::print("{}", task.get_commands()[i]);
+            if (i < task.get_commands().size() - 1) {
+                cp::print("{}", delimiter);
+            }
+        }
+
+        cp::println();
     }
 }
 
@@ -288,7 +290,7 @@ void file_worker(const int thread_id) {
                 file << TASK_MANAGER_NAME() << ": ";
 
                 const std::string delimiter = ", ";
-                for (std::size_t i = 0; i < task.get_commands().size(); ++i) {
+                for (std::size_t i = 0; i < task.get_commands().size(); i++) {
                     file << task.get_commands()[i];
                     if (i < task.get_commands().size() - 1) {
                         file << delimiter;

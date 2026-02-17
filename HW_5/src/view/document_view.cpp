@@ -51,7 +51,7 @@ namespace editor::view
             return;
         }
 
-        for (std::size_t i = 0; i < document_->getPrimitiveCount(); ++i)
+        for (std::size_t i = 0; i < document_->getPrimitiveCount(); i++)
         {
             const model::Primitive* primitive = document_->getPrimitive(i);
             auto view = PrimitiveViewFactory::createView(primitive);

@@ -16,9 +16,9 @@
 #include <database.hpp>
 
 bool Database::insert(
-    std::string_view table,
-    const int        record_id,
-    std::string_view name)
+    const std::string_view table,
+    const int              record_id,
+    const std::string_view name)
 {
     if (table == "A")
     {
@@ -50,7 +50,7 @@ bool Database::insert(
     return false;
 }
 
-void Database::truncate(std::string_view table)
+void Database::truncate(const std::string_view table)
 {
     if (table == "A")
     {
@@ -138,33 +138,25 @@ std::vector<std::string> Database::symmetric_difference()
     }
 
     std::ranges::sort(result, [](
-        std::string_view string_a,
-        std::string_view string_b)
+        const std::string_view string_a,
+        const std::string_view string_b)
     {
         auto substring_a = string_a.substr(0, string_a.find(','));
         auto substring_b = string_b.substr(0, string_b.find(','));
         constexpr unsigned char BASE = 10;
         int id_a = 0;
         int id_b = 0;
-
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        if (std::from_chars(substring_a.data(), substring_a.data() + substring_a.size(),
+            id_a, BASE).ec != std::errc{})
         {
-            auto [ptr, ec] = std::from_chars(substring_a.data(),
-                // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-                substring_a.data() + substring_a.size(), id_a, BASE);
-            if (ec != std::errc())
-            {
-                return false;
-            }
+            return false;
         }
-
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        if (std::from_chars(substring_b.data(), substring_b.data() + substring_b.size(),
+            id_b, BASE).ec != std::errc{})
         {
-            auto [ptr, ec] = std::from_chars(substring_b.data(),
-                // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-                substring_b.data() + substring_b.size(), id_b, BASE);
-            if (ec != std::errc())
-            {
-                return false;
-            }
+            return false;
         }
 
         return id_a < id_b;

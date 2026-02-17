@@ -1,15 +1,14 @@
-#if __cplusplus <= 201703L
-#include <atomic>
-#include <thread>
-#endif
+#include <atomic> // std::atomic
 #if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
 #include <chrono>
 #include <string>
 #endif
-#include <cmath>
 #include <cstddef> // std::size_t
 #include <cstdlib> // EXIT_FAILURE
 #include <exception> // std::exception
+#include <limits> // std::numeric_limits
+#include <thread> // std::thread
+#include <utility>
 #include <vector> // std::vector
 
 #include <custom_print.hpp>
@@ -67,7 +66,7 @@ namespace
     {
         bool consumerReady(false);
         bool producerDone(false);
-        float itemsPerSecond = NAN;
+        float itemsPerSecond = std::numeric_limits<float>::quiet_NaN();
         Queue<int> queue(false, QueueMode::SINGLE_PRODUCER_SINGLE_CONSUMER, queueSize);
         std::atomic<int> consumed(0);
 
@@ -96,7 +95,7 @@ namespace
             std::this_thread::yield();
         }
 
-        for (auto i = 0; i < numItems; ++i)
+        for (auto i = 0; std::cmp_less(i, numItems); i++)
         {
             queue.push(i);
         }
@@ -128,7 +127,7 @@ namespace
     {
         bool producersDone(false);
         const std::size_t itemsPerProducer = config.numItems / config.numProducers;
-        float itemsPerSecond = NAN;
+        float itemsPerSecond = std::numeric_limits<float>::quiet_NaN();
         Queue<std::size_t> queue(false, QueueMode::MULTI_PRODUCER_MULTI_CONSUMER,
             config.queueSize);
         std::atomic<int> produced(0);
@@ -170,7 +169,7 @@ namespace
         {
             producers.emplace_back([&, i]()
             {
-                for (std::size_t j = 0; j < itemsPerProducer; ++j)
+                for (std::size_t j = 0; j < itemsPerProducer; j++)
                 {
                     queue.push((i * itemsPerProducer) + j);
                     produced++;
@@ -208,8 +207,8 @@ namespace
         const int         numPriorities)
     {
         int consumed = 0;
-        float popPerSecond = NAN;
-        float pushPerSecond = NAN;
+        float popPerSecond = std::numeric_limits<float>::quiet_NaN();
+        float pushPerSecond = std::numeric_limits<float>::quiet_NaN();
         Queue<int, int> queue(true, QueueMode::MULTI_PRODUCER_MULTI_CONSUMER, 0);
 
         cp::println("=== Performance Test: Priority Queue ===");
@@ -218,7 +217,7 @@ namespace
 
         auto startPush = high_resolution_clock::now();
 
-        for (auto i = 0; i < numItems; ++i)
+        for (auto i = 0; std::cmp_less(i, numItems); i++)
         {
             const int priority = i % numPriorities;
 
@@ -263,10 +262,10 @@ namespace
     {
         int priorityConsumed = 0;
         int regularConsumed = 0;
-        float priorityPopPerSecond = NAN;
-        float priorityPushPerSecond = NAN;
-        float regularPopPerSecond = NAN;
-        float regularPushPerSecond = NAN;
+        float priorityPopPerSecond = std::numeric_limits<float>::quiet_NaN();
+        float priorityPushPerSecond = std::numeric_limits<float>::quiet_NaN();
+        float regularPopPerSecond = std::numeric_limits<float>::quiet_NaN();
+        float regularPushPerSecond = std::numeric_limits<float>::quiet_NaN();
         Queue<int> regularQueue;
         Queue<int, int> priorityQueue(true, QueueMode::MULTI_PRODUCER_MULTI_CONSUMER, 0);
 
@@ -275,7 +274,7 @@ namespace
 
         auto startRegularPush = high_resolution_clock::now();
 
-        for (auto i = 0; i < numItems; ++i)
+        for (auto i = 0; std::cmp_less(i, numItems); i++)
         {
             regularQueue.push(i);
         }
@@ -299,7 +298,7 @@ namespace
 
         auto startPriorityPush = high_resolution_clock::now();
 
-        for (auto i = 0; i < numItems; ++i)
+        for (auto i = 0; std::cmp_less(i, numItems); i++)
         {
             constexpr int kNumPriorities = 10;
             priorityQueue.push(i, i % kNumPriorities, -1);

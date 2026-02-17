@@ -26,14 +26,13 @@
 // (".11", '.') -> ["", "11"]
 // ("11.22", '.') -> ["11", "22"]
 
-std::expected<unsigned char, std::error_code> from_chars(std::string_view chars)
+std::expected<unsigned char, std::error_code> from_chars(const std::string_view chars)
 {
     constexpr unsigned char BASE = 10;
     unsigned char value = 0;
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-    auto [ptr, ec] = std::from_chars(chars.data(), chars.data() + chars.size(), value,
-        BASE);
-    if (ec != std::errc())
+    if (auto [ptr, ec] = std::from_chars(chars.data(), chars.data() + chars.size(),
+        value, BASE); ec != std::errc{})
     {
         return std::unexpected(std::make_error_code(ec));
     }
@@ -41,30 +40,33 @@ std::expected<unsigned char, std::error_code> from_chars(std::string_view chars)
     return value;
 }
 
-std::vector<std::string> split(
-    const std::string& str,
-    const char         d) // NOLINT(readability-identifier-length)
-{
-    std::string::size_type start = 0;
-    std::string::size_type stop = str.find_first_of(d);
-    std::vector<std::string> r; // NOLINT(readability-identifier-length)
-
-    while (stop != std::string::npos)
-    {
-        r.push_back(str.substr(start, stop - start));
-
-        start = stop + 1;
-        stop = str.find_first_of(d, start);
-    }
-
-    r.push_back(str.substr(start));
-
-    return r;
-}
-
 namespace
 {
-    constexpr bool comp(
+    std::vector<std::string> split(
+        const std::string& str,
+        const char         d) // NOLINT(readability-identifier-length)
+    {
+        std::string::size_type start = 0;
+        std::string::size_type stop = str.find_first_of(d);
+        std::vector<std::string> r; // NOLINT(readability-identifier-length)
+
+        while (stop != std::string::npos)
+        {
+            r.push_back(str.substr(start, stop - start));
+
+            start = stop + 1;
+            stop = str.find_first_of(d, start);
+        }
+
+        r.push_back(str.substr(start));
+
+        return r;
+    }
+} // namespace
+
+void reverse_lexicographic_sort(std::vector<std::vector<std::string>>& ip_pool)
+{
+    auto comp = [](
         const std::vector<std::string>& first_ip,
         const std::vector<std::string>& second_ip)
     {
@@ -89,11 +91,8 @@ namespace
         }
 
         return false;
-    }
-} // namespace
+    };
 
-void reverse_lexicographic_sort(std::vector<std::vector<std::string>>& ip_pool)
-{
     std::ranges::sort(ip_pool, comp, std::identity{});
 }
 
@@ -154,7 +153,7 @@ void print(std::span<const std::vector<std::string>> ip_pool)
 #else
     for (const auto& ip_address : ip_pool)
     {
-        for (std::size_t i = 0; i < ip_address.size(); ++i)
+        for (std::size_t i = 0; i < ip_address.size(); i++)
         {
             cp::print("{}", ip_address[i]);
             if (i + 1 < ip_address.size())

@@ -1,7 +1,7 @@
 #include <algorithm> // std::ranges::transform
 #include <cctype> // std::tolower
 #include <cstddef> // std::size_t
-#include <cstdint> // uintmax_t
+#include <cstdint> // std::uintmax_t
 #include <cstdio> // stderr
 #include <exception> // std::exception
 #include <fstream> // std::ifstream
@@ -39,7 +39,7 @@ struct FileInfo
 {
     FileInfo(
         boost::filesystem::path path,
-        uintmax_t               size,
+        std::uintmax_t          size,
         std::size_t             block_size);
 
     FileInfo(const FileInfo& other);
@@ -48,7 +48,7 @@ struct FileInfo
     FileInfo& operator=(FileInfo&&) noexcept = default;
     ~FileInfo() noexcept = default;
 
-    ATTRIBUTE_PURE [[nodiscard]] uintmax_t get_size() const;
+    ATTRIBUTE_PURE [[nodiscard]] std::uintmax_t get_size() const;
     ATTRIBUTE_CONST [[nodiscard]] const std::vector<std::string>& get_hashes() const;
     ATTRIBUTE_CONST const boost::filesystem::path& get_path() const;
     std::string compute_block_hash(
@@ -64,7 +64,7 @@ private:
     mutable std::vector<std::string> hashes;
     mutable std::unique_ptr<std::ifstream> file_stream;
     std::size_t block_size_;
-    uintmax_t size_;
+    std::uintmax_t size_;
 };
 
 class FileScanner
@@ -79,12 +79,12 @@ class FileScanner
     [[nodiscard]] bool is_excluded(const boost::filesystem::path& dir) const;
 
     bool scan_level_;
+    std::uintmax_t block_size_;
+    std::uintmax_t min_file_size_;
     std::vector<std::regex> mask_regexes_;
     std::vector<std::string> exclude_dirs_;
     std::vector<std::string> file_masks_;
     std::vector<std::string> scan_dirs_;
-    uintmax_t block_size_;
-    uintmax_t min_file_size_;
 public:
     FileScanner(
         bool               scan_level,
@@ -103,16 +103,16 @@ class DuplicateFinder
         find_duplicates_in_group(std::vector<FileInfo*>& files);
 
     HashAlgorithm hash_algo_;
-    uintmax_t block_size_;
+    std::uintmax_t block_size_;
 public:
     DuplicateFinder(
-        HashAlgorithm hash_algo,
-        uintmax_t     block_size);
+        HashAlgorithm  hash_algo,
+        std::uintmax_t block_size);
 
     std::vector<std::vector<FileInfo>> find_duplicates(std::vector<FileInfo>& files);
 };
 
-std::string compute_crc32(std::string_view input)
+std::string compute_crc32(const std::string_view input)
 {
     boost::crc_32_type result;
 
@@ -121,7 +121,7 @@ std::string compute_crc32(std::string_view input)
     return std::to_string(result.checksum());
 }
 
-std::string compute_md5(std::string_view input)
+std::string compute_md5(const std::string_view input)
 {
     boost::uuids::detail::md5 hash;
     boost::uuids::detail::md5::digest_type digest;
@@ -165,7 +165,7 @@ HashAlgorithm::HashAlgorithm(const hash_algorithm value)
     value_(value),
     hash_function(get_hash_function(value_)) {}
 
-HashAlgorithm::HashAlgorithm(std::string_view name) : value_{}
+HashAlgorithm::HashAlgorithm(const std::string_view name) : value_{}
 {
     std::string lower_s(name);
     std::ranges::transform(lower_s, lower_s.begin(), [](unsigned char character) noexcept
@@ -186,14 +186,14 @@ HashAlgorithm::HashAlgorithm(std::string_view name) : value_{}
     hash_function = get_hash_function(value_);
 }
 
-std::string HashAlgorithm::compute_hash(std::string_view input) const
+std::string HashAlgorithm::compute_hash(const std::string_view input) const
 {
     return hash_function(input);
 }
 
 FileInfo::FileInfo(
     boost::filesystem::path path,
-    const uintmax_t         size,
+    const std::uintmax_t    size,
     const std::size_t       block_size)
     :
     path_(std::move(path)),
@@ -226,7 +226,7 @@ FileInfo& FileInfo::operator=(const FileInfo& other)
     return *this;
 }
 
-uintmax_t FileInfo::get_size() const
+std::uintmax_t FileInfo::get_size() const
 {
     return size_;
 }
@@ -303,11 +303,11 @@ FileScanner::FileScanner(
     const ScanDirs&    scan_dirs)
     :
     scan_level_(scan_level),
+    block_size_(block_size.value),
+    min_file_size_(min_file_size.value),
     exclude_dirs_(exclude_dirs.value),
     file_masks_(file_masks.value),
-    scan_dirs_(scan_dirs.value),
-    block_size_(block_size.value),
-    min_file_size_(min_file_size.value)
+    scan_dirs_(scan_dirs.value)
 {
     for (const auto& mask : file_masks_)
     {
@@ -365,7 +365,7 @@ void FileScanner::scan_directory_recursive(
             files.emplace_back(path, boost::filesystem::file_size(path), block_size_);
         }
 
-        ++iterator;
+        iterator++;
     }
 }
 
@@ -444,7 +444,8 @@ bool FileScanner::matches_masks(const boost::filesystem::path& file_path) const
 
 bool FileScanner::is_excluded(const boost::filesystem::path& dir) const
 {
-    return std::ranges::any_of(exclude_dirs_, [&dir](const std::string& exclude_dir_str)
+    return std::ranges::any_of(exclude_dirs_, [&dir]
+        (const std::string_view exclude_dir_str)
     {
         const boost::filesystem::path exclude_dir(exclude_dir_str);
 
@@ -456,8 +457,8 @@ bool FileScanner::is_excluded(const boost::filesystem::path& dir) const
 
 
 DuplicateFinder::DuplicateFinder(
-    HashAlgorithm   hash_algo,
-    const uintmax_t block_size)
+    HashAlgorithm        hash_algo,
+    const std::uintmax_t block_size)
     :
     hash_algo_(std::move(hash_algo)),
     block_size_(block_size) {}
@@ -465,7 +466,7 @@ DuplicateFinder::DuplicateFinder(
 std::vector<std::vector<FileInfo>>
     DuplicateFinder::find_duplicates(std::vector<FileInfo>& files)
 {
-    std::unordered_map<uintmax_t, std::vector<FileInfo*>> files_by_size;
+    std::unordered_map<std::uintmax_t, std::vector<FileInfo*>> files_by_size;
 
     for (auto& file : files)
     {
@@ -493,7 +494,7 @@ std::vector<std::vector<FileInfo>>
 {
     const std::size_t num_blocks = (files[0]->get_size() + block_size_ - 1) / block_size_;
 
-    for (std::size_t block_idx = 0; block_idx < num_blocks; ++block_idx)
+    for (std::size_t block_idx = 0; block_idx < num_blocks; block_idx++)
     {
         std::unordered_map<std::string, std::vector<FileInfo*>> files_by_hash;
 
@@ -608,7 +609,8 @@ std::pair<ProcessStatus, Options> option_process(std::span<const char *const> ar
                 (&options.file_masks),
                 "masks of file names allowed for comparison (case-insensitive)")
             ("hash_algorithm", boost::program_options::value<std::string>()
-                ->default_value("crc32")->notifier([&options](const std::string& value)
+                ->default_value("crc32")->notifier([&options]
+                    (const std::string_view value)
                 {
                     try
                     {

@@ -45,9 +45,8 @@ target_compile_options(server_and_database PRIVATE
 if (MSVC)
   target_compile_definitions(server_and_database PRIVATE _WIN32_WINNT=0x0A00)
 else()
-  target_compile_options(server_and_database
-    PRIVATE -Wno-effc++ -Wno-null-dereference -Wno-strict-overflow
-      -Wno-unsafe-buffer-usage)
+  target_compile_options(server_and_database PRIVATE
+    -Wno-effc++ -Wno-null-dereference -Wno-strict-overflow -Wno-unsafe-buffer-usage)
 endif()
 
 add_executable(join_server src/main.cpp)
@@ -55,8 +54,8 @@ target_link_libraries(join_server PRIVATE custom_print server_and_database)
 target_compile_options(join_server PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_11_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)
-  target_compile_options(join_server
-    PRIVATE -Wno-unsafe-buffer-usage-in-container -Wno-unsafe-buffer-usage)
+  target_compile_options(join_server PRIVATE
+    -Wno-unsafe-buffer-usage-in-container -Wno-unsafe-buffer-usage)
   target_link_libraries(join_server PRIVATE -static)
 endif()
 
@@ -66,8 +65,8 @@ target_link_libraries(join_server_test PRIVATE GTest::gtest_main server_and_data
 target_compile_options(join_server_test PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_11_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)
-  target_compile_options(join_server_test
-    PRIVATE -Wno-effc++ -Wno-strict-overflow -Wno-global-constructors)
+  target_compile_options(join_server_test PRIVATE
+    -Wno-effc++ -Wno-strict-overflow -Wno-global-constructors)
 endif()
 
 set(CLANG_TIDY_HW_11_OPTS
