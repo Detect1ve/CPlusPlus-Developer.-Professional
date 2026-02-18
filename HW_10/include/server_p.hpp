@@ -13,21 +13,16 @@ namespace async
 {
     class ServerImpl
     {
-        friend class Server;
-        std::unique_ptr<boost::asio::io_context> io_context_;
-        boost::asio::ip::tcp::acceptor acceptor_;
-        std::size_t bulk_size_;
-        std::vector<std::shared_ptr<Session>> sessions_;
     public:
         ServerImpl(
             std::unique_ptr<boost::asio::io_context> io_context,
-            const std::uint16_t                      port,
+            const boost::asio::ip::port_type         port,
             const std::size_t                        bulk_size)
             :
+            bulk_size_(bulk_size),
             io_context_(std::move(io_context)),
             acceptor_(*io_context_,
-                boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
-            bulk_size_(bulk_size)
+                boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port))
         {
             cp::println("Server started on port {} with bulk size {}", port, bulk_size);
         }
@@ -37,6 +32,12 @@ namespace async
         ServerImpl(ServerImpl&&) = delete;
         ServerImpl& operator=(ServerImpl&&) = delete;
 
+        void remove_session(const std::shared_ptr<Session>& session)
+        {
+            std::erase(sessions_, session);
+        }
+
+    private:
         void start_accept()
         {
             acceptor_.async_accept(
@@ -61,20 +62,15 @@ namespace async
                 });
         }
 
-        void remove_session(const std::shared_ptr<Session>& session)
-        {
-            std::erase(sessions_, session);
-        }
+        friend class Server;
+        std::size_t bulk_size_;
+        std::unique_ptr<boost::asio::io_context> io_context_;
+        boost::asio::ip::tcp::acceptor acceptor_;
+        std::vector<std::shared_ptr<Session>> sessions_;
     };
 
     class SessionImpl
     {
-        boost::asio::ip::tcp::socket socket_;
-        std::size_t bulk_size_;
-        handle_t handle_{nullptr};
-        ServerImpl& server_;
-        Session& session_;
-        std::unique_ptr<boost::asio::streambuf> buffer_;
     public:
         SessionImpl(
             boost::asio::ip::tcp::socket& socket,
@@ -83,11 +79,10 @@ namespace async
             Session&                      session)
             :
             socket_(std::move(socket)),
-            bulk_size_(bulk_size),
             server_(server),
             session_(session),
+            bulk_size_(bulk_size),
             buffer_(std::make_unique<boost::asio::streambuf>()) {}
-
         ~SessionImpl()
         {
             if (handle_ != nullptr)
@@ -95,7 +90,6 @@ namespace async
                 disconnect(handle_);
             }
         }
-
         SessionImpl(const SessionImpl&) = delete;
         SessionImpl& operator=(const SessionImpl&) = delete;
         SessionImpl(SessionImpl&&) = delete;
@@ -113,6 +107,7 @@ namespace async
                 });
         }
 
+    private:
         void handle_read(
             const boost::system::error_code& error,
             const std::size_t                bytes_transferred)
@@ -166,6 +161,13 @@ namespace async
                 cp::println(stderr, "Error: {}", error.message());
             }
         }
+
+        boost::asio::ip::tcp::socket socket_;
+        handle_t handle_{nullptr};
+        ServerImpl& server_;
+        Session& session_;
+        std::size_t bulk_size_;
+        std::unique_ptr<boost::asio::streambuf> buffer_;
     };
 } // namespace async
 

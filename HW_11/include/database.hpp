@@ -13,10 +13,6 @@ struct Record
 
 class Database
 {
-    std::mutex table_a_mutex_;
-    std::mutex table_b_mutex_;
-    std::unordered_map<int, std::string> table_a_;
-    std::unordered_map<int, std::string> table_b_;
 public:
     Database() = default;
     ~Database() = default;
@@ -33,6 +29,12 @@ public:
     std::vector<std::string> intersection();
     std::vector<std::string> symmetric_difference();
     void truncate(std::string_view table);
+
+private:
+    std::mutex table_a_mutex_;
+    std::mutex table_b_mutex_;
+    std::unordered_map<int, std::string> table_a_;
+    std::unordered_map<int, std::string> table_b_;
 };
 
 #endif // DATABASE_HPP

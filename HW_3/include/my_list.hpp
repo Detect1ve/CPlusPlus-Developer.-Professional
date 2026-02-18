@@ -6,45 +6,40 @@
 template <typename T, typename Alloc = std::allocator<T>>
 class MyList
 {
-    struct Node
-    {
-        explicit Node(T const val): next(nullptr), val_(val) {}
-
-        [[nodiscard]] T getValue() const
-        {
-            return val_;
-        }
-
-        [[nodiscard]] Node* getNext() const
-        {
-            return next;
-        }
-
-        void setNext(Node* const newNext)
-        {
-            next = newNext;
-        }
-
-    private:
-        Node *next;
-        T val_;
-    };
-
-    Node *head = nullptr;
-    Node *tail = nullptr;
-    std::size_t size_ = 0;
+    class Node;
 public:
+    MyList() = default;
+    ~MyList()
+    {
+        using NodeAllocator =
+            typename std::allocator_traits<Alloc>::template rebind_alloc<Node>;
+        NodeAllocator nodeAllocator;
+
+        Node* current_ = head_;
+        while (current_)
+        {
+            Node* next = current_->getNext();
+
+            current_->~Node();
+            nodeAllocator.deallocate(current_, 1);
+            current_ = next;
+        }
+    }
+    MyList(const MyList&) = delete;
+    MyList& operator=(const MyList&) = delete;
+    MyList(MyList&&) = delete;
+    MyList& operator=(MyList&&) = delete;
+
     class iterator
     {
-        Node* current;
     public:
-        explicit iterator(Node* const ptr) : current(ptr) {}
+        explicit iterator(Node* const ptr) : current_(ptr) {}
 
         iterator& operator++()
         {
-            if (current)
+            if (current_)
             {
-                current = current->getNext();
+                current_ = current_->getNext();
             }
 
             return *this;
@@ -52,18 +47,21 @@ public:
 
         T operator*() const
         {
-            return current->getValue();
+            return current_->getValue();
         }
 
         bool operator!=(const iterator& other) const
         {
-            return current != other.current;
+            return current_ != other.current_;
         }
+
+    private:
+        Node* current_;
     };
 
     iterator begin()
     {
-        return iterator(head);
+        return iterator(head_);
     }
 
     iterator end()
@@ -73,7 +71,7 @@ public:
 
     [[nodiscard]] bool empty() const
     {
-        return head == nullptr;
+        return head_ == nullptr;
     }
 
     [[nodiscard]] std::size_t size() const
@@ -92,42 +90,49 @@ public:
 
         new (newNode) Node(val);
 
-        if (head == nullptr)
+        if (head_ == nullptr)
         {
-            head = newNode;
-            tail = newNode;
+            head_ = newNode;
+            tail_ = newNode;
         }
         else
         {
-            tail->setNext(newNode);
-            tail = newNode;
+            tail_->setNext(newNode);
+            tail_ = newNode;
         }
 
         size_++;
     }
 
-    MyList() = default;
-    MyList(const MyList&) = delete;
-    MyList& operator=(const MyList&) = delete;
-    MyList(MyList&&) = delete;
-    MyList& operator=(MyList&&) = delete;
-
-    ~MyList()
+private:
+    class Node
     {
-        using NodeAllocator =
-            typename std::allocator_traits<Alloc>::template rebind_alloc<Node>;
-        NodeAllocator nodeAllocator;
+    public:
+        explicit Node(T const val): next_(nullptr), val_(val) {}
 
-        Node* current = head;
-        while (current)
+        [[nodiscard]] T getValue() const
         {
-            Node* next = current->getNext();
-
-            current->~Node();
-            nodeAllocator.deallocate(current, 1);
-            current = next;
+            return val_;
         }
-    }
+
+        [[nodiscard]] Node* getNext() const
+        {
+            return next_;
+        }
+
+        void setNext(Node *const newNext)
+        {
+            next_ = newNext;
+        }
+
+    private:
+        Node *next_;
+        T val_;
+    };
+
+    Node *head_ = nullptr;
+    Node *tail_ = nullptr;
+    std::size_t size_ = 0;
 };
 
 #endif // MY_LIST_HPP

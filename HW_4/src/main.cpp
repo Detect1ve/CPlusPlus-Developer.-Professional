@@ -51,7 +51,7 @@ int main()
     }
     catch (...)
     {
-        cp::safe_error(nullptr);
+        cp::safe_error();
 
         return EXIT_FAILURE;
     }

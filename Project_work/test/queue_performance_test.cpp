@@ -4,10 +4,12 @@
 #include <string>
 #endif
 #include <cstddef> // std::size_t
+#include <cstdint> // std::uint64_t
 #include <cstdlib> // EXIT_FAILURE
 #include <exception> // std::exception
 #include <limits> // std::numeric_limits
-#include <thread> // std::thread
+#include <stop_token> // std::stop_token
+#include <thread>
 #include <utility>
 #include <vector> // std::vector
 
@@ -25,12 +27,12 @@ using std::chrono::seconds;
 
 namespace
 {
-    constexpr float kMillisecondsInSecond = 1000.0;
+    constexpr double MILLISEC_IN_SEC = 1000.0;
 
     std::string formatDuration(const nanoseconds nanos)
     {
-        constexpr int kMicrosecondsInMillisecond = 1000;
-        constexpr int kHundred = 100;
+        constexpr int HUNDRED = 100;
+        constexpr int MICROSEC_IN_MILLISEC = 1000;
 
         const auto micros = duration_cast<microseconds>(nanos);
         const auto millis = duration_cast<milliseconds>(nanos);
@@ -39,21 +41,21 @@ namespace
         if (secs.count() > 0)
         {
             return std::to_string(secs.count()) + "."
-                + std::to_string((millis.count() % kMicrosecondsInMillisecond) / kHundred)
+                + std::to_string((millis.count() % MICROSEC_IN_MILLISEC) / HUNDRED)
                 + " s";
         }
 
         if (millis.count() > 0)
         {
             return std::to_string(millis.count()) + "."
-                + std::to_string((micros.count() % kMicrosecondsInMillisecond) / kHundred)
+                + std::to_string((micros.count() % MICROSEC_IN_MILLISEC) / HUNDRED)
                 + " ms";
         }
 
         if (micros.count() > 0)
         {
             return std::to_string(micros.count()) + "."
-                + std::to_string((nanos.count() % kMicrosecondsInMillisecond) / kHundred)
+                + std::to_string((nanos.count() % MICROSEC_IN_MILLISEC) / HUNDRED)
                 + " µs";
         }
 
@@ -61,12 +63,11 @@ namespace
     }
 
     void testSingleProducerSingleConsumer(
-        const std::size_t numItems,
+        const int         numItems,
         const std::size_t queueSize)
     {
         bool consumerReady(false);
-        bool producerDone(false);
-        float itemsPerSecond = std::numeric_limits<float>::quiet_NaN();
+        double itemsPerSecond = std::numeric_limits<double>::quiet_NaN();
         Queue<int> queue(false, QueueMode::SINGLE_PRODUCER_SINGLE_CONSUMER, queueSize);
         std::atomic<int> consumed(0);
 
@@ -74,14 +75,14 @@ namespace
         cp::println("Number of elements: {}, queue size: {}", numItems, queueSize);
 
         auto start = high_resolution_clock::now();
-        std::thread consumer([&]()
+        std::jthread consumer([&](const std::stop_token& stoken)
         {
             consumerReady = true;
-            while (  !producerDone
-                || !queue.empty())
+            while (  !stoken.stop_requested()
+                  || !queue.empty())
             {
-                constexpr int kPopTimeoutMilliseconds = 100;
-                const auto item = queue.pop(kPopTimeoutMilliseconds);
+                constexpr int POP_TIMEOUT_MILLISEC = 100;
+                const auto item = queue.pop(POP_TIMEOUT_MILLISEC);
 
                 if (item.has_value())
                 {
@@ -95,19 +96,19 @@ namespace
             std::this_thread::yield();
         }
 
-        for (auto i = 0; std::cmp_less(i, numItems); i++)
+        for (int i = 0; i < numItems; i++)
         {
             queue.push(i);
         }
 
-        producerDone = true;
+        consumer.request_stop();
         consumer.join();
         auto end = high_resolution_clock::now();
 
         auto duration = end - start;
-        itemsPerSecond = static_cast<float>(numItems)
-            / (static_cast<float>(duration_cast<milliseconds>(duration).count())
-            / kMillisecondsInSecond);
+        itemsPerSecond = static_cast<double>(numItems)
+            / (static_cast<double>(duration_cast<milliseconds>(duration).count())
+            / MILLISEC_IN_SEC);
 
         cp::println("Lead time: {}", formatDuration(duration));
         cp::println("Elements produced: {}", numItems);
@@ -117,23 +118,22 @@ namespace
 
     struct TestConfig
     {
-        std::size_t numItems;
+        int numItems;
         std::size_t queueSize;
-        std::size_t numProducers;
-        std::size_t numConsumers;
+        int numProducers;
+        int numConsumers;
     };
 
     void testMultiProducerMultiConsumer(const TestConfig& config)
     {
-        bool producersDone(false);
-        const std::size_t itemsPerProducer = config.numItems / config.numProducers;
-        float itemsPerSecond = std::numeric_limits<float>::quiet_NaN();
-        Queue<std::size_t> queue(false, QueueMode::MULTI_PRODUCER_MULTI_CONSUMER,
+        const int itemsPerProducer = config.numItems / config.numProducers;
+        double itemsPerSecond = std::numeric_limits<double>::quiet_NaN();
+        Queue<int> queue(false, QueueMode::MULTI_PRODUCER_MULTI_CONSUMER,
             config.queueSize);
         std::atomic<int> produced(0);
         std::atomic<int> consumed(0);
-        std::vector<std::thread> consumers;
-        std::vector<std::thread> producers;
+        std::vector<std::jthread> consumers;
+        std::vector<std::jthread> producers;
 
         cp::println("=== Performance Test: Many Producers, Many Consumers ===");
         cp::println("Number of elements: {}, queue size: {}", config.numItems,
@@ -143,17 +143,17 @@ namespace
 
         auto start = high_resolution_clock::now();
 
-        consumers.reserve(config.numConsumers);
+        consumers.reserve(static_cast<std::uint64_t>(config.numConsumers)); // FIXME
 
-        for (std::size_t i = 0; i < config.numConsumers; i++)
+        for (int i = 0; i < config.numConsumers; i++)
         {
-            consumers.emplace_back([&]()
+            consumers.emplace_back([&](const std::stop_token& stoken)
             {
-                while (  !producersDone
-                    || !queue.empty())
+                while (  !stoken.stop_requested()
+                      || !queue.empty())
                 {
-                    constexpr int kPopTimeoutMilliseconds = 10;
-                    const auto item = queue.pop(kPopTimeoutMilliseconds);
+                    constexpr int POP_TIMEOUT_MILLISEC = 10;
+                    const auto item = queue.pop(POP_TIMEOUT_MILLISEC);
 
                     if (item.has_value())
                     {
@@ -163,13 +163,13 @@ namespace
             });
         }
 
-        producers.reserve(config.numProducers);
+        producers.reserve(static_cast<std::uint64_t>(config.numProducers)); // FIXME
 
-        for (std::size_t i = 0; i < config.numProducers; i++)
+        for (int i = 0; i < config.numProducers; i++)
         {
             producers.emplace_back([&, i]()
             {
-                for (std::size_t j = 0; j < itemsPerProducer; j++)
+                for (int j = 0; j < itemsPerProducer; j++)
                 {
                     queue.push((i * itemsPerProducer) + j);
                     produced++;
@@ -177,24 +177,21 @@ namespace
             });
         }
 
-        for (auto& producer : producers)
-        {
-            producer.join();
-        }
-
-        producersDone = true;
+        producers.clear();
 
         for (auto& consumer : consumers)
         {
-            consumer.join();
+            consumer.request_stop();
         }
+
+        consumers.clear();
 
         auto end = high_resolution_clock::now();
 
         auto duration = end - start;
-        itemsPerSecond = static_cast<float>(produced)
-            / (static_cast<float>(duration_cast<milliseconds>(duration).count())
-            / kMillisecondsInSecond);
+        itemsPerSecond = static_cast<double>(produced)
+            / (static_cast<double>(duration_cast<milliseconds>(duration).count())
+            / MILLISEC_IN_SEC);
 
         cp::println("Lead time: {}", formatDuration(duration));
         cp::println("Elements produced: {}", produced.load(std::memory_order_relaxed));
@@ -203,12 +200,12 @@ namespace
     }
 
     void testPriorityQueue(
-        const std::size_t numItems,
-        const int         numPriorities)
+        const int numItems,
+        const int numPriorities)
     {
+        double popPerSecond = std::numeric_limits<double>::quiet_NaN();
+        double pushPerSecond = std::numeric_limits<double>::quiet_NaN();
         int consumed = 0;
-        float popPerSecond = std::numeric_limits<float>::quiet_NaN();
-        float pushPerSecond = std::numeric_limits<float>::quiet_NaN();
         Queue<int, int> queue(true, QueueMode::MULTI_PRODUCER_MULTI_CONSUMER, 0);
 
         cp::println("=== Performance Test: Priority Queue ===");
@@ -217,7 +214,7 @@ namespace
 
         auto startPush = high_resolution_clock::now();
 
-        for (auto i = 0; std::cmp_less(i, numItems); i++)
+        for (int i = 0; i < numItems; i++)
         {
             const int priority = i % numPriorities;
 
@@ -244,12 +241,12 @@ namespace
         auto durationPop = endPop - startPop;
         auto durationTotal = durationPush + durationPop;
 
-        pushPerSecond = static_cast<float>(numItems)
-            / (static_cast<float>(duration_cast<milliseconds>(durationPush).count())
-            / kMillisecondsInSecond);
-        popPerSecond = static_cast<float>(consumed)
-            / (static_cast<float>(duration_cast<milliseconds>(durationPop).count())
-            / kMillisecondsInSecond);
+        pushPerSecond = static_cast<double>(numItems)
+            / (static_cast<double>(duration_cast<milliseconds>(durationPush).count())
+            / MILLISEC_IN_SEC);
+        popPerSecond = static_cast<double>(consumed)
+            / (static_cast<double>(duration_cast<milliseconds>(durationPop).count())
+            / MILLISEC_IN_SEC);
 
         cp::println("Add time: {}", formatDuration(durationPush));
         cp::println("Extraction time: {}", formatDuration(durationPop));
@@ -258,14 +255,14 @@ namespace
         cp::println("Extraction performance: {:.2f} elements/sec\n", popPerSecond);
     }
 
-    void compareQueueTypes(const std::size_t numItems)
+    void compareQueueTypes(const int numItems)
     {
         int priorityConsumed = 0;
         int regularConsumed = 0;
-        float priorityPopPerSecond = std::numeric_limits<float>::quiet_NaN();
-        float priorityPushPerSecond = std::numeric_limits<float>::quiet_NaN();
-        float regularPopPerSecond = std::numeric_limits<float>::quiet_NaN();
-        float regularPushPerSecond = std::numeric_limits<float>::quiet_NaN();
+        double priorityPopPerSecond = std::numeric_limits<double>::quiet_NaN();
+        double priorityPushPerSecond = std::numeric_limits<double>::quiet_NaN();
+        double regularPopPerSecond = std::numeric_limits<double>::quiet_NaN();
+        double regularPushPerSecond = std::numeric_limits<double>::quiet_NaN();
         Queue<int> regularQueue;
         Queue<int, int> priorityQueue(true, QueueMode::MULTI_PRODUCER_MULTI_CONSUMER, 0);
 
@@ -274,7 +271,7 @@ namespace
 
         auto startRegularPush = high_resolution_clock::now();
 
-        for (auto i = 0; std::cmp_less(i, numItems); i++)
+        for (int i = 0; std::cmp_less(i, numItems); i++)
         {
             regularQueue.push(i);
         }
@@ -298,10 +295,10 @@ namespace
 
         auto startPriorityPush = high_resolution_clock::now();
 
-        for (auto i = 0; std::cmp_less(i, numItems); i++)
+        for (int i = 0; std::cmp_less(i, numItems); i++)
         {
-            constexpr int kNumPriorities = 10;
-            priorityQueue.push(i, i % kNumPriorities, -1);
+            constexpr int NUM_PRIORITIES = 10;
+            priorityQueue.push(i, i % NUM_PRIORITIES, -1);
         }
 
         auto endPriorityPush = high_resolution_clock::now();
@@ -333,18 +330,18 @@ namespace
         cp::println("  Extraction time: {}", formatDuration(durPriorityPop));
         cp::println("  Total time: {}", formatDuration(durPriorityPush + durPriorityPop));
 
-        regularPushPerSecond = static_cast<float>(numItems)
-            / (static_cast<float>(duration_cast<milliseconds>(durRegularPush).count())
-            / kMillisecondsInSecond);
-        regularPopPerSecond = static_cast<float>(regularConsumed)
-            / (static_cast<float>(duration_cast<milliseconds>(durRegularPop).count())
-            / kMillisecondsInSecond);
-        priorityPushPerSecond = static_cast<float>(numItems)
-            / (static_cast<float>(duration_cast<milliseconds>(durPriorityPush).count())
-            / kMillisecondsInSecond);
-        priorityPopPerSecond = static_cast<float>(priorityConsumed)
-            / (static_cast<float>(duration_cast<milliseconds>(durPriorityPop).count())
-            / kMillisecondsInSecond);
+        regularPushPerSecond = static_cast<double>(numItems)
+            / (static_cast<double>(duration_cast<milliseconds>(durRegularPush).count())
+            / MILLISEC_IN_SEC);
+        regularPopPerSecond = static_cast<double>(regularConsumed)
+            / (static_cast<double>(duration_cast<milliseconds>(durRegularPop).count())
+            / MILLISEC_IN_SEC);
+        priorityPushPerSecond = static_cast<double>(numItems)
+            / (static_cast<double>(duration_cast<milliseconds>(durPriorityPush).count())
+            / MILLISEC_IN_SEC);
+        priorityPopPerSecond = static_cast<double>(priorityConsumed)
+            / (static_cast<double>(duration_cast<milliseconds>(durPriorityPop).count())
+            / MILLISEC_IN_SEC);
 
         cp::println("Comparison of append performance:");
         cp::println("  Regular queue: {:.2f} elements/sec", regularPushPerSecond);
@@ -376,7 +373,7 @@ int main()
             .numProducers = 2,
             .numConsumers = 2
         };
-        constexpr int kNumPriorities = 5;
+        constexpr int NUM_PRIORITIES = 5;
 
         testSingleProducerSingleConsumer(small_config.numItems, small_config.queueSize);
         testSingleProducerSingleConsumer(large_config.numItems, large_config.queueSize);
@@ -384,7 +381,7 @@ int main()
         testMultiProducerMultiConsumer(small_config);
         testMultiProducerMultiConsumer(large_config);
 
-        testPriorityQueue(small_config.numItems, kNumPriorities);
+        testPriorityQueue(small_config.numItems, NUM_PRIORITIES);
 
         compareQueueTypes(small_config.numItems);
 
@@ -397,7 +394,7 @@ int main()
     }
     catch (...)
     {
-        cp::safe_error(nullptr);
+        cp::safe_error();
 
         return EXIT_FAILURE;
     }

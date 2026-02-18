@@ -10,13 +10,7 @@ set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 project(ip_filter VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 if (PROJECT_IS_TOP_LEVEL)
-  if (NOT MSVC)
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-      add_compile_options(-fcolor-diagnostics)
-    else()
-      add_compile_options(-fdiagnostics-color=always)
-    endif()
-  endif()
+  set(CMAKE_COLOR_DIAGNOSTICS ON)
 
   set(MINIMUM_CXX_STANDARD 23)
   include(../cmake/cxx_standard.cmake)
@@ -27,6 +21,7 @@ if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
   include(../cmake/fetch_boost.cmake)
   include(../cmake/fetch_googletest.cmake)
+  include(../cmake/gcc_analyzer.cmake)
   include(../cmake/lto_enable.cmake)
   include(../cmake/warning_flags.cmake)
   include(../common/attribute_wrapper.cmake)
@@ -35,45 +30,50 @@ if (PROJECT_IS_TOP_LEVEL)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  set(HW_2_COMPILE_WARNING_FLAGS -Wc++20-compat-pedantic)
-endif()
-
 add_library(ip_filter_lib STATIC lib/ip_filter.cpp)
 target_include_directories(ip_filter_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(ip_filter_lib
   PRIVATE custom_print
   PUBLIC attribute_wrapper)
-target_compile_options(ip_filter_lib PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_2_COMPILE_WARNING_FLAGS})
-if (NOT MSVC)
-  target_compile_options(ip_filter_lib PRIVATE
-    -Wno-strict-overflow -Wno-unsafe-buffer-usage)
-endif()
+set_warning_flags(ip_filter_lib
+  EXTRA_CLANG -Wc++20-compat-pedantic -Wno-unsafe-buffer-usage)
 
 add_executable(ip_filter src/main.cpp)
 target_link_libraries(ip_filter PRIVATE custom_print ip_filter_lib)
+set_warning_flags(ip_filter
+  EXTRA_CLANG -Wc++20-compat-pedantic)
 if (NOT MSVC)
   target_link_libraries(ip_filter PRIVATE -static)
 endif()
-target_compile_options(ip_filter PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_2_COMPILE_WARNING_FLAGS})
 
 add_executable(ip_filter_test test/ip_filter_test.cpp)
 target_link_libraries(ip_filter_test PRIVATE
   Boost::hash2 capture GTest::gtest_main ip_filter_lib)
-target_compile_options(ip_filter_test PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_2_COMPILE_WARNING_FLAGS})
-if (NOT MSVC)
-  target_compile_options(ip_filter_test PRIVATE -Wno-global-constructors)
-endif()
+set_warning_flags(ip_filter_test
+  EXTRA_CLANG -Wc++20-compat-pedantic -Wno-global-constructors)
 
 enable_lto(ip_filter ip_filter_lib ip_filter_test)
+
+set_analyzer(ip_filter_lib
+  EXCLUDE
+    "-Wno-analyzer-use-of-uninitialized-value"
+  EXCLUDE_MINSIZEREL
+    "-Wno-analyzer-use-of-uninitialized-value")
+set_analyzer(ip_filter
+  EXCLUDE
+    "-Wno-analyzer-use-of-uninitialized-value"
+  EXCLUDE_MINSIZEREL
+    "-Wno-analyzer-use-of-uninitialized-value")
+set_analyzer(ip_filter_test
+  EXCLUDE_MINSIZEREL
+    "-Wno-analyzer-malloc-leak"
+    "-Wno-analyzer-use-of-uninitialized-value")
 
 set(CLANG_TIDY_HW_2_OPTS
   "-modernize-use-trailing-return-type")
 
 set_smart_tidy(ip_filter_lib
+  BUILD_PATH "${CMAKE_BINARY_DIR}"
   EXCLUDE
     "-fuchsia-default-arguments-calls"
     "-llvm-prefer-static-over-anonymous-namespace"
@@ -84,6 +84,7 @@ set_smart_tidy(ip_filter_lib
   HAS_EXCEPTIONS)
 
 set_smart_tidy(ip_filter
+  BUILD_PATH "${CMAKE_BINARY_DIR}"
   EXCLUDE
     "-google-readability-todo"
     "${CLANG_TIDY_HW_2_OPTS}"
@@ -93,6 +94,7 @@ set_smart_tidy(ip_filter
   HAS_EXCEPTIONS)
 
 set_smart_tidy(ip_filter_test
+  BUILD_PATH "${CMAKE_BINARY_DIR}"
   EXCLUDE
     "-fuchsia-default-arguments-calls"
     "-llvm-prefer-static-over-anonymous-namespace"

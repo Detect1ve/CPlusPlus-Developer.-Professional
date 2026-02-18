@@ -105,8 +105,6 @@ namespace async
             *this);
     }
 
-    Session::~Session() = default;
-
     void Session::start()
     {
         pimpl_->start();

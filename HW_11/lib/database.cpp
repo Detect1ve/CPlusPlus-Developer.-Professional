@@ -11,6 +11,7 @@
 #include <string> // std::string
 #include <string_view> // std::string_view
 #include <system_error> // std::errc
+#include <unordered_set>
 #include <vector> // std::vector
 
 #include <database.hpp>
@@ -95,7 +96,7 @@ std::vector<std::string> Database::intersection()
 std::vector<std::string> Database::symmetric_difference()
 {
     std::set<int> all_ids;
-    std::set<int> common_ids;
+    std::unordered_set<int> common_ids;
     std::vector<std::string> result;
 
     const std::scoped_lock<std::mutex, std::mutex> lock(table_a_mutex_, table_b_mutex_);
@@ -143,9 +144,9 @@ std::vector<std::string> Database::symmetric_difference()
     {
         auto substring_a = string_a.substr(0, string_a.find(','));
         auto substring_b = string_b.substr(0, string_b.find(','));
-        constexpr unsigned char BASE = 10;
-        int id_a = 0;
-        int id_b = 0;
+        constexpr int BASE{10};
+        int id_a{};
+        int id_b{};
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
         if (std::from_chars(substring_a.data(), substring_a.data() + substring_a.size(),
             id_a, BASE).ec != std::errc{})

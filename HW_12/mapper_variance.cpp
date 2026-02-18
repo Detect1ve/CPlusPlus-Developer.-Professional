@@ -1,18 +1,18 @@
 #include <charconv>
 #include <iomanip>
 #include <iostream>
-#include <map>
 #if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
 #include <string>
 #endif
 #include <string_view> // std::string_view
 #include <system_error> // std::errc
+#include <unordered_map>
 
 namespace
 {
-    constexpr unsigned char MAX_PRICE_LENGTH = 5;
-    constexpr unsigned char MAX_PRICE_SQUARED_LENGTH = 11;
-    constexpr unsigned char PRICE_FIELD_INDEX = 9;
+    constexpr std::uint8_t MAX_PRICE_LENGTH = 5;
+    constexpr std::uint8_t MAX_PRICE_SQUARED_LENGTH = 11;
+    constexpr std::uint8_t PRICE_FIELD_INDEX = 9;
 
     struct Delimiter
     {
@@ -30,7 +30,7 @@ namespace
         const FieldIndex       field_index)
     {
         bool in_quotes = false;
-        int current_index = 0;
+        int current_index{};
         std::string current_field;
 
         for (const char chr : str_view)
@@ -61,8 +61,8 @@ namespace
 
 int main()
 {
-    std::map<double, int> price_counts;
     std::string line;
+    std::unordered_map<double, int> price_counts;
 
     while (std::getline(std::cin, line))
     {

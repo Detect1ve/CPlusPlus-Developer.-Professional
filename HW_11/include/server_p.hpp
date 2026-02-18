@@ -9,12 +9,6 @@
 
 class ServerImpl
 {
-    void do_accept();
-
-    friend class Server;
-    boost::asio::io_context io_context_;
-    boost::asio::ip::tcp::acceptor acceptor_;
-    Database database_;
 public:
     explicit ServerImpl(std::uint16_t port);
     explicit ServerImpl(
@@ -28,6 +22,12 @@ public:
 
     void run();
     void stop();
+private:
+    void do_accept();
+
+    boost::asio::io_context io_context_;
+    boost::asio::ip::tcp::acceptor acceptor_;
+    Database database_;
 };
 
 #endif // SERVER_P_HPP

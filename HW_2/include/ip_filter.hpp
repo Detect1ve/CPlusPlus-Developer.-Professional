@@ -96,12 +96,12 @@ std::expected<std::vector<std::vector<std::string>>, std::error_code> filter(
     std::array<int, sizeof...(octet)> a_octet = {octet...};
 
 #ifdef __cpp_lib_ranges_to_container
-    return ip_pool | std::ranges::views::filter([&a_octet](const auto& ip_address)
+    return ip_pool | std::views::filter([&a_octet](const auto& ip_address)
     {
         auto common_range = std::min(a_octet.size(), ip_address.size());
         auto ip_view = ip_address | std::views::take(common_range);
 
-        for (const auto& [idx, ip_part] : ip_view | std::views::enumerate)
+        for (const auto& [idx, ip_part] : std::views::enumerate(ip_view))
         {
             auto result = from_chars(ip_part);
             if (!result || result.value() != a_octet.at(static_cast<std::size_t>(idx)))

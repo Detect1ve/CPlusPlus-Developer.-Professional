@@ -3,13 +3,7 @@ cmake_minimum_required(VERSION 3.25..4.2.3)
 project(HW_3 LANGUAGES CXX)
 
 if (PROJECT_IS_TOP_LEVEL)
-  if (NOT MSVC)
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-      add_compile_options(-fcolor-diagnostics)
-    else()
-      add_compile_options(-fdiagnostics-color=always)
-    endif()
-  endif()
+  set(CMAKE_COLOR_DIAGNOSTICS ON)
 
   set(MINIMUM_CXX_STANDARD 14)
   include(../cmake/cxx_standard.cmake)
@@ -20,13 +14,10 @@ if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
   include(../cmake/fetch_googletest.cmake)
   include(../cmake/fetch_gsl.cmake)
+  include(../cmake/gcc_analyzer.cmake)
   include(../cmake/warning_flags.cmake)
   include(../common/custom_print.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  set(HW_3_COMPILE_WARNING_FLAGS -Wc++14-compat-pedantic)
 endif()
 
 add_library(list_and_allocator INTERFACE)
@@ -39,31 +30,42 @@ target_link_libraries(main PRIVATE custom_print list_and_allocator)
 if (NOT MSVC)
   target_link_libraries(main PRIVATE -static)
 endif()
-target_compile_options(main PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_3_COMPILE_WARNING_FLAGS})
+set_warning_flags(main
+  EXTRA_CLANG -Wc++14-compat-pedantic)
 
 add_executable(my_allocator_test test/my_allocator_test.cpp)
 target_link_libraries(my_allocator_test PRIVATE GTest::gtest_main list_and_allocator)
-target_compile_options(my_allocator_test PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_3_COMPILE_WARNING_FLAGS})
-if (NOT MSVC)
-  target_compile_options(my_allocator_test PRIVATE -Wno-global-constructors)
-endif()
+set_warning_flags(my_allocator_test
+  EXTRA_CLANG -Wc++14-compat-pedantic -Wno-global-constructors)
 
 add_executable(my_list_test test/my_list_test.cpp)
 target_link_libraries(my_list_test PRIVATE GTest::gtest_main list_and_allocator)
-target_compile_options(my_list_test PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_3_COMPILE_WARNING_FLAGS})
-if (NOT MSVC)
-  target_compile_options(my_list_test PRIVATE -Wno-global-constructors)
-endif()
+set_warning_flags(my_list_test
+  EXTRA_CLANG -Wc++14-compat-pedantic -Wno-global-constructors)
+
+set_analyzer(main
+  EXCLUDE
+    "-Wno-analyzer-use-of-uninitialized-value"
+  EXCLUDE_MINSIZEREL
+    "-Wno-analyzer-use-of-uninitialized-value")
+set_analyzer(my_allocator_test
+  EXCLUDE_MINSIZEREL
+    "-Wno-analyzer-malloc-leak"
+  EXCLUDE_RELEASE
+    "-Wno-analyzer-malloc-leak")
+set_analyzer(my_list_test
+  EXCLUDE_MINSIZEREL
+    "-Wno-analyzer-malloc-leak"
+    "-Wno-analyzer-use-of-uninitialized-value"
+  EXCLUDE_RELEASE
+    "-Wno-analyzer-malloc-leak")
 
 set(CLANG_TIDY_HW_3_OPTS
-    "-altera-struct-pack-align"
-    "-fuchsia-overloaded-operator"
-    "-modernize-use-trailing-return-type")
+  "-fuchsia-overloaded-operator"
+  "-modernize-use-trailing-return-type")
 
 set_smart_tidy(main
+  BUILD_PATH "${CMAKE_BINARY_DIR}"
   EXCLUDE
     "-llvm-prefer-static-over-anonymous-namespace"
     "${CLANG_TIDY_HW_3_OPTS}"
@@ -72,6 +74,7 @@ set_smart_tidy(main
   HAS_EXCEPTIONS)
 
 set_smart_tidy(my_allocator_test
+  BUILD_PATH "${CMAKE_BINARY_DIR}"
   EXCLUDE
     "-cert-err58-cpp"
     "-cppcoreguidelines-owning-memory"
@@ -81,6 +84,7 @@ set_smart_tidy(my_allocator_test
   HAS_EXCEPTIONS)
 
 set_smart_tidy(my_list_test
+  BUILD_PATH "${CMAKE_BINARY_DIR}"
   EXCLUDE
     "${CLANG_TIDY_HW_3_OPTS}")
 

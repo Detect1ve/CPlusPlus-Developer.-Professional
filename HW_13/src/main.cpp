@@ -25,7 +25,7 @@ int main(
     const char* argv[])
 {
     const std::span<const char*> args(argv, static_cast<std::size_t>(argc));
-    int ret = 0;
+    int ret{};
     try
     {
         if (args.size() != 3)
@@ -57,7 +57,7 @@ int main(
     }
     catch (...)
     {
-        cp::safe_error(nullptr);
+        cp::safe_error();
         ret = -3;
     }
 

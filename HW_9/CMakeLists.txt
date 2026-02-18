@@ -10,13 +10,7 @@ set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 project(async VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 if (PROJECT_IS_TOP_LEVEL)
-  if (NOT MSVC)
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-      add_compile_options(-fcolor-diagnostics)
-    else()
-      add_compile_options(-fdiagnostics-color=always)
-    endif()
-  endif()
+  set(CMAKE_COLOR_DIAGNOSTICS ON)
 
   set(MINIMUM_CXX_STANDARD 20)
   include(../cmake/cxx_standard.cmake)
@@ -27,6 +21,7 @@ if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
   include(../cmake/fetch_absl.cmake)
   include(../cmake/fetch_googletest.cmake)
+  include(../cmake/gcc_analyzer.cmake)
   include(../cmake/lto_enable.cmake)
   include(../cmake/warning_flags.cmake)
   include(../common/capture.cmake)
@@ -34,58 +29,58 @@ if (PROJECT_IS_TOP_LEVEL)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  set(HW_9_COMPILE_WARNING_FLAGS -Wc++20-compat-pedantic)
-endif()
-
 add_library(async SHARED lib/async.cpp include/async.h)
 target_include_directories(async PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(async PRIVATE custom_print)
-target_compile_options(async PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_9_COMPILE_WARNING_FLAGS})
+set_warning_flags(async
+  EXTRA_CLANG -Wc++20-compat-pedantic
+  EXTRA_GCC -Wno-effc++ -Wno-strict-overflow)
 if (MSVC)
   set_target_properties(async PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
-else()
-  target_compile_options(async PRIVATE -Wno-effc++ -Wno-strict-overflow)
 endif()
 
 add_library(async_static STATIC lib/async.cpp)
 target_include_directories(async_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(async_static PRIVATE custom_print)
-target_compile_options(async_static PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_9_COMPILE_WARNING_FLAGS})
-if (NOT MSVC)
-  target_compile_options(async_static PRIVATE -Wno-effc++ -Wno-strict-overflow)
-endif()
+set_warning_flags(async_static
+  EXTRA_CLANG -Wc++20-compat-pedantic
+  EXTRA_GCC -Wno-effc++ -Wno-strict-overflow)
 
 add_executable(async_cli src/main.cpp)
 target_link_libraries(async_cli PRIVATE async_static)
+set_warning_flags(async_cli
+  EXTRA_CLANG -Wc++20-compat-pedantic)
 if (NOT MSVC)
   target_link_libraries(async_cli PRIVATE -static)
 endif()
-target_compile_options(async_cli PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_9_COMPILE_WARNING_FLAGS})
 
 enable_lto(async_cli async_static)
 
 add_executable(async_test test/async_test.cpp)
 target_link_libraries(async_test PRIVATE absl::strings async capture GTest::gtest_main)
-target_compile_options(async_test PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_9_COMPILE_WARNING_FLAGS})
-if (NOT MSVC)
-  target_compile_options(async_test PRIVATE
-    -Wno-unsafe-buffer-usage -Wno-global-constructors)
-endif()
+set_warning_flags(async_test
+  EXTRA_CLANG -Wc++20-compat-pedantic -Wno-global-constructors -Wno-unsafe-buffer-usage)
+
+set_analyzer(async
+  EXCLUDE
+    "-Wno-analyzer-use-of-uninitialized-value"
+  EXCLUDE_MINSIZEREL
+    "-Wno-analyzer-use-of-uninitialized-value")
+set_analyzer(async_static
+  EXCLUDE
+    "-Wno-analyzer-use-of-uninitialized-value")
+set_analyzer(async_cli)
+set_analyzer(async_test)
 
 set(CLANG_TIDY_HW_9_OPTS
-    "-llvm-header-guard"
-    "-llvm-namespace-comment"
-    "-modernize-use-trailing-return-type"
-    "-portability-avoid-pragma-once")
+  "-llvm-header-guard"
+  "-llvm-namespace-comment"
+  "-modernize-use-trailing-return-type"
+  "-portability-avoid-pragma-once")
 
 set_smart_tidy(async
+  BUILD_PATH "${CMAKE_BINARY_DIR}"
   EXCLUDE
-    "-altera-struct-pack-align"
     "-fuchsia-default-arguments-calls"
     "-llvm-prefer-static-over-anonymous-namespace"
     "${CLANG_TIDY_HW_9_OPTS}"
@@ -93,8 +88,8 @@ set_smart_tidy(async
     "${CUSTOM_PRINT_INCLUDE_DIR}")
 
 set_smart_tidy(async_static
+  BUILD_PATH "${CMAKE_BINARY_DIR}"
   EXCLUDE
-    "-altera-struct-pack-align"
     "-fuchsia-default-arguments-calls"
     "-llvm-prefer-static-over-anonymous-namespace"
     "${CLANG_TIDY_HW_9_OPTS}"
@@ -102,6 +97,7 @@ set_smart_tidy(async_static
     "${CUSTOM_PRINT_INCLUDE_DIR}")
 
 set_smart_tidy(async_cli
+  BUILD_PATH "${CMAKE_BINARY_DIR}"
   EXCLUDE
     "-cppcoreguidelines-avoid-magic-numbers"
     "-hicpp-named-parameter"
@@ -115,6 +111,7 @@ set_smart_tidy(async_cli
     "${CLANG_TIDY_HW_9_OPTS}")
 
 set_smart_tidy(async_test
+  BUILD_PATH "${CMAKE_BINARY_DIR}"
   COGNITIVE_IGNORE_MACROS
   EXCLUDE
     "-fuchsia-default-arguments-calls"

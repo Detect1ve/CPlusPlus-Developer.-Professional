@@ -10,7 +10,7 @@
 
 int main()
 {
-    constexpr int kThickness = 1;
+    constexpr int THICKNESS = 1;
     Point const start {.x = 10, .y = 10};
     Point const end {.x = 100, .y = 100};
 
@@ -23,7 +23,7 @@ int main()
         auto documentView =
             std::make_unique<editor::view::DocumentView>(docController->getDocument());
 
-        docController->getPrimitiveController()->createLine(start, end, kThickness);
+        docController->getPrimitiveController()->createLine(start, end, THICKNESS);
 
         docController->getPrimitiveController()->removePrimitive(0);
 
@@ -46,7 +46,7 @@ int main()
     }
     catch (...)
     {
-        cp::safe_error(nullptr);
+        cp::safe_error();
 
         return EXIT_FAILURE;
     }

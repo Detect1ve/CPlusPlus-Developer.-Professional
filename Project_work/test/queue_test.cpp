@@ -1,9 +1,10 @@
 #include <atomic> // std::atomic
 #include <chrono> // std::chrono::milliseconds
-#include <cstddef> // std::size_t
 #include <mutex> // std::mutex
+#include <ranges>
+#include <stop_token> // std::stop_token
 #include <string> // std::string
-#include <thread> // std::thread
+#include <thread>
 #include <vector> // std::vector
 
 #include <gtest/gtest.h>
@@ -90,13 +91,13 @@ TEST(ProjectWork, ClearQueue)
 
 TEST(ProjectWork, PriorityQueue)
 {
-    const int priority_high = 10;
-    const int priority_medium = 5;
+    constexpr int PRIORITY_HIGH = 10;
+    constexpr int PRIORITY_MEDIUM = 5;
     Queue<std::string, int> queue(true, QueueMode::MULTI_PRODUCER_MULTI_CONSUMER, 0);
 
     queue.push("Low", 1, -1);
-    queue.push("High", priority_high, -1);
-    queue.push("Medium", priority_medium, -1);
+    queue.push("High", PRIORITY_HIGH, -1);
+    queue.push("Medium", PRIORITY_MEDIUM, -1);
 
     auto item1 = queue.pop();
     if (item1.has_value())
@@ -131,21 +132,20 @@ TEST(ProjectWork, PriorityQueue)
 
 TEST(ProjectWork, SingleProducerSingleConsumer)
 {
-    bool done(false);
-    const int items_to_produce = 100;
-    const int max_queue_size = 10;
-    const int pop_timeout_ms = 100;
-    const int final_sleep_ms = 500;
-    Queue<int> queue(false, QueueMode::SINGLE_PRODUCER_SINGLE_CONSUMER, max_queue_size);
+    constexpr int ITEMS_TO_PRODUCE{100};
+    constexpr int MAX_QUEUE_SIZE{10};
+    constexpr int POP_TIMEOUT_MS{100};
+    constexpr int FINAL_SLEEP_MS{500};
+    Queue<int> queue(false, QueueMode::SINGLE_PRODUCER_SINGLE_CONSUMER, MAX_QUEUE_SIZE);
     std::vector<int> consumed;
     std::mutex consumedMutex;
 
-    std::thread consumer([&]()
+    std::jthread consumer([&](const std::stop_token& stoken)
     {
-        while (  !done
+        while (  !stoken.stop_requested()
               || !queue.empty())
         {
-            auto item = queue.pop(pop_timeout_ms);
+            auto item = queue.pop(POP_TIMEOUT_MS);
 
             if (item.has_value())
             {
@@ -156,46 +156,45 @@ TEST(ProjectWork, SingleProducerSingleConsumer)
         }
     });
 
-    for (auto i = 0; i < items_to_produce; i++)
+    for (int i = 0; i < ITEMS_TO_PRODUCE; i++)
     {
         ASSERT_TRUE(queue.push(i));
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(final_sleep_ms));
-    done = true;
+    std::this_thread::sleep_for(std::chrono::milliseconds(FINAL_SLEEP_MS));
+    consumer.request_stop();
     consumer.join();
 
-    ASSERT_EQ(consumed.size(), items_to_produce);
-    for (std::size_t i = 0; i < consumed.size(); i++)
+    ASSERT_EQ(consumed.size(), ITEMS_TO_PRODUCE);
+    for (const auto& [idx, value] : std::views::enumerate(consumed))
     {
-        ASSERT_EQ(consumed[i], i);
+        ASSERT_EQ(value, idx);
     }
 }
 
 TEST(ProjectWork, MultiProducerMultiConsumer)
 {
-    bool done(false);
-    const int itemsPerProducer = 1000;
-    const int numConsumers = 4;
-    const int numProducers = 4;
+    constexpr int ITEMS_PER_PRODUCER{1000};
+    constexpr int NUM_CONSUMERS{4};
+    constexpr int NUM_PRODUCERS{4};
     Queue<int> queue(false, QueueMode::MULTI_PRODUCER_MULTI_CONSUMER, 0);
     std::atomic<int> totalProduced(0);
     std::atomic<int> totalConsumed(0);
-    std::vector<std::thread> consumers;
-    std::vector<std::thread> producers;
+    std::vector<std::jthread> consumers;
+    std::vector<std::jthread> producers;
 
-    consumers.reserve(numConsumers);
+    consumers.reserve(NUM_CONSUMERS);
 
-    for (auto i = 0; i < numConsumers; i++)
+    for (int i = 0; i < NUM_CONSUMERS; i++)
     {
-        consumers.emplace_back([&]()
+        consumers.emplace_back([&](const std::stop_token& stoken)
         {
-            while (  !done
+            while (  !stoken.stop_requested()
                   || !queue.empty())
             {
-                const int pop_timeout_ms = 10;
-                auto item = queue.pop(pop_timeout_ms);
+                constexpr int POP_TIMEOUT_MS{10};
+                auto item = queue.pop(POP_TIMEOUT_MS);
 
                 if (item.has_value())
                 {
@@ -205,67 +204,65 @@ TEST(ProjectWork, MultiProducerMultiConsumer)
         });
     }
 
-    producers.reserve(numProducers);
+    producers.reserve(NUM_PRODUCERS);
 
-    for (auto i = 0; i < numProducers; i++)
+    for (int i = 0; i < NUM_PRODUCERS; i++)
     {
         producers.emplace_back([&, i]()
         {
-            for (auto j = 0; j < itemsPerProducer; j++)
+            for (int j = 0; j < ITEMS_PER_PRODUCER; j++)
             {
-                queue.push((i * itemsPerProducer) + j);
+                queue.push((i * ITEMS_PER_PRODUCER) + j);
                 totalProduced++;
             }
         });
     }
 
-    for (auto& producer : producers)
-    {
-        producer.join();
-    }
+    producers.clear();
 
     std::this_thread::sleep_for(std::chrono::seconds(1));
-    done = true;
     for (auto& consumer : consumers)
     {
-        consumer.join();
+        consumer.request_stop();
     }
 
-    ASSERT_EQ(totalProduced.load(), numProducers * itemsPerProducer);
+    consumers.clear();
+
+    ASSERT_EQ(totalProduced.load(), NUM_PRODUCERS * ITEMS_PER_PRODUCER);
     ASSERT_EQ(totalConsumed.load(), totalProduced.load());
     ASSERT_TRUE(queue.empty());
 }
 
 TEST(ProjectWork, PopTimeout)
 {
+    const int PUSH_TIMEOUT_MS{100};
     Queue<int> queue;
 
-    const int pop_timeout_ms = 100;
     auto start = std::chrono::steady_clock::now();
-    auto item = queue.pop(pop_timeout_ms);
+    auto item = queue.pop(PUSH_TIMEOUT_MS);
     auto end = std::chrono::steady_clock::now();
 
     ASSERT_FALSE(item.has_value());
 
     auto duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    ASSERT_GE(duration, pop_timeout_ms);
+    ASSERT_GE(duration, PUSH_TIMEOUT_MS);
 }
 
 TEST(ProjectWork, PushTimeout)
 {
+    constexpr int PUSH_TIMEOUT_MS{100};
     Queue<int> queue(false, QueueMode::MULTI_PRODUCER_MULTI_CONSUMER, 1);
 
     ASSERT_TRUE(queue.push(1));
 
-    const int push_timeout_ms = 100;
     auto start = std::chrono::steady_clock::now();
-    auto result = queue.push(2, 0, push_timeout_ms);
+    auto result = queue.push(2, 0, PUSH_TIMEOUT_MS);
     auto end = std::chrono::steady_clock::now();
 
     ASSERT_FALSE(result);
 
     auto duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    ASSERT_GE(duration, push_timeout_ms);
+    ASSERT_GE(duration, PUSH_TIMEOUT_MS);
 }

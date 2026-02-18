@@ -1,4 +1,3 @@
-#include <cstdint> // std::uint16_t
 #include <iostream> // std::cout
 #include <string> // std::string
 #include <tuple> // std::tie
@@ -8,8 +7,8 @@
 #include <capture.hpp>
 #include <matrix.hpp>
 
-constexpr std::uint16_t TEST_VALUE_1 = 314;
-constexpr std::uint16_t TEST_VALUE_2 = 217;
+constexpr int TEST_VALUE_1 = 314;
+constexpr int TEST_VALUE_2 = 217;
 
 TEST(HW6, Matrix)
 {

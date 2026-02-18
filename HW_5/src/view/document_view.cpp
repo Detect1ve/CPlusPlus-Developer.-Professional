@@ -37,11 +37,6 @@ namespace editor::view
         createPrimitiveViews();
     }
 
-    const model::Document* DocumentView::getDocument() const
-    {
-        return document_;
-    }
-
     void DocumentView::createPrimitiveViews()
     {
         primitiveViews_.clear();

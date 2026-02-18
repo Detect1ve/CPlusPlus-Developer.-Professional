@@ -1,13 +1,13 @@
 #include <charconv>
 #include <iostream>
-#include <map>
 #include <string>
 #include <string_view> // std::string_view
 #include <system_error> // std::errc
+#include <unordered_map>
 
 namespace
 {
-    constexpr int PRICE_FIELD_INDEX = 9;
+    constexpr std::uint8_t PRICE_FIELD_INDEX = 9;
 
     struct Delimiter
     {
@@ -25,7 +25,7 @@ namespace
         const FieldIndex       field_index)
     {
         bool in_quotes = false;
-        int current_index = 0;
+        int current_index{};
         std::string current_field;
 
         for (const char chr : str_view)
@@ -56,7 +56,7 @@ namespace
 
 int main(int argc, char ** argv)
 {
-    std::map<double, int> price_counts;
+    std::unordered_map<double, int> price_counts;
     std::string line;
     while (std::getline(std::cin, line))
     {

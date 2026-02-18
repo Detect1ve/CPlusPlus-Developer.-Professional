@@ -9,8 +9,6 @@
 
 namespace editor::model
 {
-    Document::Document(std::string name) : name_(std::move(name)) {}
-
     void Document::addPrimitive(std::unique_ptr<Primitive> primitive)
     {
         primitives_.emplace_back(std::move(primitive));

@@ -8,16 +8,17 @@ set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 project(helloworld VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 if (PROJECT_IS_TOP_LEVEL)
-    if (NOT MSVC)
-        if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-            add_compile_options(-fcolor-diagnostics)
-        else ()
-            add_compile_options(-fdiagnostics-color=always)
-        endif()
-    endif()
+    set(CMAKE_COLOR_DIAGNOSTICS ON)
     set(MINIMUM_CXX_STANDARD 11)
     include(../cmake/cxx_standard.cmake)
     set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
+    include(../cmake/clang-tidy.cmake)
+    include(../cmake/fetch_boost.cmake)
+    include(../cmake/fetch_googletest.cmake)
+    include(../cmake/gcc_analyzer.cmake)
+    include(../cmake/lto_enable.cmake)
+    include(../cmake/warning_flags.cmake)
+    list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
 configure_file(version.h.in version.h)
@@ -39,15 +40,6 @@ if (NOT MSVC)
     )
 endif()
 
-if (PROJECT_IS_TOP_LEVEL)
-    include(../cmake/clang-tidy.cmake)
-    include(../cmake/fetch_boost.cmake)
-    include(../cmake/fetch_googletest.cmake)
-    include(../cmake/lto_enable.cmake)
-    include(../cmake/warning_flags.cmake)
-    list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
-endif()
-
 add_executable(test_version test_version.cpp)
 
 target_link_libraries(test_version
@@ -62,42 +54,46 @@ target_link_libraries(g_test_version
     helloworld
 )
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 15)
-        set(HW_1_COMPILE_WARNING_FLAGS -Wleading-whitespace=none)
-    endif()
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set(HW_1_COMPILE_WARNING_FLAGS -Wc++11-compat-pedantic)
+if (    CMAKE_CXX_COMPILER_ID STREQUAL "GNU"
+    AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 15)
+    set(GCC_EXTRA -Wleading-whitespace=none)
 endif()
 
-target_compile_options(helloworld_cli PRIVATE
-    ${COMPILE_WARNING_FLAGS} ${HW_1_COMPILE_WARNING_FLAGS}
+set_analyzer(helloworld_cli)
+set_analyzer(helloworld)
+set_analyzer(test_version
+    EXCLUDE_MINSIZEREL
+        "-Wno-analyzer-use-of-uninitialized-value"
 )
-target_compile_options(helloworld PRIVATE
-    ${COMPILE_WARNING_FLAGS} ${HW_1_COMPILE_WARNING_FLAGS}
+
+set_analyzer(g_test_version
+    EXCLUDE_MINSIZEREL
+        "-Wno-analyzer-malloc-leak"
+        "-Wno-analyzer-use-of-uninitialized-value"
 )
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(helloworld PRIVATE
-        -Wno-suggest-attribute=const
-    )
-endif()
+
+set_warning_flags(helloworld_cli
+    EXTRA_CLANG -Wc++11-compat-pedantic
+    EXTRA_GCC ${GCC_EXTRA}
+)
+
+set_warning_flags(helloworld
+    EXTRA_CLANG -Wc++11-compat-pedantic
+    EXTRA_GCC ${GCC_EXTRA} -Wno-suggest-attribute=const
+)
+
+set_warning_flags(test_version
+    EXTRA_CLANG -Wc++11-compat-pedantic -Wno-global-constructors
+        -Wno-used-but-marked-unused
+    EXTRA_GCC ${GCC_EXTRA}
+)
+
+set_warning_flags(g_test_version
+    EXTRA_CLANG -Wc++11-compat-pedantic -Wno-global-constructors
+    EXTRA_GCC ${GCC_EXTRA}
+)
+
 enable_lto(g_test_version helloworld helloworld_cli test_version)
-target_compile_options(test_version PRIVATE
-    ${COMPILE_WARNING_FLAGS} ${HW_1_COMPILE_WARNING_FLAGS}
-)
-if (NOT MSVC)
-    target_compile_options(test_version PRIVATE
-        -Wno-used-but-marked-unused -Wno-global-constructors
-    )
-endif()
-target_compile_options(g_test_version PRIVATE
-    ${COMPILE_WARNING_FLAGS} ${HW_1_COMPILE_WARNING_FLAGS}
-)
-if (NOT MSVC)
-    target_compile_options(g_test_version PRIVATE
-        -Wno-global-constructors
-    )
-endif()
 
 set(CLANG_TIDY_HW_1_OPTS
     "-llvm-header-guard"
@@ -106,26 +102,27 @@ set(CLANG_TIDY_HW_1_OPTS
 )
 
 set_smart_tidy(helloworld_cli
+    BUILD_PATH "${CMAKE_BINARY_DIR}"
     EXCLUDE
         "-hicpp-named-parameter"
         "-performance-avoid-endl"
         "-readability-named-parameter"
         "${CLANG_TIDY_HW_1_OPTS}"
-    MAIN_INCLUDE_DIR
-        "${CMAKE_CURRENT_SOURCE_DIR}"
+    MAIN_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
 set_smart_tidy(helloworld
+    BUILD_PATH "${CMAKE_BINARY_DIR}"
     EXCLUDE
         "-cppcoreguidelines-macro-to-enum"
         "-cppcoreguidelines-macro-usage"
         "-modernize-macro-to-enum"
         "${CLANG_TIDY_HW_1_OPTS}"
-    MAIN_INCLUDE_DIR
-        "${CMAKE_CURRENT_SOURCE_DIR}"
+    MAIN_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
 set_smart_tidy(test_version
+    BUILD_PATH "${CMAKE_BINARY_DIR}"
     EXCLUDE
         "-cert-err58-cpp"
         "-cppcoreguidelines-avoid-do-while"
@@ -137,19 +134,18 @@ set_smart_tidy(test_version
         "-misc-include-cleaner"
         "-readability-identifier-length"
         "${CLANG_TIDY_HW_1_OPTS}"
-    MAIN_INCLUDE_DIR
-        "${CMAKE_CURRENT_SOURCE_DIR}"
+    MAIN_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
 set_smart_tidy(g_test_version
+    BUILD_PATH "${CMAKE_BINARY_DIR}"
     EXCLUDE
         "-cert-err58-cpp"
         "-cppcoreguidelines-owning-memory"
         "-fuchsia-default-arguments-calls"
         "-fuchsia-statically-constructed-objects"
         "${CLANG_TIDY_HW_1_OPTS}"
-    MAIN_INCLUDE_DIR
-        "${CMAKE_CURRENT_SOURCE_DIR}"
+    MAIN_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
 install(TARGETS helloworld_cli RUNTIME DESTINATION bin

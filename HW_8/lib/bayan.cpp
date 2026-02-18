@@ -34,22 +34,61 @@
 #include <bayan.hpp>
 #include <custom_print.hpp>
 
-struct FileInfo
+class FileInfo
 {
+public:
     FileInfo(
         boost::filesystem::path path,
-        std::uintmax_t          size,
-        std::size_t             block_size);
-
-    FileInfo(const FileInfo& other);
-    FileInfo(FileInfo&&) noexcept = default;
-    FileInfo& operator=(const FileInfo& other);
-    FileInfo& operator=(FileInfo&&) noexcept = default;
+        std::uintmax_t const    size,
+        std::size_t const       block_size)
+        :
+        path_(std::move(path)),
+        hashes_((size + block_size - 1) / block_size),
+        block_size_(block_size),
+        size_(size) {}
     ~FileInfo() noexcept = default;
+    FileInfo(
+        const FileInfo& other)
+        :
+        path_(other.path_),
+        hashes_(other.hashes_),
+        file_stream_(nullptr),
+        block_size_(other.block_size_),
+        size_(other.size_) {}
+    FileInfo(FileInfo&&) noexcept = default;
+    FileInfo& operator=(const FileInfo& other)
+    {
+        if (this != &other)
+        {
+            close_file();
 
-    ATTRIBUTE_PURE [[nodiscard]] std::uintmax_t get_size() const;
-    ATTRIBUTE_CONST [[nodiscard]] const std::vector<std::string>& get_hashes() const;
-    ATTRIBUTE_CONST const boost::filesystem::path& get_path() const;
+            path_ = other.path_;
+            hashes_ = other.hashes_;
+            size_ = other.size_;
+            block_size_ = other.block_size_;
+            file_opened_ = false;
+            file_stream_ = nullptr;
+        }
+
+        return *this;
+    }
+    FileInfo& operator=(FileInfo&&) noexcept = default;
+
+    ATTRIBUTE_PURE [[nodiscard]] std::uintmax_t get_size() const
+    {
+        return size_;
+    }
+
+    ATTRIBUTE_CONST [[nodiscard]] const std::vector<std::string>& get_hashes() const
+    {
+        return hashes_;
+    }
+
+    ATTRIBUTE_CONST const boost::filesystem::path& get_path() const
+    {
+        return path_;
+    }
+
     std::string compute_block_hash(
         std::size_t          block_index,
         const HashAlgorithm& hash_algo) const;
@@ -59,15 +98,27 @@ private:
     void close_file() const;
 
     boost::filesystem::path path_;
-    mutable bool file_opened{false};
-    mutable std::vector<std::string> hashes;
-    mutable std::unique_ptr<std::ifstream> file_stream;
+    mutable bool file_opened_{false};
+    mutable std::vector<std::string> hashes_;
+    mutable std::unique_ptr<std::ifstream> file_stream_;
     std::size_t block_size_;
     std::uintmax_t size_;
 };
 
 class FileScanner
 {
+public:
+    FileScanner(
+        bool               scan_level,
+        BlockSize          block_size,
+        MinFileSize        min_file_size,
+        const ExcludeDirs& exclude_dirs,
+        const FileMasks&   file_masks,
+        const ScanDirs&    scan_dirs);
+
+    std::vector<FileInfo> scan_directories();
+
+private:
     void scan_directory_recursive(
         const boost::filesystem::path& dir,
         std::vector<FileInfo>&         files);
@@ -84,38 +135,30 @@ class FileScanner
     std::vector<std::string> exclude_dirs_;
     std::vector<std::string> file_masks_;
     std::vector<std::string> scan_dirs_;
-public:
-    FileScanner(
-        bool               scan_level,
-        BlockSize          block_size,
-        MinFileSize        min_file_size,
-        const ExcludeDirs& exclude_dirs,
-        const FileMasks&   file_masks,
-        const ScanDirs&    scan_dirs);
-
-    std::vector<FileInfo> scan_directories();
 };
 
 class DuplicateFinder
 {
-    std::vector<std::vector<FileInfo>>
-        find_duplicates_in_group(std::vector<FileInfo*>& files);
-
-    HashAlgorithm hash_algo_;
-    std::uintmax_t block_size_;
 public:
     DuplicateFinder(
         HashAlgorithm  hash_algo,
         std::uintmax_t block_size);
 
     std::vector<std::vector<FileInfo>> find_duplicates(std::vector<FileInfo>& files);
+
+private:
+    std::vector<std::vector<FileInfo>>
+        find_duplicates_in_group(std::vector<FileInfo*>& files);
+
+    HashAlgorithm hash_algo_;
+    std::uintmax_t block_size_;
 };
 
 std::string compute_crc32(const std::string_view input)
 {
     boost::crc_32_type result;
 
-    result.process_bytes(input.data(), input.length());
+    result.process_bytes(input.data(), input.size());
 
     return std::to_string(result.checksum());
 }
@@ -152,12 +195,12 @@ std::function<std::string(std::string_view)> HashAlgorithm::get_hash_function(
 HashAlgorithm::HashAlgorithm()
     :
     value_(hash_algorithm::crc32),
-    hash_function(get_hash_function(value_)) {}
+    hash_function_(get_hash_function(value_)) {}
 
 HashAlgorithm::HashAlgorithm(const hash_algorithm value)
     :
     value_(value),
-    hash_function(get_hash_function(value_)) {}
+    hash_function_(get_hash_function(value_)) {}
 
 HashAlgorithm::HashAlgorithm(const std::string_view name) : value_{}
 {
@@ -167,9 +210,9 @@ HashAlgorithm::HashAlgorithm(const std::string_view name) : value_{}
         return static_cast<char>(std::tolower(character));
     });
 
-    auto iterator = name_to_enum_map.find(lower_s);
+    auto iterator = name_to_enum_map_.find(lower_s);
 
-    if (iterator == name_to_enum_map.cend())
+    if (iterator == name_to_enum_map_.cend())
     {
         throw boost::program_options::validation_error(
             boost::program_options::validation_error::invalid_option_value,
@@ -177,62 +220,12 @@ HashAlgorithm::HashAlgorithm(const std::string_view name) : value_{}
     }
 
     value_ = iterator->second;
-    hash_function = get_hash_function(value_);
+    hash_function_ = get_hash_function(value_);
 }
 
 std::string HashAlgorithm::compute_hash(const std::string_view input) const
 {
-    return hash_function(input);
-}
-
-FileInfo::FileInfo(
-    boost::filesystem::path path,
-    const std::uintmax_t    size,
-    const std::size_t       block_size)
-    :
-    path_(std::move(path)),
-    hashes((size + block_size - 1) / block_size),
-    block_size_(block_size),
-    size_(size) {}
-
-FileInfo::FileInfo(const FileInfo& other)
-    :
-    path_(other.path_),
-    hashes(other.hashes),
-    file_stream(nullptr),
-    block_size_(other.block_size_),
-    size_(other.size_) {}
-
-FileInfo& FileInfo::operator=(const FileInfo& other)
-{
-    if (this != &other)
-    {
-        close_file();
-
-        path_ = other.path_;
-        hashes = other.hashes;
-        size_ = other.size_;
-        block_size_ = other.block_size_;
-        file_opened = false;
-        file_stream = nullptr;
-    }
-
-    return *this;
-}
-
-std::uintmax_t FileInfo::get_size() const
-{
-    return size_;
-}
-
-const std::vector<std::string>& FileInfo::get_hashes() const
-{
-    return hashes;
-}
-
-const boost::filesystem::path& FileInfo::get_path() const
-{
-    return path_;
+    return hash_function_(input);
 }
 
 std::string FileInfo::compute_block_hash(
@@ -241,50 +234,50 @@ std::string FileInfo::compute_block_hash(
 {
     std::vector<char> buffer(block_size_, 0);
 
-    if (!hashes[block_index].empty())
+    if (!hashes_[block_index].empty())
     {
-        return hashes[block_index];
+        return hashes_[block_index];
     }
 
-    if (!file_opened)
+    if (!file_opened_)
     {
         open_file();
     }
 
-    file_stream->seekg(static_cast<std::streamoff>(block_index * block_size_));
-    file_stream->read(buffer.data(), static_cast<std::streamsize>(block_size_));
+    file_stream_->seekg(static_cast<std::streamoff>(block_index * block_size_));
+    file_stream_->read(buffer.data(), static_cast<std::streamsize>(block_size_));
 
-    const std::streamsize bytes_read = file_stream->gcount();
+    const std::streamsize bytes_read = file_stream_->gcount();
 
     const std::string block_data(buffer.data(),
         static_cast<std::string::size_type>(bytes_read));
 
-    hashes[block_index] = hash_algo.compute_hash(block_data);
+    hashes_[block_index] = hash_algo.compute_hash(block_data);
 
-    return hashes[block_index];
+    return hashes_[block_index];
 }
 
 void FileInfo::open_file() const
 {
-    if (!file_opened)
+    if (!file_opened_)
     {
-        file_stream = std::make_unique<std::ifstream>(path_.string(), std::ios::binary);
-        if (!*file_stream)
+        file_stream_ = std::make_unique<std::ifstream>(path_.string(), std::ios::binary);
+        if (!*file_stream_)
         {
             throw std::runtime_error("Failed to open file: " + path_.string());
         }
 
-        file_opened = true;
+        file_opened_ = true;
     }
 }
 
 void FileInfo::close_file() const
 {
-    if (file_opened)
+    if (file_opened_)
     {
-        file_stream->close();
-        file_opened = false;
-        file_stream = nullptr;
+        file_stream_->close();
+        file_opened_ = false;
+        file_stream_ = nullptr;
     }
 }
 
@@ -500,7 +493,7 @@ std::vector<std::vector<FileInfo>>
         }
 
         files.clear();
-        for (auto& [hash, hash_group] : files_by_hash)
+        for (const auto& [hash, hash_group] : files_by_hash)
         {
             if (hash_group.size() > 1)
             {

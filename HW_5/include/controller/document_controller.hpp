@@ -7,12 +7,9 @@ namespace editor::controller
 {
     class DocumentController
     {
-        std::unique_ptr<model::Document> document_;
-        std::unique_ptr<PrimitiveController> primitiveController_;
     public:
         DocumentController();
         ~DocumentController() = default;
-
         DocumentController(const DocumentController&) = delete;
         DocumentController& operator=(const DocumentController&) = delete;
         DocumentController(DocumentController&&) = delete;
@@ -25,6 +22,10 @@ namespace editor::controller
 
         ATTRIBUTE_PURE [[nodiscard]] model::Document* getDocument() const;
         ATTRIBUTE_PURE [[nodiscard]] PrimitiveController* getPrimitiveController() const;
+
+    private:
+        std::unique_ptr<model::Document> document_;
+        std::unique_ptr<PrimitiveController> primitiveController_;
     };
 } // namespace editor::controller
 

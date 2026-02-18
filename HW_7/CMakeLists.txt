@@ -10,13 +10,7 @@ set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 project(bulk VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 if (PROJECT_IS_TOP_LEVEL)
-  if (NOT MSVC)
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-      add_compile_options(-fcolor-diagnostics)
-    else()
-      add_compile_options(-fdiagnostics-color=always)
-    endif()
-  endif()
+  set(CMAKE_COLOR_DIAGNOSTICS ON)
 
   set(MINIMUM_CXX_STANDARD 20)
   include(../cmake/cxx_standard.cmake)
@@ -26,6 +20,7 @@ endif()
 if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
   include(../cmake/fetch_googletest.cmake)
+  include(../cmake/gcc_analyzer.cmake)
   include(../cmake/lto_enable.cmake)
   include(../cmake/warning_flags.cmake)
   include(../common/attribute_wrapper.cmake)
@@ -34,42 +29,50 @@ if (PROJECT_IS_TOP_LEVEL)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  set(HW_7_COMPILE_WARNING_FLAGS -Wc++20-compat-pedantic)
-endif()
-
 add_library(taskmanager STATIC lib/taskmanager.cpp)
 target_include_directories(taskmanager PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(taskmanager
   PRIVATE custom_print
   PUBLIC attribute_wrapper)
-target_compile_options(taskmanager PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_7_COMPILE_WARNING_FLAGS})
-if (NOT MSVC)
-  target_compile_options(taskmanager
-    PRIVATE -Wno-strict-overflow
-    PUBLIC -Wno-effc++)
-endif()
+set_warning_flags(taskmanager
+  EXTRA_CLANG -Wc++20-compat-pedantic
+  EXTRA_GCC -Wno-strict-overflow)
+
+set_warning_flags(taskmanager
+  EXTRA_GCC -Wno-effc++
+  NO_BASE
+  SCOPE "PUBLIC")
 
 add_executable(bulk src/main.cpp)
 target_link_libraries(bulk PRIVATE custom_print taskmanager)
-target_compile_options(bulk PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_7_COMPILE_WARNING_FLAGS})
+set_warning_flags(bulk
+  EXTRA_CLANG -Wc++20-compat-pedantic -Wno-unsafe-buffer-usage)
 if (NOT MSVC)
   target_link_libraries(bulk PRIVATE -static)
-  target_compile_options(bulk PRIVATE
-    -Wno-unsafe-buffer-usage-in-container -Wno-unsafe-buffer-usage)
 endif()
 
 add_executable(taskmanager_test test/taskmanager_test.cpp)
 target_link_libraries(taskmanager_test PRIVATE
   capture custom_print GTest::gtest_main taskmanager)
-target_compile_options(taskmanager_test PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_7_COMPILE_WARNING_FLAGS})
-if (NOT MSVC)
-  target_compile_options(taskmanager_test PRIVATE
-    -Wno-unsafe-buffer-usage -Wno-global-constructors)
-endif()
+set_warning_flags(taskmanager_test
+  EXTRA_CLANG -Wc++20-compat-pedantic -Wno-global-constructors -Wno-unsafe-buffer-usage)
+
+set_analyzer(taskmanager
+  EXCLUDE
+    "-Wno-analyzer-use-of-uninitialized-value"
+  EXCLUDE_MINSIZEREL
+    "-Wno-analyzer-use-of-uninitialized-value")
+set_analyzer(bulk
+  EXCLUDE
+    "-Wno-analyzer-use-of-uninitialized-value"
+  EXCLUDE_MINSIZEREL
+    "-Wno-analyzer-use-of-uninitialized-value")
+set_analyzer(taskmanager_test
+  EXCLUDE
+    "-Wno-analyzer-use-of-uninitialized-value"
+  EXCLUDE_MINSIZEREL
+    "-Wno-analyzer-malloc-leak"
+    "-Wno-analyzer-use-of-uninitialized-value")
 
 enable_lto(bulk taskmanager taskmanager_test)
 
@@ -78,6 +81,7 @@ set(CLANG_TIDY_HW_7_OPTS
   "-modernize-use-trailing-return-type")
 
 set_smart_tidy(taskmanager
+  BUILD_PATH "${CMAKE_BINARY_DIR}"
   EXCLUDE
     "-fuchsia-overloaded-operator"
     "-llvm-prefer-static-over-anonymous-namespace"
@@ -88,6 +92,7 @@ set_smart_tidy(taskmanager
   HAS_EXCEPTIONS)
 
 set_smart_tidy(bulk
+  BUILD_PATH "${CMAKE_BINARY_DIR}"
   EXCLUDE
     "${CLANG_TIDY_HW_7_OPTS}"
   EXTRA_INCLUDES
@@ -96,6 +101,7 @@ set_smart_tidy(bulk
   HAS_EXCEPTIONS)
 
 set_smart_tidy(taskmanager_test
+  BUILD_PATH "${CMAKE_BINARY_DIR}"
   EXCLUDE
     "-llvm-prefer-static-over-anonymous-namespace"
     "${CLANG_TIDY_HW_7_OPTS}"

@@ -33,10 +33,10 @@ namespace
         std::optional<std::chrono::system_clock::time_point> start_time,
         std::optional<std::chrono::system_clock::time_point> end_time)
     {
-        constexpr unsigned char BASE = 10;
+        constexpr int BASE = 10;
         std::vector<std::filesystem::path> log_files;
 
-        for (const auto &entry : std::filesystem::directory_iterator("."))
+        for (const auto& entry : std::filesystem::directory_iterator("."))
         {
             const std::string filename = entry.path().filename().string();
             if (  entry.is_regular_file()
@@ -51,8 +51,8 @@ namespace
                     continue;
                 }
 
-                const std::string_view timestamp_sv = timestamp_str;
-                std::int64_t timestamp_seconds = 0;
+                const std::string_view timestamp_sv{timestamp_str};
+                std::int64_t timestamp_seconds{};
                 if (std::from_chars(timestamp_sv.data(),
                     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
                     timestamp_sv.data() + timestamp_sv.size(), timestamp_seconds,
@@ -110,7 +110,14 @@ namespace
 
 class HW7 : public ::testing::Test
 {
-    std::chrono::system_clock::time_point start_time_;
+public:
+    HW7() = default;
+    ~HW7() override = default;
+    HW7(const HW7&) = delete;
+    HW7(HW7&&) = delete;
+    HW7& operator=(const HW7&) = delete;
+    HW7& operator=(HW7&&) = delete;
+
 protected:
     void SetUp() override
     {
@@ -122,16 +129,10 @@ protected:
     {
         clear_log_files(start_time_, std::chrono::system_clock::now());
     }
-public:
-    HW7() = default;
-    HW7(const HW7&) = delete;
-    HW7(HW7&&) = delete;
-    HW7& operator=(const HW7&) = delete;
-    HW7& operator=(HW7&&) = delete;
-    ~HW7() override;
-};
 
-HW7::~HW7() = default;
+private:
+    std::chrono::system_clock::time_point start_time_;
+};
 
 TEST_F(HW7, StaticBlocks)
 {

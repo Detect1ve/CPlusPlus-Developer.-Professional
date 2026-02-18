@@ -37,13 +37,11 @@ TEST(HW8, NoDuplicatesTest)
     boost::filesystem::create_directory(temp_dir);
 
     {
-        std::ofstream cpp_stream(cpp_file.string());
+        std::ofstream cpp_stream{cpp_file.string()};
         cpp_stream << "Hello, C++\n";
-        cpp_stream.close();
 
-        std::ofstream world_stream(world_file.string());
+        std::ofstream world_stream{world_file.string()};
         world_stream << "Hello, World\n";
-        world_stream.close();
     }
 
     ASSERT_TRUE(boost::filesystem::exists(cpp_file));
@@ -103,25 +101,20 @@ TEST(HW8, FindDuplicatesTest)
     boost::filesystem::create_directory(level2_dir);
 
     {
-        std::ofstream cpp_stream1(cpp_file1.string());
+        std::ofstream cpp_stream1{cpp_file1.string()};
         cpp_stream1 << "Hello, C++\n";
-        cpp_stream1.close();
 
-        std::ofstream cpp_stream2(cpp_file2.string());
+        std::ofstream cpp_stream2{cpp_file2.string()};
         cpp_stream2 << "Hello, C++\n";
-        cpp_stream2.close();
 
-        std::ofstream world_stream1(world_file1.string());
+        std::ofstream world_stream1{world_file1.string()};
         world_stream1 << "Hello, World\n";
-        world_stream1.close();
 
-        std::ofstream world_stream2(world_file2.string());
+        std::ofstream world_stream2{world_file2.string()};
         world_stream2 << "Hello, World\n";
-        world_stream2.close();
 
-        std::ofstream world_stream3(world_file3.string());
+        std::ofstream world_stream3{world_file3.string()};
         world_stream3 << "Hello, World\n";
-        world_stream3.close();
     }
 
     ASSERT_TRUE(boost::filesystem::exists(cpp_file1));

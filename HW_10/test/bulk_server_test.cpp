@@ -27,12 +27,12 @@
 
 namespace
 {
-    constexpr int COMMAND_COUNT = 10;
-    constexpr int TOTAL_COMMANDS = 20;
     constexpr std::chrono::milliseconds THREAD_SLEEP_DURATION{500};
     constexpr std::chrono::milliseconds SLEEP_BETWEEN_TESTS{1000};
     constexpr std::chrono::milliseconds SERVER_STARTUP_SLEEP_DURATION{100};
-    constexpr std::uint16_t DEFAULT_PORT = 9000;
+    constexpr int COMMAND_COUNT = 10;
+    constexpr int TOTAL_COMMANDS = 20;
+    constexpr int DEFAULT_PORT = 9000;
 
     void run_client_task(
         const std::string_view cmds,
@@ -54,10 +54,10 @@ namespace
         std::optional<std::chrono::system_clock::time_point> start_time,
         std::optional<std::chrono::system_clock::time_point> end_time)
     {
-        constexpr unsigned char BASE = 10;
+        constexpr std::uint8_t BASE = 10;
         std::vector<std::filesystem::path> log_files;
 
-        for (const auto &entry : std::filesystem::directory_iterator("."))
+        for (const auto& entry : std::filesystem::directory_iterator("."))
         {
             const std::string filename = entry.path().filename().string();
             if (  entry.is_regular_file()
@@ -72,7 +72,7 @@ namespace
 
                 const std::string timestamp_str =
                     filename.substr(4, first_underscore - 4);
-                const std::string_view timestamp_sv = timestamp_str;
+                const std::string_view timestamp_sv{timestamp_str};
                 std::int64_t timestamp_val = 0;
                 if (std::from_chars(timestamp_sv.data(),
                     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
@@ -121,12 +121,14 @@ namespace
 
 class HW10 : public ::testing::Test
 {
-    std::uint16_t port_{};
-    std::size_t bulk_size_{};
-    std::thread server_thread_;
-    std::unique_ptr<async::Server> server_;
-    std::exception_ptr server_exception_{nullptr};
-    std::chrono::system_clock::time_point start_time_;
+public:
+    HW10() = default;
+    ~HW10() override = default;
+    HW10(const HW10&) = delete;
+    HW10(HW10&&) = delete;
+    HW10& operator=(const HW10&) = delete;
+    HW10& operator=(HW10&&) = delete;
+
 protected:
     void SetUp() override
     {
@@ -175,7 +177,7 @@ protected:
             {
                 std::rethrow_exception(server_exception_);
             }
-            catch(const std::exception& e)
+            catch (const std::exception& e)
             {
                 FAIL() << "Server thread threw exception: " << e.what();
             }
@@ -186,16 +188,16 @@ protected:
     {
         return port_;
     }
-public:
-    HW10() = default;
-    HW10(const HW10&) = delete;
-    HW10(HW10&&) = delete;
-    HW10& operator=(const HW10&) = delete;
-    HW10& operator=(HW10&&) = delete;
-    ~HW10() override;
-};
 
-HW10::~HW10() = default;
+private:
+    std::chrono::system_clock::time_point start_time_;
+    // std::exception_ptr server_exception_;
+    std::exception_ptr server_exception_{nullptr};
+    std::size_t bulk_size_{};
+    std::thread server_thread_;
+    std::uint16_t port_{};
+    std::unique_ptr<async::Server> server_;
+};
 
 TEST_F(HW10, CombinedConnectionTest)
 {
@@ -236,7 +238,7 @@ TEST_F(HW10, CombinedConnectionTest)
         for (const auto& path :
                 get_log_files(single_conn_start_time, std::chrono::system_clock::now()))
         {
-            const std::ifstream file(path);
+            const std::ifstream file{path};
             std::stringstream buffer;
 
             buffer << file.rdbuf();
@@ -270,11 +272,10 @@ TEST_F(HW10, CombinedConnectionTest)
 
         const std::string commands2 = commands2_stream.str();
 
-        std::thread client1(run_client_task, commands1, get_port());
-        std::thread client2(run_client_task, commands2, get_port());
-
-        client1.join();
-        client2.join();
+        {
+            const std::jthread client1(run_client_task, commands1, get_port());
+            const std::jthread client2(run_client_task, commands2, get_port());
+        }
 
         std::this_thread::sleep_for(THREAD_SLEEP_DURATION);
         const std::string two_conn_output = StdoutCapture::End();
@@ -285,7 +286,7 @@ TEST_F(HW10, CombinedConnectionTest)
 
         for (const auto& path : log_files)
         {
-            const std::ifstream file(path);
+            const std::ifstream file{path};
             std::stringstream buffer;
 
             buffer << file.rdbuf();
@@ -299,7 +300,7 @@ TEST_F(HW10, CombinedConnectionTest)
         for (std::sregex_iterator i = words_begin; i != words_end; i++)
         {
             const std::string number_str = (*i).str();
-            const std::string_view number_sv(number_str);
+            const std::string_view number_sv{number_str};
             int value{};
             // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
             if (std::from_chars(number_sv.data(), number_sv.data() + number_sv.size(),
@@ -323,7 +324,7 @@ TEST_F(HW10, CombinedConnectionTest)
         for (std::sregex_iterator i = words_begin_stdout; i != words_end_stdout; i++)
         {
             const std::string number_str = (*i).str();
-            const std::string_view number_sv(number_str);
+            const std::string_view number_sv{number_str};
             int value{};
             // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
             if (std::from_chars(number_sv.data(), number_sv.data() + number_sv.size(),
@@ -371,15 +372,15 @@ TEST_F(HW10, DynamicBlockTest)
         };
         std::string static_content;
         std::string word;
-        std::thread client1(run_client_task, commands1, get_port());
-        std::thread client2(run_client_task, commands2, get_port());
         std::unordered_set<std::string> received_static_cmds;
         std::vector<std::string> file_contents;
 
         received_static_cmds.reserve(expected_static_cmds.size());
 
-        client1.join();
-        client2.join();
+        {
+            const std::jthread client1(run_client_task, commands1, get_port());
+            const std::jthread client2(run_client_task, commands2, get_port());
+        }
 
         std::this_thread::sleep_for(THREAD_SLEEP_DURATION);
 
@@ -389,7 +390,7 @@ TEST_F(HW10, DynamicBlockTest)
 
         for (const auto& path : log_files)
         {
-            const std::ifstream file(path);
+            const std::ifstream file{path};
             std::stringstream buffer;
 
             buffer << file.rdbuf();
@@ -411,7 +412,7 @@ TEST_F(HW10, DynamicBlockTest)
             static_content += block;
         }
 
-        std::stringstream static_content_stream(static_content);
+        std::stringstream static_content_stream{static_content};
 
         while (static_content_stream >> word)
         {

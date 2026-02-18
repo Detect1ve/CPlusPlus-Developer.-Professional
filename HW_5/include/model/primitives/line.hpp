@@ -7,28 +7,22 @@ namespace editor::model
 {
     class Line final : public Primitive
     {
-        int x1_;
-        int y1_;
-        int x2_;
-        int y2_;
-        int thickness_;
     public:
-        ~Line() override;
-        Line(const Line&) = delete;
-        Line(Line&&) = delete;
-        Line& operator=(const Line&) = delete;
-        Line& operator=(Line&&) = delete;
-
         Line(
-            Point start,
-            Point end,
-            int   thickness)
+            Point     start,
+            Point     end,
+            int const thickness)
             :
             x1_(start.x),
             y1_(start.y),
             x2_(end.x),
             y2_(end.y),
             thickness_(thickness) {}
+        ~Line() override = default;
+        Line(const Line&) = delete;
+        Line& operator=(const Line&) = delete;
+        Line(Line&&) = delete;
+        Line& operator=(Line&&) = delete;
 
         [[nodiscard]] std::string getType() const override
         {
@@ -59,6 +53,13 @@ namespace editor::model
         {
             return thickness_;
         }
+
+    private:
+        int x1_;
+        int y1_;
+        int x2_;
+        int y2_;
+        int thickness_;
     };
 } // namespace editor::model
 

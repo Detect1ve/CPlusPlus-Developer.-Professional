@@ -18,17 +18,17 @@ int main(
     const int   argc,
     const char* argv[])
 {
-    int ret = 0;
+    int ret{};
 
     try
     {
         auto const args = std::span(argv, static_cast<std::size_t>(argc))
             | std::views::transform([](char const *const arg) noexcept
             {
-                return std::string_view(arg);
+                return std::string_view{arg};
             });
-        constexpr unsigned char BASE = 10;
-        std::int16_t port = 0;
+        constexpr int BASE = 10;
+        std::int16_t port{};
 
         if (args.size() != 2)
         {
@@ -59,7 +59,7 @@ int main(
     }
     catch (...)
     {
-        cp::safe_error(nullptr);
+        cp::safe_error();
         ret = -4;
     }
 
