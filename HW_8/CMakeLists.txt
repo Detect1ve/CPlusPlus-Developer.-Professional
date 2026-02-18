@@ -43,8 +43,8 @@ endif()
 add_library(bayan_lib STATIC lib/bayan.cpp)
 target_include_directories(bayan_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(bayan_lib PRIVATE
-  attribute_wrapper Boost::algorithm Boost::crc Boost::filesystem Boost::program_options
-  Boost::uuid custom_print)
+  attribute_wrapper Boost::crc Boost::filesystem Boost::hash2 Boost::program_options
+  custom_print)
 target_compile_options(bayan_lib PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_8_COMPILE_WARNING_FLAGS})
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")

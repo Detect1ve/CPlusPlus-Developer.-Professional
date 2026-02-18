@@ -7,7 +7,6 @@
 #include <fstream> // std::ifstream
 #include <functional> // std::function
 #include <iostream>
-#include <iterator> // std::back_inserter
 #include <memory> // std::unique_ptr
 #include <regex> // std::regex
 #include <span> // std::span
@@ -18,18 +17,18 @@
 #include <utility> // std::move
 #include <vector> // std::vector
 
-#include <boost/algorithm/hex.hpp>
 #include <boost/crc.hpp>
 #include <boost/filesystem/directory.hpp>
 #include <boost/filesystem/exception.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
+#include <boost/hash2/digest.hpp>
+#include <boost/hash2/md5.hpp>
 #include <boost/program_options/errors.hpp>
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/parsers.hpp>
 #include <boost/program_options/value_semantic.hpp>
 #include <boost/program_options/variables_map.hpp>
-#include <boost/uuid/detail/md5.hpp>
 
 #include <attribute_wrapper.hpp>
 #include <bayan.hpp>
@@ -123,16 +122,11 @@ std::string compute_crc32(const std::string_view input)
 
 std::string compute_md5(const std::string_view input)
 {
-    boost::uuids::detail::md5 hash;
-    boost::uuids::detail::md5::digest_type digest;
+    boost::hash2::md5_128 hash;
 
-    hash.process_bytes(input.data(), input.length());
-    hash.get_digest(digest);
-    std::string result;
+    hash.update(input.data(), input.size());
 
-    boost::algorithm::hex(std::span(digest), std::back_inserter(result));
-
-    return result;
+    return boost::hash2::to_string(hash.result());
 }
 
 std::function<std::string(std::string_view)> HashAlgorithm::get_hash_function(

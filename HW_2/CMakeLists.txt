@@ -61,7 +61,7 @@ target_compile_options(ip_filter PRIVATE
 
 add_executable(ip_filter_test test/ip_filter_test.cpp)
 target_link_libraries(ip_filter_test PRIVATE
-  Boost::algorithm Boost::uuid capture GTest::gtest_main ip_filter_lib)
+  Boost::hash2 capture GTest::gtest_main ip_filter_lib)
 target_compile_options(ip_filter_test PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_2_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)
