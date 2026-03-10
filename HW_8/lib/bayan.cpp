@@ -312,11 +312,10 @@ FileScanner::FileScanner(
     file_masks_(file_masks.value),
     scan_dirs_(scan_dirs.value)
 {
-    for (const auto& mask : file_masks_)
+    for (const auto& regex_str : file_masks_)
     {
-        const std::string regex_str = mask;
-
         std::string result;
+
         for (const char character : regex_str)
         {
             if (character == '.')

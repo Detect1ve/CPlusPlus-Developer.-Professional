@@ -23,11 +23,12 @@ int main(
             return std::string_view(arg);
         });
     constexpr unsigned char BASE = 10;
-    int command_number = 0;
     int ret = 0;
 
     try
     {
+        int command_number = 0;
+
         if (args.size() < 2)
         {
             cp::println(stderr, "Usage: {} <positive_number>", args[0]);
