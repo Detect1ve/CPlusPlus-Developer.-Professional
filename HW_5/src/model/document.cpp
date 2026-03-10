@@ -41,7 +41,7 @@ namespace editor::model
         return primitives_.size();
     }
 
-    std::string_view Document::getName() const
+    const std::string& Document::getName() const
     {
         return name_;
     }

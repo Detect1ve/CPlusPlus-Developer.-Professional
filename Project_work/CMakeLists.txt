@@ -17,6 +17,7 @@ endif()
 
 if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
+  include(../cmake/cppcheck.cmake)
   include(../cmake/fetch_googletest.cmake)
   include(../cmake/warning_flags.cmake)
   include(../common/custom_print.cmake)
@@ -69,3 +70,11 @@ set_smart_tidy(queue_performance_test
   EXTRA_INCLUDES
     "${CUSTOM_PRINT_INCLUDE_DIR}"
   HAS_EXCEPTIONS)
+
+set_smart_cppcheck(queue_test
+  LIBRARIES
+    "googletest")
+
+set_smart_cppcheck(queue_performance_test
+  EXCLUDE
+    "unusedFunction")

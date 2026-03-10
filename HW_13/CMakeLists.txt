@@ -24,11 +24,12 @@ if (PROJECT_IS_TOP_LEVEL)
 endif()
 
 if (PROJECT_IS_TOP_LEVEL)
-    include(../cmake/clang-tidy.cmake)
-    include(../cmake/fetch_googletest.cmake)
-    include(../cmake/warning_flags.cmake)
-    include(../common/custom_print.cmake)
-    list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
+  include(../cmake/clang-tidy.cmake)
+  include(../cmake/cppcheck.cmake)
+  include(../cmake/fetch_googletest.cmake)
+  include(../cmake/warning_flags.cmake)
+  include(../common/custom_print.cmake)
+  list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -90,6 +91,18 @@ set_smart_tidy(fashio_mnist
 set_smart_tidy(fashio_mnist_test
   EXCLUDE
     "${CLANG_TIDY_HW_13_OPTS}")
+
+set_smart_cppcheck(mlp_lib
+  EXCLUDE
+    "unusedFunction")
+
+set_smart_cppcheck(fashio_mnist
+  EXCLUDE
+    "unusedFunction")
+
+set_smart_cppcheck(fashio_mnist_test
+  LIBRARIES
+    "googletest")
 
 enable_testing()
 add_test(NAME HW_13.fashio_mnist_test COMMAND $<TARGET_FILE:fashio_mnist_test>)

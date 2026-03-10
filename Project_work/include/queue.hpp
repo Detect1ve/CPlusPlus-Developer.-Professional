@@ -240,8 +240,8 @@ namespace pc_queue
 
             if (usePriority_)
             {
-                std::priority_queue<PriorityItem> empty;
-                std::swap(priorityQueue_, empty);
+                std::priority_queue<PriorityItem> empty_;
+                std::swap(priorityQueue_, empty_);
             }
 
             notFull_.notify_all();

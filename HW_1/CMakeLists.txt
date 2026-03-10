@@ -41,6 +41,7 @@ endif()
 
 if (PROJECT_IS_TOP_LEVEL)
     include(../cmake/clang-tidy.cmake)
+    include(../cmake/cppcheck.cmake)
     include(../cmake/fetch_boost.cmake)
     include(../cmake/fetch_googletest.cmake)
     include(../cmake/warning_flags.cmake)
@@ -80,6 +81,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         -Wno-suggest-attribute=const
     )
 endif()
+
 target_compile_options(test_version PRIVATE
     ${COMPILE_WARNING_FLAGS} ${HW_1_COMPILE_WARNING_FLAGS}
 )
@@ -148,6 +150,26 @@ set_smart_tidy(g_test_version
         "${CLANG_TIDY_HW_1_OPTS}"
     MAIN_INCLUDE_DIR
         "${CMAKE_CURRENT_SOURCE_DIR}"
+)
+
+set_smart_cppcheck(helloworld_cli)
+
+set_smart_cppcheck(helloworld
+    EXCLUDE
+        "unmatchedSuppression"
+        "unusedFunction"
+)
+
+set_smart_cppcheck(test_version
+    EXCLUDE
+        "unusedFunction"
+    LIBRARIES
+        "boost"
+)
+
+set_smart_cppcheck(g_test_version
+    LIBRARIES
+        "googletest"
 )
 
 install(TARGETS helloworld_cli RUNTIME DESTINATION bin

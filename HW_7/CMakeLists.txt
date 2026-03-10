@@ -25,6 +25,7 @@ endif()
 
 if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
+  include(../cmake/cppcheck.cmake)
   include(../cmake/fetch_googletest.cmake)
   include(../cmake/warning_flags.cmake)
   include(../common/attribute_wrapper.cmake)
@@ -101,6 +102,24 @@ set_smart_tidy(taskmanager_test
     "${CAPTURE_INCLUDE_DIR}"
     "${CUSTOM_PRINT_INCLUDE_DIR}"
   HAS_EXCEPTIONS)
+
+set_smart_cppcheck(taskmanager
+  EXCLUDE
+    "unusedFunction"
+  LIBRARIES
+    "gnu,posix")
+
+set_smart_cppcheck(bulk
+  EXCLUDE
+    "unusedFunction"
+  LIBRARIES
+    "gnu")
+
+set_smart_cppcheck(taskmanager_test
+  EXCLUDE
+    "unusedFunction"
+  LIBRARIES
+    "gnu,googletest,posix")
 
 enable_testing()
 add_test(NAME HW_7.taskmanager_test COMMAND $<TARGET_FILE:taskmanager_test>)

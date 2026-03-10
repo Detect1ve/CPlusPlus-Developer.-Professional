@@ -224,12 +224,13 @@ namespace bulk
     int taskmanager::run(std::istream& input)
     {
         int ret = 0;
-        std::string line;
 
         try
         {
             while (!stop_flag)
             {
+                std::string line;
+
                 if (std::getline(input, line))
                 {
                     if (this->add_task(line) != 0)

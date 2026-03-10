@@ -25,6 +25,7 @@ endif()
 
 if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
+  include(../cmake/cppcheck.cmake)
   include(../cmake/fetch_boost.cmake)
   include(../cmake/fetch_googletest.cmake)
   include(../cmake/warning_flags.cmake)
@@ -95,6 +96,20 @@ set_smart_tidy(ip_filter_test
     "${ATTRIBUTE_WRAPPER_INCLUDE_DIR}"
     "${CAPTURE_INCLUDE_DIR}"
   HAS_EXCEPTIONS)
+
+set_smart_cppcheck(ip_filter_lib
+  EXCLUDE
+    "unusedFunction"
+  LIBRARIES
+    "gnu")
+
+set_smart_cppcheck(ip_filter
+  LIBRARIES
+    "gnu")
+
+set_smart_cppcheck(ip_filter_test
+  LIBRARIES
+    "boost,gnu,googletest,posix")
 
 enable_testing()
 add_test(

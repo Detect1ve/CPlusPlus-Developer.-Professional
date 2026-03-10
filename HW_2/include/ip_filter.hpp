@@ -12,6 +12,7 @@
 #include <limits>
 #include <span>
 #endif
+#include <algorithm>
 #include <ranges>
 #include <utility>
 #include <vector>
@@ -84,13 +85,13 @@ std::expected<std::vector<std::vector<std::string>>, std::error_code> filter(
 {
     auto octet_list = std::initializer_list<int>{octet...};
 
-    for (const auto& val : octet_list)
-    {
-        if (  std::cmp_less(val, std::numeric_limits<unsigned char>::min())
-           || std::cmp_greater(val, std::numeric_limits<unsigned char>::max()))
+    if (std::ranges::any_of(octet_list, [](auto val) noexcept
         {
-            return std::unexpected(std::make_error_code(std::errc::value_too_large));
-        }
+            return   std::cmp_less(val, std::numeric_limits<unsigned char>::min())
+                  || std::cmp_greater(val, std::numeric_limits<unsigned char>::max());
+        }, std::identity{}))
+    {
+        return std::unexpected(std::make_error_code(std::errc::value_too_large));
     }
 
     std::array<int, sizeof...(octet)> a_octet = {octet...};

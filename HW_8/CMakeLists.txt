@@ -25,6 +25,7 @@ endif()
 
 if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
+  include(../cmake/cppcheck.cmake)
   include(../cmake/fetch_absl.cmake)
   include(../cmake/fetch_boost.cmake)
   include(../cmake/fetch_googletest.cmake)
@@ -98,6 +99,23 @@ set_smart_tidy(bayan_test
   EXTRA_INCLUDES
     "${CAPTURE_INCLUDE_DIR}"
   HAS_EXCEPTIONS)
+
+set_smart_cppcheck(bayan_lib
+  EXCLUDE
+    "missingMemberCopy"
+    "unusedFunction"
+  LIBRARIES
+    "boost,gnu")
+
+set_smart_cppcheck(bayan
+  EXCLUDE
+    "unusedFunction")
+
+set_smart_cppcheck(bayan_test
+  EXCLUDE
+    "unreadVariable" # TODO
+  LIBRARIES
+    "boost,googletest,posix")
 
 enable_testing()
 add_test(NAME HW_8.bayan_test COMMAND $<TARGET_FILE:bayan_test>)

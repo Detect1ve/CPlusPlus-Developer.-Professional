@@ -25,6 +25,7 @@ endif()
 
 if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
+  include(../cmake/cppcheck.cmake)
   include(../cmake/fetch_boost.cmake)
   include(../cmake/fetch_googletest.cmake)
   include(../cmake/warning_flags.cmake)
@@ -124,6 +125,27 @@ set_smart_tidy(bulk_server_test
     "${CAPTURE_INCLUDE_DIR}"
     "${SOCKET_WRAPPER_INCLUDE_DIR}"
   HAS_EXCEPTIONS)
+
+set_smart_cppcheck(server_async
+  EXCLUDE
+    "unreadVariable"
+    "unusedFunction")
+
+set_smart_cppcheck(server
+  EXCLUDE
+    "unusedFunction"
+  LIBRARIES
+    "boost,posix")
+
+set_smart_cppcheck(bulk_server
+  EXCLUDE
+    "unusedFunction")
+
+set_smart_cppcheck(bulk_server_test
+  EXCLUDE
+    "unusedFunction"
+  LIBRARIES
+    "googletest,posix")
 
 enable_testing()
 add_test(NAME HW_10.bulk_server_test COMMAND $<TARGET_FILE:bulk_server_test>)

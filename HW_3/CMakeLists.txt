@@ -18,6 +18,7 @@ endif()
 
 if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
+  include(../cmake/cppcheck.cmake)
   include(../cmake/fetch_googletest.cmake)
   include(../cmake/fetch_gsl.cmake)
   include(../cmake/warning_flags.cmake)
@@ -83,6 +84,20 @@ set_smart_tidy(my_allocator_test
 set_smart_tidy(my_list_test
   EXCLUDE
     "${CLANG_TIDY_HW_3_OPTS}")
+
+set_smart_cppcheck(main
+  EXCLUDE
+    "unusedFunction")
+
+set_smart_cppcheck(my_allocator_test
+  EXCLUDE
+    "unusedFunction")
+
+set_smart_cppcheck(my_list_test
+  EXCLUDE
+    "unusedFunction"
+  LIBRARIES
+    "googletest")
 
 enable_testing()
 add_test(NAME HW_3.my_allocator_test COMMAND $<TARGET_FILE:my_allocator_test>)

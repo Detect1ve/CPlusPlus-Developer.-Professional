@@ -64,7 +64,7 @@ public:
         return iterator(head_);
     }
 
-    iterator end()
+    static iterator end()
     {
         return iterator(nullptr);
     }

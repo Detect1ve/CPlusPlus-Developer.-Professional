@@ -18,6 +18,7 @@ endif()
 
 if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
+  include(../cmake/cppcheck.cmake)
   include(../cmake/warning_flags.cmake)
   include(../common/attribute_wrapper.cmake)
   include(../common/custom_print.cmake)
@@ -54,3 +55,10 @@ set_smart_tidy(editor
     "${ATTRIBUTE_WRAPPER_INCLUDE_DIR}"
     "${CUSTOM_PRINT_INCLUDE_DIR}"
   HAS_EXCEPTIONS)
+
+set_smart_cppcheck(editor
+  EXCLUDE
+    "unmatchedSuppression"
+    "unusedFunction"
+  LIBRARIES
+    "gnu")

@@ -92,7 +92,7 @@ public:
 
         iterator& operator++()
         {
-            it_++;
+            ++it_;
 
             return *this;
         }
@@ -167,14 +167,14 @@ template <typename T, T DefaultValue>
 // NOLINTNEXTLINE(cert-dcl58-cpp)
 struct std::formatter<Matrix<T, DefaultValue>>
 {
-    constexpr auto parse(std::format_parse_context& ctx)
+    static constexpr auto parse(std::format_parse_context& ctx)
     {
         return ctx.begin();
     }
 
-    auto format(
+    static auto format(
         const Matrix<T, DefaultValue>& matrix,
-        std::format_context&           ctx) const -> decltype(ctx.out())
+        std::format_context&           ctx) -> decltype(ctx.out())
     {
         auto out = ctx.out();
 

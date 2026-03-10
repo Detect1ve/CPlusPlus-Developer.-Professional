@@ -3,17 +3,25 @@
  || __cplusplus <=  202002L
 #include <charconv>
 #endif
+
+#include <algorithm>
 #include <chrono> // std::chrono::system_clock
 #include <cstddef> // std::size_t
 #include <cstdint> // std::int64_t
 #include <filesystem>
 #include <fstream>
+#include <iterator> // std::back_inserter
 #include <optional> // std::optional
 #include <sstream> // std::stringstream
 #include <string> // std::string
 #include <string_view> // std::string_view
 #include <system_error> // std::errc
 #include <vector> // std::vector
+#include <version> // IWYU pragma: keep
+
+#ifdef __cpp_lib_ranges_to_container
+#include <ranges>
+#endif
 
 #include <gtest/gtest.h>
 #include <absl/strings/match.h>
@@ -160,14 +168,20 @@ TEST_F(HW9, MainFunctionality)
     ASSERT_TRUE(absl::StrContains(output, "bulk: 6\n"));
     ASSERT_TRUE(absl::StrContains(output, "bulk: a, b, c, d\n"));
     ASSERT_TRUE(absl::StrContains(output, "bulk: 89\n"));
-
+#ifdef __cpp_lib_ranges_to_container
+    const auto log_contents =
+        get_log_files(get_start_time(), std::chrono::system_clock::now())
+        | std::views::transform(read_file_content)
+        | std::ranges::to<std::vector<std::string>>();
+#else
+    const auto log_files =
+        get_log_files(get_start_time(), std::chrono::system_clock::now());
     std::vector<std::string> log_contents;
-    for (const auto &path :
-            get_log_files(get_start_time(), std::chrono::system_clock::now()))
-    {
-        log_contents.emplace_back(read_file_content(path));
-    }
 
+    log_contents.reserve(log_files.size());
+    std::ranges::transform(log_files, std::back_inserter(log_contents),
+        read_file_content);
+#endif
     ASSERT_GE(log_contents.size(), 4);
 
     bool block1_found = false;

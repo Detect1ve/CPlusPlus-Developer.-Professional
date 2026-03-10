@@ -10,7 +10,6 @@ set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 project(mapreduce VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 if (PROJECT_IS_TOP_LEVEL)
-  include(../cmake/clang-tidy.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
@@ -21,6 +20,8 @@ if (MSVC OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     endif()
 
     set(MINIMUM_CXX_STANDARD 17)
+    include(../cmake/clang-tidy.cmake)
+    include(../cmake/cppcheck.cmake)
     include(../cmake/cxx_standard.cmake)
     include(../cmake/warning_flags.cmake)
   endif()
@@ -87,6 +88,12 @@ if (MSVC OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set_smart_tidy(reducer_variance
     EXCLUDE
       "${CLANG_TIDY_HW_12_OPTS}")
+
+  set_smart_cppcheck(mapper)
+  set_smart_cppcheck(reducer)
+  set_smart_cppcheck(mapper_variance)
+  set_smart_cppcheck(reducer_variance)
+
 else()
   add_custom_target(mapreduce_all ALL
     COMMAND make -f ${CMAKE_CURRENT_SOURCE_DIR}/Makefile all

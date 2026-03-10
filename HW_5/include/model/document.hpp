@@ -20,10 +20,10 @@ namespace editor::model
         Document(Document&&) = delete;
         Document& operator=(Document&&) = delete;
 
-        ATTRIBUTE_CONST [[nodiscard]] std::string_view getName() const;
         ATTRIBUTE_CONST [[nodiscard]] static bool saveToFile(
             const Document&  document,
             std::string_view filename);
+        ATTRIBUTE_CONST [[nodiscard]] const std::string& getName() const;
         ATTRIBUTE_PURE [[nodiscard]] const Primitive* getPrimitive(std::size_t index)
             const;
         ATTRIBUTE_PURE [[nodiscard]] std::size_t getPrimitiveCount() const;

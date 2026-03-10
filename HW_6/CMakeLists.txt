@@ -25,6 +25,7 @@ endif()
 
 if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
+  include(../cmake/cppcheck.cmake)
   include(../cmake/fetch_googletest.cmake)
   include(../cmake/warning_flags.cmake)
   include(../common/capture.cmake)
@@ -78,6 +79,16 @@ set_smart_tidy(matrix_test
   EXTRA_INCLUDES
     "${CAPTURE_INCLUDE_DIR}"
   HAS_EXCEPTIONS)
+
+set_smart_cppcheck(matrix
+  EXCLUDE
+    "unusedFunction")
+
+set_smart_cppcheck(matrix_test
+  EXCLUDE
+    "unusedFunction"
+  LIBRARIES
+    "googletest,posix")
 
 enable_testing()
 add_test(NAME HW_6.matrix_test COMMAND $<TARGET_FILE:matrix_test>)

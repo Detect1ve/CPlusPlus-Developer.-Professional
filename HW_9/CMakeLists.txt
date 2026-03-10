@@ -25,6 +25,7 @@ endif()
 
 if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
+  include(../cmake/cppcheck.cmake)
   include(../cmake/fetch_absl.cmake)
   include(../cmake/fetch_googletest.cmake)
   include(../cmake/warning_flags.cmake)
@@ -120,6 +121,21 @@ set_smart_tidy(async_test
   EXTRA_INCLUDES
     "${CAPTURE_INCLUDE_DIR}"
   HAS_EXCEPTIONS)
+
+set_smart_cppcheck(async
+  EXCLUDE
+    "unreadVariable"
+    "unusedFunction")
+
+set_smart_cppcheck(async_static
+  EXCLUDE
+    "unreadVariable"
+    "unusedFunction")
+
+set_smart_cppcheck(async_cli)
+set_smart_cppcheck(async_test
+  LIBRARIES
+    "googletest,posix")
 
 enable_testing()
 add_test(NAME HW_9.async_test COMMAND $<TARGET_FILE:async_test>)

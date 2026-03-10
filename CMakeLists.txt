@@ -22,6 +22,7 @@ set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 
 include(cmake/clang-tidy.cmake)
+include(cmake/cppcheck.cmake)
 include(cmake/fetch_absl.cmake)
 include(cmake/fetch_boost.cmake)
 include(cmake/fetch_googletest.cmake)

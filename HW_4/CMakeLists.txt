@@ -28,6 +28,7 @@ endif()
 
 if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
+  include(../cmake/cppcheck.cmake)
   include(../cmake/fetch_googletest.cmake)
   include(../cmake/warning_flags.cmake)
   include(../common/capture.cmake)
@@ -86,6 +87,14 @@ set_smart_tidy(print_ip_test
   EXTRA_INCLUDES
     "${CAPTURE_INCLUDE_DIR}"
     "${CUSTOM_PRINT_INCLUDE_DIR}")
+
+set_smart_cppcheck(print_ip)
+set_smart_cppcheck(print_ip_test
+  EXCLUDE
+    "unreadVariable" # TODO
+    "unusedFunction"
+  LIBRARIES
+    "posix,googletest")
 
 if (ENABLE_CLANG_TIDY AND CLANG_TIDY_BIN AND PATCH_COMPILE_COMMANDS)
   add_custom_target(patch_compile_commands ALL
