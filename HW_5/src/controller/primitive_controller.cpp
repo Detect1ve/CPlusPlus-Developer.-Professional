@@ -9,9 +9,6 @@
 
 namespace editor::controller
 {
-    PrimitiveController::PrimitiveController(model::Document* document)
-        : document_(document) {}
-
     void PrimitiveController::createLine(
         Point const start,
         Point const end,

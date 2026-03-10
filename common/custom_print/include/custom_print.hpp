@@ -10,16 +10,39 @@
 #include <iostream>
 #endif
 
-namespace cp
+#ifdef _WIN32
+#include <io.h>
+#define WRITE_FUNC _write
+#else
+#include <unistd.h>
+#define WRITE_FUNC write
+#endif
+
+namespace wrapper
 {
-    template <typename... Args>
-    void print(
-        std::format_string<Args...> fmt,
-        Args&&...                   args)
+    inline int fileno(std::FILE *const stream)
     {
-        print(stdout, fmt, std::forward<Args>(args)...);
+#ifdef _WIN32
+        return ::_fileno(stream);
+#else
+        return ::fileno(stream);
+#endif
     }
 
+    inline void write_raw(const std::string_view message) noexcept
+    {
+        if (message.empty())
+        {
+            return;
+        }
+
+        std::ignore = WRITE_FUNC(wrapper::fileno(stderr), message.data(),
+            static_cast<unsigned>(message.size()));
+    }
+} // namespace wrapper
+
+namespace cp
+{
     template <typename... Args>
     void print(
         std::FILE *const            stream,
@@ -40,6 +63,14 @@ namespace cp
     #endif
     }
 
+    template <typename... Args>
+    void print(
+        std::format_string<Args...> fmt,
+        Args&&...                   args)
+    {
+        cp::print(stdout, fmt, std::forward<Args>(args)...);
+    }
+
     inline void println()
     {
     #ifdef __cpp_lib_print
@@ -47,12 +78,6 @@ namespace cp
     #else
         std::cout << '\n';
     #endif
-    }
-
-    template <typename... Args>
-    void println(std::format_string<Args...> fmt, Args&&... args)
-    {
-        println(stdout, fmt, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
@@ -75,32 +100,31 @@ namespace cp
     #endif
     }
 
-    inline void safe_error(const char *const message) noexcept
+    template <typename... Args>
+    void println(std::format_string<Args...> fmt, Args&&... args)
     {
-        if (message != nullptr)
+        cp::println(stdout, fmt, std::forward<Args>(args)...);
+    }
+
+    inline void safe_error(const std::string_view message) noexcept
+    {
+        wrapper::write_raw("Fatal error: ");
+
+        if (!message.empty())
         {
-            if (std::fputs("Fatal error: ", stderr) == EOF)
-            {
-                return;
-            }
-
-            if (std::fputs(message, stderr) == EOF)
-            {
-                return;
-            }
-
-            if (std::fputc('\n', stderr) == EOF)
-            {
-                return;
-            }
+            wrapper::write_raw(message);
         }
         else
         {
-            if (std::fputs("Unknown error\n", stderr) == EOF)
-            {
-                return;
-            }
+            wrapper::write_raw("Unknown error");
         }
+
+        wrapper::write_raw("\n");
+    }
+
+    inline void safe_error() noexcept
+    {
+        safe_error({});
     }
 } // namespace cp
 

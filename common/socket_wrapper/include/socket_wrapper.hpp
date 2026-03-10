@@ -13,33 +13,6 @@ namespace test_util
 {
     class ClientSocket
     {
-        void close_socket()
-        {
-#ifdef _WIN32
-            if (sock_ != INVALID_SOCKET)
-            {
-                closesocket(sock_);
-                WSACleanup();
-                sock_ = INVALID_SOCKET;
-            }
-#else
-            if (sock_ != -1)
-            {
-                if (close(sock_) != 0)
-                {
-                    std::cerr << "close failed\n";
-                }
-
-                sock_ = -1;
-            }
-#endif
-        }
-
-#ifdef _WIN32
-        SOCKET sock_ = INVALID_SOCKET;
-#else
-        int sock_ = -1;
-#endif
     public:
         ClientSocket(
             const std::string&  host,
@@ -52,7 +25,7 @@ namespace test_util
                 throw std::runtime_error("WSAStartup failed");
             }
 #endif
-            const std::string port_str = std::to_string(static_cast<unsigned int>(port));
+            const std::string port_str = std::to_string(static_cast<unsigned>(port));
             addrinfo hints = {};
             addrinfo *res = nullptr;
 
@@ -96,12 +69,10 @@ namespace test_util
 
             freeaddrinfo(res);
         }
-
         ~ClientSocket()
         {
             close_socket();
         }
-
         ClientSocket(const ClientSocket&) = delete;
         ClientSocket& operator=(const ClientSocket&) = delete;
         ClientSocket(ClientSocket&&) = delete;
@@ -110,11 +81,11 @@ namespace test_util
         void send_data(const std::string_view data) const
         {
 #ifdef _WIN32
-            const int len = static_cast<int>(data.length());
+            const int size = static_cast<int>(data.size());
 #else
-            const size_t len = data.length();
+            const size_t size = data.size();
 #endif
-            if (send(sock_, data.data(), len, 0) < 0)
+            if (send(sock_, data.data(), size, 0) < 0)
             {
                 throw std::runtime_error("send failed");
             }
@@ -131,8 +102,8 @@ namespace test_util
 
         [[nodiscard]] std::string receive_data() const
         {
-            constexpr std::size_t buffer_size = 4096;
-            std::string buffer(buffer_size, '\0');
+            constexpr std::size_t BUFFER_SIZE = 4096;
+            std::string buffer(BUFFER_SIZE, '\0');
             std::string result;
 
             while (true)
@@ -172,6 +143,35 @@ namespace test_util
 
             return result;
         }
+
+    private:
+        void close_socket()
+        {
+#ifdef _WIN32
+            if (sock_ != INVALID_SOCKET)
+            {
+                closesocket(sock_);
+                WSACleanup();
+                sock_ = INVALID_SOCKET;
+            }
+#else
+            if (sock_ != -1)
+            {
+                if (close(sock_) != 0)
+                {
+                    std::cerr << "close failed\n";
+                }
+
+                sock_ = -1;
+            }
+#endif
+        }
+
+#ifdef _WIN32
+        SOCKET sock_{INVALID_SOCKET};
+#else
+        int sock_{-1};
+#endif
     };
 } // namespace test_util
 

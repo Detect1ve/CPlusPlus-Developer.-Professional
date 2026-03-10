@@ -5,142 +5,26 @@
 
 #include <gsl/pointers>
 
-namespace wrapper
-{
-    inline int close(const int file_desc)
-    {
-#ifdef _WIN32
-        return ::_close(file_desc);
-#else
-        return ::close(file_desc);
-#endif
-    }
-
-    inline int dup2(
-        const int oldfd,
-        const int newfd)
-    {
-#ifdef _WIN32
-        return ::_dup2(oldfd, newfd);
-#else
-        return ::dup2(oldfd, newfd);
-#endif
-    }
-
-    inline int fileno(std::FILE *const stream)
-    {
-#ifdef _WIN32
-        return ::_fileno(stream);
-#else
-        return ::fileno(stream);
-#endif
-    }
-} // namespace wrapper
-
 class StreamCapture
 {
-    int _fd_old = -1;
-    int _target_fd;
-    std::array<int, 2> _pipefd = {{ -1, -1 }};
-    std::FILE *_target_stream;
-    std::mutex _data_mutex;
-    std::string _captured_data;
-    std::thread _reader_thread;
-    static constexpr std::uint8_t pipe_r = 0;
-    static constexpr std::uint8_t pipe_w = 1;
-    static constexpr std::uint16_t PIPE_SIZE = 4096;
-
-    std::error_code cleanup() noexcept
-    {
-        std::error_code er_code;
-
-        if (_fd_old != -1)
-        {
-            if (wrapper::dup2(_fd_old, _target_fd) == -1)
-            {
-                er_code = std::error_code(errno, std::generic_category());
-            }
-
-            if (wrapper::close(_fd_old) == -1)
-            {
-                er_code = std::error_code(errno, std::generic_category());
-            }
-
-            _fd_old = -1;
-        }
-
-        if (_pipefd[pipe_w] != -1)
-        {
-            if (wrapper::close(_pipefd[pipe_w]) == -1)
-            {
-                er_code = std::error_code(errno, std::generic_category());
-            }
-
-            _pipefd[pipe_w] = -1;
-        }
-
-        if (_reader_thread.joinable())
-        {
-            _reader_thread.join();
-        }
-
-        if (_pipefd[pipe_r] != -1)
-        {
-            if (wrapper::close(_pipefd[pipe_r]) == -1)
-            {
-                er_code = std::error_code(errno, std::generic_category());
-            }
-
-            _pipefd[pipe_r] = -1;
-        }
-
-        return er_code;
-    }
-
-    void reader_worker()
-    {
-        std::array<char, PIPE_SIZE> buffer{};
-
-        while (true)
-        {
-#ifdef _WIN32
-            const int bytes_read = _read(_pipefd[pipe_r], buffer.data(),
-                static_cast<unsigned>(buffer.size()));
-#else
-            const ssize_t bytes_read = read(_pipefd[pipe_r], buffer.data(),
-                buffer.size());
-#endif
-            if (bytes_read > 0)
-            {
-                const std::scoped_lock<std::mutex> lock(_data_mutex);
-                _captured_data.append(buffer.data(),
-                    static_cast<std::string::size_type>(bytes_read));
-            }
-            else if (bytes_read == 0 || errno != EINTR)
-            {
-                break;
-            }
-        }
-    }
-
 public:
     explicit StreamCapture(FILE *const target_stream)
     :
-    _target_fd(wrapper::fileno(target_stream)),
-    _target_stream(target_stream)
+    target_fd_(fileno(target_stream)),
+    target_stream_(target_stream)
     {
 #ifdef _WIN32
-        if (_pipe(_pipefd.data(), PIPE_SIZE, _O_BINARY | _O_NOINHERIT) == -1)
+        if (_pipe(pipefd_.data(), PIPE_SIZE, _O_BINARY | _O_NOINHERIT) == -1)
 #else
-        if (pipe2(_pipefd.data(), O_CLOEXEC) == -1)
+        if (pipe2(pipefd_.data(), O_CLOEXEC) == -1)
 #endif
         {
             throw std::system_error(errno, std::generic_category());
         }
 
-        if (fflush(_target_stream) == EOF)
+        if (fflush(target_stream_) == EOF)
         {
-            const int err = errno;
+            const int err{errno};
 
             errno = 0;
 
@@ -150,13 +34,13 @@ public:
                 "cleanup() also returned " + err_cleanup.message());
         }
 #ifdef _WIN32
-        _fd_old = _dup(_target_fd);
+        fd_old_ = _dup(target_fd_);
 #else
-        _fd_old = fcntl(_target_fd, F_DUPFD_CLOEXEC, 0);
+        fd_old_ = fcntl(target_fd_, F_DUPFD_CLOEXEC, 0);
 #endif
-        if (_fd_old == -1)
+        if (fd_old_ == -1)
         {
-            const int err = errno;
+            const int err{errno};
 
             errno = 0;
 
@@ -166,9 +50,9 @@ public:
                 "cleanup() also returned " + err_cleanup.message());
         }
 
-        if (wrapper::dup2(_pipefd[pipe_w], _target_fd) == -1)
+        if (dup2(pipefd_[PIPE_W], target_fd_) == -1)
         {
-            const int err = errno;
+            const int err{errno};
 
             errno = 0;
 
@@ -180,7 +64,7 @@ public:
 
         try
         {
-            _reader_thread = std::thread(&StreamCapture::reader_worker, this);
+            reader_thread_ = std::thread(&StreamCapture::reader_worker, this);
         }
         catch (...)
         {
@@ -189,10 +73,9 @@ public:
             throw std::system_error(err_cleanup);
         }
     }
-
     ~StreamCapture()
     {
-        if (_fd_old != -1)
+        if (fd_old_ != -1)
         {
             try
             {
@@ -204,7 +87,6 @@ public:
             }
         }
     }
-
     StreamCapture(const StreamCapture&) = delete;
     StreamCapture& operator=(const StreamCapture&) = delete;
     StreamCapture(StreamCapture&&) = delete;
@@ -215,12 +97,12 @@ public:
         std::error_code ec_cleanup;
         std::error_code ec_fflush;
 
-        if (_fd_old == -1)
+        if (fd_old_ == -1)
         {
-            return _captured_data;
+            return captured_data_;
         }
 
-        if (fflush(_target_stream) == EOF)
+        if (fflush(target_stream_) == EOF)
         {
             ec_fflush = std::error_code(errno, std::generic_category());
         }
@@ -237,32 +119,129 @@ public:
             throw std::system_error(ec_fflush, "fflush failed during End()");
         }
 
-        const std::scoped_lock<std::mutex> lock(_data_mutex);
+        const std::scoped_lock<std::mutex> lock(data_mutex_);
 
-        return std::move(_captured_data);
+        return std::move(captured_data_);
     }
+
+private:
+    static int close(const int file_desc)
+    {
+#ifdef _WIN32
+        return ::_close(file_desc);
+#else
+        return ::close(file_desc);
+#endif
+    }
+
+    static int dup2(
+        const int oldfd,
+        const int newfd)
+    {
+#ifdef _WIN32
+        return ::_dup2(oldfd, newfd);
+#else
+        return ::dup2(oldfd, newfd);
+#endif
+    }
+
+    static int fileno(std::FILE *const stream)
+    {
+#ifdef _WIN32
+        return ::_fileno(stream);
+#else
+        return ::fileno(stream);
+#endif
+    }
+
+    std::error_code cleanup() noexcept
+    {
+        std::error_code er_code;
+
+        if (fd_old_ != -1)
+        {
+            if (dup2(fd_old_, target_fd_) == -1)
+            {
+                er_code = std::error_code(errno, std::generic_category());
+            }
+
+            if (close(fd_old_) == -1)
+            {
+                er_code = std::error_code(errno, std::generic_category());
+            }
+
+            fd_old_ = -1;
+        }
+
+        if (pipefd_[PIPE_W] != -1)
+        {
+            if (close(pipefd_[PIPE_W]) == -1)
+            {
+                er_code = std::error_code(errno, std::generic_category());
+            }
+
+            pipefd_[PIPE_W] = -1;
+        }
+
+        if (reader_thread_.joinable())
+        {
+            reader_thread_.join();
+        }
+
+        if (pipefd_[PIPE_R] != -1)
+        {
+            if (close(pipefd_[PIPE_R]) == -1)
+            {
+                er_code = std::error_code(errno, std::generic_category());
+            }
+
+            pipefd_[PIPE_R] = -1;
+        }
+
+        return er_code;
+    }
+
+    void reader_worker()
+    {
+        std::array<char, PIPE_SIZE> buffer{};
+
+        while (true)
+        {
+#ifdef _WIN32
+            const int bytes_read = _read(pipefd_[PIPE_R], buffer.data(),
+                static_cast<unsigned>(buffer.size()));
+#else
+            const ssize_t bytes_read = read(pipefd_[PIPE_R], buffer.data(),
+                buffer.size());
+#endif
+            if (bytes_read > 0)
+            {
+                const std::scoped_lock<std::mutex> lock(data_mutex_);
+                captured_data_.append(buffer.data(),
+                    static_cast<std::string::size_type>(bytes_read));
+            }
+            else if (bytes_read == 0 || errno != EINTR)
+            {
+                break;
+            }
+        }
+    }
+
+    int fd_old_{-1};
+    int target_fd_;
+    std::array<int, 2> pipefd_ = {{ -1, -1 }};
+    std::FILE *target_stream_;
+    std::mutex data_mutex_;
+    std::string captured_data_;
+    std::thread reader_thread_;
+    static constexpr int PIPE_R = 0;
+    static constexpr int PIPE_W = 1;
+    static constexpr unsigned PIPE_SIZE = 4096;
 };
 
 template <auto GetStream>
 class BaseCapture
 {
-    static gsl::owner<StreamCapture*>* instance()
-    {
-        static gsl::owner<StreamCapture*> s_instance = nullptr;
-
-        return &s_instance;
-    }
-
-    static void Destroy()
-    {
-        gsl::owner<StreamCapture*> inst = *instance();
-        if (inst != nullptr)
-        {
-            *instance() = nullptr;
-
-            delete inst;
-        }
-    }
 public:
     static void Begin()
     {
@@ -292,6 +271,25 @@ public:
         Destroy();
 
         return output;
+    }
+
+private:
+    static gsl::owner<StreamCapture*>* instance()
+    {
+        static gsl::owner<StreamCapture*> s_instance = nullptr;
+
+        return &s_instance;
+    }
+
+    static void Destroy()
+    {
+        gsl::owner<StreamCapture*> inst = *instance();
+        if (inst != nullptr)
+        {
+            *instance() = nullptr;
+
+            delete inst;
+        }
     }
 };
 

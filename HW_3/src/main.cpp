@@ -8,7 +8,7 @@
 #include <my_allocator.hpp>
 #include <my_list.hpp>
 
-constexpr unsigned char CONTAINER_SIZE = 10;
+constexpr int CONTAINER_SIZE = 10;
 
 namespace
 {
@@ -50,16 +50,16 @@ int main()
             cp::println("{} {}", elem.first, elem.second);
         }
 
-        MyList<unsigned> my_list_with_standard_alloc;
+        MyList<int> my_list_with_standard_alloc;
 
-        for (unsigned i = 0; i < CONTAINER_SIZE; i++)
+        for (int i = 0; i < CONTAINER_SIZE; i++)
         {
             my_list_with_standard_alloc.push_back(i);
         }
 
-        MyList<unsigned, MyAllocator<int, CONTAINER_SIZE>> my_list_with_custom_alloc;
+        MyList<int, MyAllocator<int, CONTAINER_SIZE>> my_list_with_custom_alloc;
 
-        for (unsigned i = 0; i < CONTAINER_SIZE; i++)
+        for (int i = 0; i < CONTAINER_SIZE; i++)
         {
             my_list_with_custom_alloc.push_back(i);
         }
@@ -79,7 +79,7 @@ int main()
     }
     catch (...)
     {
-        cp::safe_error(nullptr);
+        cp::safe_error();
 
         return EXIT_FAILURE;
     }

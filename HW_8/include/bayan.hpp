@@ -26,8 +26,9 @@ enum class hash_algorithm : std::uint8_t
     md5,
 };
 
-struct HashAlgorithm
+class HashAlgorithm
 {
+public:
     HashAlgorithm();
     explicit HashAlgorithm(hash_algorithm value);
     explicit HashAlgorithm(std::string_view name);
@@ -35,25 +36,27 @@ struct HashAlgorithm
     [[nodiscard]] std::string compute_hash(std::string_view input) const;
 
 private:
-    hash_algorithm value_;
-    std::function<std::string(std::string_view)> hash_function;
-
     static
     std::function<std::string(std::string_view)> get_hash_function(hash_algorithm value);
 
-    std::unordered_map<std::string, hash_algorithm> name_to_enum_map =
+    hash_algorithm value_;
+    std::function<std::string(std::string_view)> hash_function_;
+    std::unordered_map<std::string, hash_algorithm> name_to_enum_map_ =
     {
         {"crc32", hash_algorithm::crc32},
         {"md5", hash_algorithm::md5}
     };
 };
 
-struct BlockSize
+enum class ProcessStatus : std::uint8_t
 {
-    std::uintmax_t value;
+    SUCCESS = 0,
+    HELP_REQUESTED = 1,
+    OPTION_ERROR = 2,
+    FILE_ERROR = 3,
 };
 
-struct MinFileSize
+struct BlockSize
 {
     std::uintmax_t value;
 };
@@ -68,17 +71,9 @@ struct FileMasks
     std::vector<std::string> value;
 };
 
-struct ScanDirs
+struct MinFileSize
 {
-    std::vector<std::string> value;
-};
-
-enum class ProcessStatus : std::uint8_t
-{
-    SUCCESS = 0,
-    HELP_REQUESTED = 1,
-    OPTION_ERROR = 2,
-    FILE_ERROR = 3,
+    std::uintmax_t value;
 };
 
 struct Options
@@ -90,6 +85,11 @@ struct Options
     std::vector<std::string> exclude_dirs;
     std::vector<std::string> file_masks;
     std::vector<std::string> scan_dirs;
+};
+
+struct ScanDirs
+{
+    std::vector<std::string> value;
 };
 
 std::pair<ProcessStatus, Options> option_process(std::span<const char *const> argv);

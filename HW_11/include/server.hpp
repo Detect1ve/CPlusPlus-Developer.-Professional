@@ -4,19 +4,17 @@
 #include <future>
 #include <memory>
 
-class ServerImpl;
 class Database;
+class ServerImpl;
 
 class Server
 {
-    std::unique_ptr<ServerImpl> pimpl_;
 public:
     explicit Server(std::int16_t port);
     explicit Server(
         std::promise<std::uint16_t>& port_promise,
         std::int16_t                 port);
     ~Server();
-
     Server(const Server&) = delete;
     Server& operator=(const Server&) = delete;
     Server(Server&&) = delete;
@@ -25,6 +23,9 @@ public:
     void run();
     void setup_signal_handling();
     void stop();
+
+private:
+    std::unique_ptr<ServerImpl> pimpl_;
 };
 
 #endif // SERVER_HPP

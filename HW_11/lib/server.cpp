@@ -19,7 +19,6 @@
 #include <boost/asio/read_until.hpp>
 #include <boost/asio/streambuf.hpp>
 #include <boost/asio/write.hpp>
-#include <boost/system/detail/error_code.hpp>
 
 #include <custom_print.hpp>
 #include <server.hpp>
@@ -51,68 +50,31 @@ class Session;
 
 class SessionImpl
 {
-    void do_read();
-    void do_write(std::string_view message);
-    void do_write(const std::vector<std::string>& messages);
-    void process_command(std::string_view command);
-
-    tcp::socket socket_;
-    Database* database_;
-    std::unique_ptr<boost::asio::streambuf> buffer_;
-    std::shared_ptr<Session> self_;
 public:
     SessionImpl(
-        tcp::socket socket,
-        Database*   database);
+        tcp::socket     socket,
+        Database *const database)
+        :
+        database_(database),
+        buffer_(std::make_unique<boost::asio::streambuf>()),
+        socket_(std::move(socket)) {}
     ~SessionImpl() = default;
     SessionImpl(const SessionImpl&) = delete;
     SessionImpl& operator=(const SessionImpl&) = delete;
     SessionImpl(SessionImpl&&) = delete;
     SessionImpl& operator=(SessionImpl&&) = delete;
 
-    void start(std::shared_ptr<Session> self);
-};
-
-class Session : public std::enable_shared_from_this<Session>
-{
-    std::unique_ptr<SessionImpl> pimpl_;
-public:
-    Session(
-        tcp::socket socket,
-        Database*   database)
-        :
-        pimpl_(std::make_unique<SessionImpl>(std::move(socket), database)) {}
-    ~Session() = default;
-    Session(const Session&) = delete;
-    Session& operator=(const Session&) = delete;
-    Session(Session&&) = delete;
-    Session& operator=(Session&&) = delete;
-
-    void start()
+    void start(std::shared_ptr<Session> self)
     {
-        pimpl_->start(shared_from_this());
+        self_ = std::move(self);
+        do_read();
     }
-};
 
-SessionImpl::SessionImpl(
-    tcp::socket socket,
-    Database*   database)
-    :
-    socket_(std::move(socket)),
-    database_(database),
-    buffer_(std::make_unique<boost::asio::streambuf>()) {}
-
-void SessionImpl::start(std::shared_ptr<Session> self)
-{
-    self_ = std::move(self);
-    do_read();
-}
-
-void SessionImpl::do_read()
-{
-    boost::asio::async_read_until(socket_, *buffer_, '\n',
-        [this](
-            const boost::system::error_code& error_code,
+private:
+    void do_read()
+    {
+        boost::asio::async_read_until(socket_, *buffer_, '\n', [this](
+            const boost::system::error_code& error_code, // NOLINT(misc-include-cleaner)
             const std::size_t                length)
         {
             if (!error_code)
@@ -131,12 +93,11 @@ void SessionImpl::do_read()
                 cp::println(stderr, "Error: {}", error_code.message());
             }
         });
-}
+    }
 
-void SessionImpl::do_write(const std::string_view message)
-{
-    boost::asio::async_write(socket_, boost::asio::buffer(message),
-        [](
+    void do_write(std::string_view message)
+    {
+        boost::asio::async_write(socket_, boost::asio::buffer(message), [](
             const boost::system::error_code& error_code,
             const std::size_t                /*length*/)
         {
@@ -145,65 +106,94 @@ void SessionImpl::do_write(const std::string_view message)
                 cp::println(stderr, "Error: {}", error_code.message());
             }
         });
-}
-
-void SessionImpl::do_write(const std::vector<std::string>& messages)
-{
-    for (const auto& message : messages)
-    {
-        do_write(message + '\n');
     }
 
-    do_write("OK\n");
-}
-
-void SessionImpl::process_command(const std::string_view command)
-{
-    std::istringstream iss((std::string(command)));
-    std::string cmd;
-    std::string table;
-
-    iss >> cmd;
-
-    if (cmd == "INSERT")
+    void do_write(const std::vector<std::string>& messages)
     {
-        int record_id = 0;
-        std::string name;
-
-        iss >> table >> record_id;
-        std::getline(iss >> std::ws, name);
-        if (database_->insert(table, record_id, name))
+        for (const auto& message : messages)
         {
+            do_write(message + '\n');
+        }
+
+        do_write("OK\n");
+    }
+
+    void process_command(std::string_view command)
+    {
+        std::istringstream iss((std::string(command)));
+        std::string cmd;
+        std::string table;
+
+        iss >> cmd;
+
+        if (cmd == "INSERT")
+        {
+            int record_id{};
+            std::string name;
+
+            iss >> table >> record_id;
+            std::getline(iss >> std::ws, name);
+            if (database_->insert(table, record_id, name))
+            {
+                do_write("OK\n");
+            }
+            else
+            {
+                do_write("ERR duplicate " + std::to_string(record_id) + '\n');
+            }
+        }
+        else if (cmd == "TRUNCATE")
+        {
+            iss >> table;
+            database_->truncate(table);
             do_write("OK\n");
+        }
+        else if (cmd == "INTERSECTION")
+        {
+            auto result = database_->intersection();
+
+            do_write(result);
+        }
+        else if (cmd == "SYMMETRIC_DIFFERENCE")
+        {
+            auto result = database_->symmetric_difference();
+
+            do_write(result);
         }
         else
         {
-            do_write("ERR duplicate " + std::to_string(record_id) + '\n');
+            do_write("ERR unknown command\n");
         }
     }
-    else if (cmd == "TRUNCATE")
-    {
-        iss >> table;
-        database_->truncate(table);
-        do_write("OK\n");
-    }
-    else if (cmd == "INTERSECTION")
-    {
-        auto result = database_->intersection();
 
-        do_write(result);
-    }
-    else if (cmd == "SYMMETRIC_DIFFERENCE")
-    {
-        auto result = database_->symmetric_difference();
+    Database* database_;
+    std::shared_ptr<Session> self_;
+    std::unique_ptr<boost::asio::streambuf> buffer_;
+    tcp::socket socket_;
+};
 
-        do_write(result);
-    }
-    else
+class Session : public std::enable_shared_from_this<Session>
+{
+public:
+    Session(
+        tcp::socket     socket,
+        Database *const database)
+        :
+        pimpl_(std::make_unique<SessionImpl>(std::move(socket), database)) {}
+    ~Session() = default;
+    Session(const Session&) = delete;
+    Session& operator=(const Session&) = delete;
+    Session(Session&&) = delete;
+    Session& operator=(Session&&) = delete;
+
+    void start()
     {
-        do_write("ERR unknown command\n");
+        pimpl_->start(shared_from_this());
     }
-}
+
+private:
+    std::unique_ptr<SessionImpl> pimpl_;
+};
 
 ServerImpl::ServerImpl(const std::uint16_t port)
     :
@@ -211,7 +201,6 @@ ServerImpl::ServerImpl(const std::uint16_t port)
 {
     do_accept();
 }
-
 ServerImpl::ServerImpl(
     std::promise<std::uint16_t>& port_promise,
     const std::uint16_t          port)
@@ -227,8 +216,8 @@ void ServerImpl::do_accept()
 {
     acceptor_.async_accept(
         [this](
-            boost::system::error_code error_code,
-            tcp::socket               socket)
+            const boost::system::error_code& error_code,
+            tcp::socket                      socket)
         {
             if (!error_code)
             {
@@ -250,12 +239,12 @@ void ServerImpl::stop()
 }
 
 Server::Server(const std::int16_t port) : pimpl_(std::make_unique<ServerImpl>(port)) {}
-
 Server::Server(
     std::promise<std::uint16_t>& port_promise,
     const std::int16_t           port)
     :
     pimpl_(std::make_unique<ServerImpl>(port_promise, port)) {}
+Server::~Server() = default;
 
 void Server::run()
 {
@@ -299,5 +288,3 @@ void Server::stop()
 {
     pimpl_->stop();
 }
-
-Server::~Server() = default;

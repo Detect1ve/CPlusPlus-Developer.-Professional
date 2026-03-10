@@ -1,12 +1,13 @@
 #include <algorithm>
 #include <charconv> // std::from_chars
 #include <cstddef> // std::size_t
+#include <cstdint> // std::uint8_t
 #if !((defined(__clang_analyzer__) || defined(__clang__)) && (__clang_major__ <= 18))
 #include <expected> // std::expected
 #endif
 #include <functional> // std::identity
 #include <iostream>
-#include <ranges> // std::ranges::views::take
+#include <ranges> // std::views::take
 #include <stdexcept> // std::out_of_range
 #if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
 #include <string>
@@ -26,10 +27,10 @@
 // (".11", '.') -> ["", "11"]
 // ("11.22", '.') -> ["11", "22"]
 
-std::expected<unsigned char, std::error_code> from_chars(const std::string_view chars)
+std::expected<std::uint8_t, std::error_code> from_chars(const std::string_view chars)
 {
-    constexpr unsigned char BASE = 10;
-    unsigned char value = 0;
+    constexpr int BASE = 10;
+    std::uint8_t value = 0;
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
     if (auto [ptr, ec] = std::from_chars(chars.data(), chars.data() + chars.size(),
         value, BASE); ec != std::errc{})
@@ -73,7 +74,7 @@ void reverse_lexicographic_sort(std::vector<std::vector<std::string>>& ip_pool)
         auto common_range = std::min(first_ip.size(), second_ip.size());
         auto first_view = first_ip | std::views::take(common_range);
 
-        for (const auto [idx, ip_part] : first_view | std::views::enumerate)
+        for (const auto& [idx, ip_part] : std::views::enumerate(first_view))
         {
             auto first_result = from_chars(ip_part);
             auto second_result = from_chars(second_ip[static_cast<std::size_t>(idx)]);
@@ -101,7 +102,7 @@ std::expected<std::vector<std::vector<std::string>>, std::error_code> filter_any
     const unsigned char                          any_octet)
 {
 #ifdef __cpp_lib_ranges_to_container
-    return ip_pool | std::ranges::views::filter([any_octet](const auto& ip_address)
+    return ip_pool | std::views::filter([any_octet](const auto& ip_address)
     {
         return std::ranges::any_of(ip_address, [any_octet](const std::string_view ip_part)
         {
@@ -144,27 +145,20 @@ std::expected<std::vector<std::vector<std::string>>, std::error_code> filter_any
 
 void print(std::span<const std::vector<std::string>> ip_pool)
 {
-#ifdef __cpp_lib_ranges_to_container
     for (const auto& ip_address : ip_pool)
     {
-        cp::println("{}", ip_address | std::views::join_with(std::string_view("."))
-            | std::ranges::to<std::string>());
-    }
+        auto ip_address_view = std::views::join_with(ip_address, '.');
+#ifdef __cpp_lib_format_ranges
+        cp::println("{:s}", ip_address_view);
 #else
-    for (const auto& ip_address : ip_pool)
-    {
-        for (std::size_t i = 0; i < ip_address.size(); i++)
+        for (const char symbol : ip_address_view)
         {
-            cp::print("{}", ip_address[i]);
-            if (i + 1 < ip_address.size())
-            {
-                cp::print("{}", '.');
-            }
+            cp::print("{}", symbol);
         }
 
         cp::println();
-    }
 #endif
+    }
 }
 
 std::expected<std::vector<std::vector<std::string>>, std::error_code> stdin_to_vector()

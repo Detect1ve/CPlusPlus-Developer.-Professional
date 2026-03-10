@@ -3,7 +3,7 @@
 #include <future>
 #include <memory> // std::unique_ptr
 #include <string> // std::string
-#include <thread>
+#include <thread> // std::thread
 
 #include <gtest/gtest.h>
 
@@ -12,25 +12,30 @@
 
 class HW11 : public ::testing::Test
 {
-    std::thread server_thread_;
-    std::uint16_t port_ = 0;
-    std::unique_ptr<Server> server_;
+public:
+    HW11() = default;
+    ~HW11() override = default;
+    HW11(const HW11&) = delete;
+    HW11(HW11&&) = delete;
+    HW11& operator=(const HW11&) = delete;
+    HW11& operator=(HW11&&) = delete;
+
 protected:
     void SetUp() override
     {
         std::promise<std::uint16_t> port_promise;
         auto port_future = port_promise.get_future();
 
-        server_thread_ = std::thread([&, &promise = port_promise]()
+        server_ = std::make_unique<Server>(port_promise, std::int16_t{0});
+        server_thread_ = std::thread([this]()
         {
             try
             {
-                server_ = std::make_unique<Server>(promise, std::int16_t{0});
                 server_->run();
             }
-            catch (const std::exception&)
+            catch (const std::exception& e)
             {
-                promise.set_exception(std::current_exception());
+                server_exception_ = std::make_exception_ptr(e);
             }
         });
 
@@ -39,10 +44,26 @@ protected:
 
     void TearDown() override
     {
-        server_->stop();
+        if (server_)
+        {
+            server_->stop();
+        }
+
         if (server_thread_.joinable())
         {
             server_thread_.join();
+        }
+
+        if (server_exception_)
+        {
+            try
+            {
+                std::rethrow_exception(server_exception_);
+            }
+            catch (const std::exception& e)
+            {
+                FAIL() << "Server thread threw exception: " << e.what();
+            }
         }
     }
 
@@ -54,16 +75,13 @@ protected:
 
         return socket.receive_data();
     }
-public:
-    HW11() = default;
-    HW11(const HW11&) = delete;
-    HW11(HW11&&) = delete;
-    HW11& operator=(const HW11&) = delete;
-    HW11& operator=(HW11&&) = delete;
-    ~HW11() override;
-};
 
-HW11::~HW11() = default;
+private:
+    std::exception_ptr server_exception_ = nullptr;
+    std::thread server_thread_;
+    std::uint16_t port_ = 0;
+    std::unique_ptr<Server> server_;
+};
 
 TEST_F(HW11, InsertDuplicate)
 {

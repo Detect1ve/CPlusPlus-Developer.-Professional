@@ -22,7 +22,7 @@ int main(
         {
             return std::string_view(arg);
         });
-    constexpr unsigned char BASE = 10;
+    constexpr int BASE = 10;
     int command_number = 0;
     int ret = 0;
 
@@ -70,7 +70,7 @@ int main(
     }
     catch (...)
     {
-        cp::safe_error(nullptr);
+        cp::safe_error();
 
         ret = EXIT_FAILURE;
     }

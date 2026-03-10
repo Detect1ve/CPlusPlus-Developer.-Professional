@@ -16,17 +16,11 @@ endif()
 
 if (MSVC OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   if (PROJECT_IS_TOP_LEVEL)
-    if (NOT MSVC)
-      add_compile_options(-fcolor-diagnostics)
-    endif()
+    set(CMAKE_COLOR_DIAGNOSTICS ON)
 
     set(MINIMUM_CXX_STANDARD 17)
     include(../cmake/cxx_standard.cmake)
     include(../cmake/warning_flags.cmake)
-  endif()
-
-  if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set(HW_12_COMPILE_WARNING_FLAGS -Wc++17-compat-pedantic)
   endif()
 
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
@@ -36,6 +30,20 @@ if (MSVC OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   add_executable(mapper_variance mapper_variance.cpp)
   add_executable(reducer_variance reducer_variance.cpp)
 
+  set_warning_flags(mapper
+    EXTRA_CLANG -Wc++17-compat-pedantic -Wno-unused-parameter -Wno-unsafe-buffer-usage
+    EXTRA_MSVC /wd4100)
+
+  set_warning_flags(reducer
+    EXTRA_CLANG -Wc++17-compat-pedantic -Wno-unused-parameter
+    EXTRA_MSVC /wd4100)
+
+  set_warning_flags(mapper_variance
+    EXTRA_CLANG -Wc++17-compat-pedantic -Wno-unsafe-buffer-usage)
+
+  set_warning_flags(reducer_variance
+    EXTRA_CLANG -Wc++17-compat-pedantic)
+
   if (NOT MSVC)
     target_link_libraries(mapper PRIVATE -static)
     target_link_libraries(reducer PRIVATE -static)
@@ -43,26 +51,9 @@ if (MSVC OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_link_libraries(reducer_variance PRIVATE -static)
   endif()
 
-  target_compile_options(mapper PRIVATE
-    ${COMPILE_WARNING_FLAGS} ${HW_12_COMPILE_WARNING_FLAGS})
-  target_compile_options(reducer PRIVATE
-    ${COMPILE_WARNING_FLAGS} ${HW_12_COMPILE_WARNING_FLAGS})
-  target_compile_options(mapper_variance PRIVATE
-    ${COMPILE_WARNING_FLAGS} ${HW_12_COMPILE_WARNING_FLAGS})
-  target_compile_options(reducer_variance PRIVATE
-    ${COMPILE_WARNING_FLAGS} ${HW_12_COMPILE_WARNING_FLAGS})
-  if (NOT MSVC)
-    target_compile_options(mapper PRIVATE -Wno-unused-parameter -Wno-unsafe-buffer-usage)
-    target_compile_options(reducer PRIVATE -Wno-unused-parameter)
-    target_compile_options(mapper_variance PRIVATE -Wno-unsafe-buffer-usage)
-  else()
-    target_compile_options(mapper PRIVATE /wd4100)
-    target_compile_options(reducer PRIVATE /wd4100)
-  endif()
-
   set(CLANG_TIDY_HW_12_OPTS
-      "-fuchsia-default-arguments-calls"
-      "-modernize-use-trailing-return-type")
+    "-fuchsia-default-arguments-calls"
+    "-modernize-use-trailing-return-type")
 
   set_smart_tidy(mapper
     EXCLUDE

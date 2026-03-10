@@ -13,28 +13,15 @@ namespace bulk
 {
     class taskmanager
     {
-        int add_task(std::string_view task);
-        ATTRIBUTE_PURE [[nodiscard]] bool is_dynamic_block_active() const noexcept;
-        int process_tasks(std::vector<std::string>& block_task);
-
-        int dynamic_block_nesting_level = 0;
-        int task_count = 0;
-        int max_static_task_count;
-        std::atomic<bool> stop_flag;
-        std::chrono::system_clock::time_point dynamic_block_timestamp;
-        std::chrono::system_clock::time_point static_block_timestamp;
-        std::string task_manager_name;
-        std::vector<std::string> dynamic_block_task;
-        std::vector<std::string> static_block_task;
     public:
         taskmanager(
-            const int        max_task_count,
-            std::string_view name)
+            const int              max_task_count,
+            const std::string_view name)
             :
-            max_static_task_count(max_task_count),
-            stop_flag(false),
-            task_manager_name(name) {}
-
+            max_static_task_count_(max_task_count),
+            stop_flag_(false),
+            task_manager_name_(name) {}
+        ~taskmanager() noexcept;
         taskmanager(const taskmanager&) = delete;
         taskmanager& operator=(const taskmanager&) = delete;
         taskmanager(taskmanager&&) = delete;
@@ -45,7 +32,20 @@ namespace bulk
         void setup_signal_handling();
         void stop() noexcept;
 
-        ~taskmanager() noexcept;
+    private:
+        int add_task(std::string_view task);
+        ATTRIBUTE_PURE [[nodiscard]] bool is_dynamic_block_active() const noexcept;
+        int process_tasks(std::vector<std::string>& block_task);
+
+        int dynamic_block_nesting_level_ = 0;
+        int task_count_ = 0;
+        int max_static_task_count_;
+        std::atomic<bool> stop_flag_;
+        std::chrono::system_clock::time_point dynamic_block_timestamp_;
+        std::chrono::system_clock::time_point static_block_timestamp_;
+        std::string task_manager_name_;
+        std::vector<std::string> dynamic_block_task_;
+        std::vector<std::string> static_block_task_;
     };
 } // namespace bulk
 

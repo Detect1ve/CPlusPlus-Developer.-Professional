@@ -52,6 +52,7 @@ if (ENABLE_CLANG_TIDY)
     set(CLANG_TIDY_CHECKS_LIST
       "*"
       "-altera-id-dependent-backward-branch"
+      "-altera-struct-pack-align"
       "-altera-unroll-loops"
       "-clang-diagnostic-c++98-compat*"
       "-llvmlibc-*")
@@ -92,6 +93,8 @@ function(set_smart_tidy TARGET_NAME)
     list(APPEND TIDY_COMMAND "--extra-arg=-Qunused-arguments")
   endif()
 
+  list(APPEND TIDY_COMMAND "--extra-arg=-Wno-unknown-warning-option")
+
   if (NOT TIDY_MAIN_INCLUDE_DIR)
     if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/include")
       set(BASE_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
@@ -127,7 +130,11 @@ function(set_smart_tidy TARGET_NAME)
   endif()
 
   if (TIDY_BUILD_PATH)
-    list(APPEND TIDY_COMMAND "-p" "${TIDY_BUILD_PATH}")
+    if (CMAKE_EXPORT_COMPILE_COMMANDS)
+      list(APPEND TIDY_COMMAND "-p" "${TIDY_BUILD_PATH}")
+    else()
+      message(WARNING "${TIDY_BUILD_PATH}/compile_commands.json doesn't exist!")
+    endif()
   endif()
 
   set_target_properties(${TARGET_NAME} PROPERTIES

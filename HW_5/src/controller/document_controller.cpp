@@ -25,7 +25,8 @@ namespace editor::controller
 
     bool DocumentController::saveDocument(const std::string_view filename)
     {
-        if (!document_) {
+        if (!document_)
+        {
             return false;
         }
 

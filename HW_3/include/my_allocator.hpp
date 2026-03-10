@@ -8,30 +8,27 @@
 template <typename T, const std::size_t size>
 class MyAllocator
 {
-    std::size_t memory_alloc = 0;
 public:
     using value_type = T;
 
 #if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
     MyAllocator() noexcept {}
+
+    template <typename U>
+    MyAllocator(const MyAllocator<U, size>&) noexcept {}
 #endif
 
     gsl::owner<T*> allocate(const std::size_t n)
     {
-        if (memory_alloc + n > size)
+        if (memory_alloc_ + n > size)
         {
             throw std::bad_alloc();
         }
 
-        memory_alloc += n;
+        memory_alloc_ += n;
         // NOLINTNEXTLINE(cppcoreguidelines-no-malloc,hicpp-no-malloc)
         return static_cast<T*>(malloc(sizeof(T) * n));
     }
-
-#if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
-    template <typename U>
-    MyAllocator(const MyAllocator<U, size>&) noexcept {}
-#endif
 
     template <typename U>
     struct rebind
@@ -43,9 +40,12 @@ public:
         gsl::owner<T*> const ptr,
         const std::size_t    n)
     {
-        memory_alloc -= n;
+        memory_alloc_ -= n;
         free(ptr); // NOLINT(cppcoreguidelines-no-malloc,hicpp-no-malloc)
     }
+
+private:
+    std::size_t memory_alloc_ = 0;
 };
 
 #endif // MY_ALLOCATOR_HPP

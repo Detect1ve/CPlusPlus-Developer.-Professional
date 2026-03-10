@@ -8,6 +8,7 @@
 #include <cstdint> // std::int64_t
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <optional> // std::optional
 #include <sstream> // std::stringstream
 #include <string> // std::string
@@ -27,10 +28,10 @@ namespace
         std::optional<std::chrono::system_clock::time_point> start_time,
         std::optional<std::chrono::system_clock::time_point> end_time)
     {
-        constexpr unsigned char BASE = 10;
+        constexpr int BASE = 10;
         std::vector<std::filesystem::path> log_files;
 
-        for (const auto &entry : std::filesystem::directory_iterator("."))
+        for (const auto& entry : std::filesystem::directory_iterator("."))
         {
             const std::string filename = entry.path().filename().string();
             if (  entry.is_regular_file()
@@ -45,7 +46,7 @@ namespace
 
                 const std::string timestamp_str =
                     filename.substr(4, first_underscore - 4);
-                const std::string_view timestamp_sv = timestamp_str;
+                const std::string_view timestamp_sv{timestamp_str};
                 std::int64_t timestamp_val = 0;
 
                 if (std::from_chars(timestamp_sv.data(),
@@ -96,7 +97,7 @@ namespace
 
     std::string read_file_content(const std::filesystem::path &path)
     {
-        const std::ifstream file(path);
+        const std::ifstream file{path};
         std::stringstream buffer;
 
         buffer << file.rdbuf();
@@ -107,41 +108,42 @@ namespace
 
 class HW9 : public ::testing::Test
 {
-    std::chrono::system_clock::time_point start_time;
+public:
+    HW9() = default;
+    ~HW9() override = default;
+    HW9(const HW9&) = delete;
+    HW9& operator=(const HW9&) = delete;
+    HW9(HW9&&) = delete;
+    HW9& operator=(HW9&&) = delete;
+
 protected:
     void SetUp() override
     {
         clear_log_files();
-        start_time = std::chrono::system_clock::now();
+        start_time_ = std::chrono::system_clock::now();
     }
 
     void TearDown() override
     {
-        clear_log_files(start_time, std::chrono::system_clock::now());
+        clear_log_files(start_time_, std::chrono::system_clock::now());
     }
 
     [[nodiscard]] auto get_start_time() const
     {
-        return start_time;
+        return start_time_;
     }
-public:
-    HW9() = default;
-    HW9(const HW9&) = delete;
-    HW9(HW9&&) = delete;
-    HW9& operator=(const HW9&) = delete;
-    HW9& operator=(HW9&&) = delete;
-    ~HW9() override;
-};
 
-HW9::~HW9() = default;
+private:
+    std::chrono::system_clock::time_point start_time_;
+};
 
 TEST_F(HW9, MainFunctionality)
 {
+    constexpr std::size_t BULK{5};
     StdoutCapture::Begin();
 
-    const std::size_t bulk = 5;
-    auto *handle1 = async::connect(bulk);
-    auto *handle2 = async::connect(bulk);
+    auto *handle1 = async::connect(BULK);
+    auto *handle2 = async::connect(BULK);
 
     async::receive(handle1, "1", 1);
     async::receive(handle2, "1\n", 2);
@@ -153,6 +155,8 @@ TEST_F(HW9, MainFunctionality)
 
     const std::string output = StdoutCapture::End();
 
+    std::cout << output;
+
     ASSERT_TRUE(absl::StrContains(output, "bulk: 1\n"));
     ASSERT_TRUE(absl::StrContains(output, "bulk: 1, 2, 3, 4, 5\n"));
     ASSERT_TRUE(absl::StrContains(output, "bulk: 6\n"));
@@ -160,7 +164,7 @@ TEST_F(HW9, MainFunctionality)
     ASSERT_TRUE(absl::StrContains(output, "bulk: 89\n"));
 
     std::vector<std::string> log_contents;
-    for (const auto &path :
+    for (const auto& path :
             get_log_files(get_start_time(), std::chrono::system_clock::now()))
     {
         log_contents.emplace_back(read_file_content(path));
@@ -174,7 +178,7 @@ TEST_F(HW9, MainFunctionality)
     bool block4_found = false;
     bool block5_found = false;
 
-    for (const auto &content : log_contents)
+    for (const auto& content : log_contents)
     {
         if (absl::StrContains(content, "bulk: 1\n"))
         {

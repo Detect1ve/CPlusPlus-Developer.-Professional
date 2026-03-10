@@ -10,13 +10,7 @@ set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 project(fashio_mnist VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 if (PROJECT_IS_TOP_LEVEL)
-  if (NOT MSVC)
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-      add_compile_options(-fcolor-diagnostics)
-    else()
-      add_compile_options(-fdiagnostics-color=always)
-    endif()
-  endif()
+  set(CMAKE_COLOR_DIAGNOSTICS ON)
 
   set(MINIMUM_CXX_STANDARD 17)
   include(../cmake/cxx_standard.cmake)
@@ -24,15 +18,13 @@ if (PROJECT_IS_TOP_LEVEL)
 endif()
 
 if (PROJECT_IS_TOP_LEVEL)
-    include(../cmake/clang-tidy.cmake)
-    include(../cmake/fetch_googletest.cmake)
-    include(../cmake/warning_flags.cmake)
-    include(../common/custom_print.cmake)
-    list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  set(HW_13_COMPILE_WARNING_FLAGS -Wc++17-compat-pedantic)
+  include(../cmake/clang-tidy.cmake)
+  include(../cmake/fetch_googletest.cmake)
+  include(../cmake/gcc_analyzer.cmake)
+  include(../cmake/lto_enable.cmake)
+  include(../cmake/warning_flags.cmake)
+  include(../common/custom_print.cmake)
+  list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
 include(../cmake/fetch_eigen3.cmake)
@@ -40,37 +32,48 @@ include(../cmake/fetch_eigen3.cmake)
 add_library(mlp_lib STATIC lib/mlp.cpp)
 target_link_libraries(mlp_lib PRIVATE custom_print Eigen3::Eigen)
 target_include_directories(mlp_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_compile_options(mlp_lib PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_13_COMPILE_WARNING_FLAGS})
-if (NOT MSVC)
-  target_compile_options(mlp_lib PRIVATE -Wno-effc++ -Wno-unsafe-buffer-usage)
-endif()
+set_warning_flags(mlp_lib
+  EXTRA_CLANG -Wc++17-compat-pedantic -Wno-unsafe-buffer-usage
+  EXTRA_GCC -Wno-effc++)
 
 add_executable(fashio_mnist src/main.cpp)
 target_link_libraries(fashio_mnist PRIVATE custom_print mlp_lib)
-target_compile_options(fashio_mnist PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_13_COMPILE_WARNING_FLAGS})
+set_warning_flags(fashio_mnist
+  EXTRA_CLANG -Wc++17-compat-pedantic -Wno-unsafe-buffer-usage-in-container)
 if (NOT MSVC)
   target_link_libraries(fashio_mnist PRIVATE -static)
-  target_compile_options(fashio_mnist PRIVATE -Wno-unsafe-buffer-usage-in-container)
 endif()
 
 add_executable(fashio_mnist_test test/mlp_test.cpp)
 target_link_libraries(fashio_mnist_test mlp_lib GTest::gtest_main)
-target_compile_options(fashio_mnist_test PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_13_COMPILE_WARNING_FLAGS})
-if (NOT MSVC)
-  target_compile_options(fashio_mnist_test PRIVATE -Wno-global-constructors)
-endif()
+set_warning_flags(fashio_mnist_test
+  EXTRA_CLANG -Wc++17-compat-pedantic -Wno-global-constructors)
 
 target_compile_definitions(fashio_mnist_test PRIVATE
   PROJECT_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
+set_analyzer(mlp_lib
+  EXCLUDE
+    "-Wno-analyzer-use-of-uninitialized-value"
+  EXCLUDE_MINSIZEREL
+    "-Wno-analyzer-use-of-uninitialized-value")
+set_analyzer(fashio_mnist
+  EXCLUDE
+    "-Wno-analyzer-use-of-uninitialized-value"
+  EXCLUDE_MINSIZEREL
+    "-Wno-analyzer-use-of-uninitialized-value")
+set_analyzer(fashio_mnist_test
+  EXCLUDE_MINSIZEREL
+    "-Wno-analyzer-malloc-leak")
+
+enable_lto(fashio_mnist fashio_mnist_test mlp_lib)
+
 set(CLANG_TIDY_HW_13_OPTS
-    "-fuchsia-default-arguments-calls"
-    "-modernize-use-trailing-return-type")
+  "-fuchsia-default-arguments-calls"
+  "-modernize-use-trailing-return-type")
 
 set_smart_tidy(mlp_lib
+  BUILD_PATH "${CMAKE_BINARY_DIR}"
   EXCLUDE
     "-cppcoreguidelines-avoid-magic-numbers"
     "-llvm-prefer-static-over-anonymous-namespace"
@@ -80,6 +83,7 @@ set_smart_tidy(mlp_lib
     "${CUSTOM_PRINT_INCLUDE_DIR}")
 
 set_smart_tidy(fashio_mnist
+  BUILD_PATH "${CMAKE_BINARY_DIR}"
   EXCLUDE
     "-llvm-prefer-static-over-anonymous-namespace"
     "${CLANG_TIDY_HW_13_OPTS}"
@@ -88,6 +92,7 @@ set_smart_tidy(fashio_mnist
   HAS_EXCEPTIONS)
 
 set_smart_tidy(fashio_mnist_test
+  BUILD_PATH "${CMAKE_BINARY_DIR}"
   EXCLUDE
     "${CLANG_TIDY_HW_13_OPTS}")
 

@@ -10,13 +10,7 @@ set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 project(join_server VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 if (PROJECT_IS_TOP_LEVEL)
-  if (NOT MSVC)
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-      add_compile_options(-fcolor-diagnostics)
-    else()
-      add_compile_options(-fdiagnostics-color=always)
-    endif()
-  endif()
+  set(CMAKE_COLOR_DIAGNOSTICS ON)
 
   set(MINIMUM_CXX_STANDARD 20)
   include(../cmake/cxx_standard.cmake)
@@ -27,54 +21,55 @@ if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
   include(../cmake/fetch_boost.cmake)
   include(../cmake/fetch_googletest.cmake)
+  include(../cmake/gcc_analyzer.cmake)
+  include(../cmake/lto_enable.cmake)
   include(../cmake/warning_flags.cmake)
   include(../common/custom_print.cmake)
   include(../common/socket_wrapper.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  set(HW_11_COMPILE_WARNING_FLAGS -Wc++17-compat-pedantic)
-endif()
-
 add_library(server_and_database STATIC lib/server.cpp lib/database.cpp)
 target_include_directories(server_and_database PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(server_and_database PRIVATE Boost::asio custom_print)
-target_compile_options(server_and_database PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_11_COMPILE_WARNING_FLAGS})
+set_warning_flags(server_and_database
+  EXTRA_CLANG -Wc++20-compat-pedantic -Wno-unsafe-buffer-usage
+  EXTRA_GCC -Wno-effc++)
 if (MSVC)
   target_compile_definitions(server_and_database PRIVATE _WIN32_WINNT=0x0A00)
-else()
-  target_compile_options(server_and_database PRIVATE
-    -Wno-effc++ -Wno-null-dereference -Wno-strict-overflow -Wno-unsafe-buffer-usage)
 endif()
 
 add_executable(join_server src/main.cpp)
 target_link_libraries(join_server PRIVATE custom_print server_and_database)
-target_compile_options(join_server PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_11_COMPILE_WARNING_FLAGS})
+set_warning_flags(join_server
+  EXTRA_CLANG -Wc++20-compat-pedantic -Wno-unsafe-buffer-usage)
 if (NOT MSVC)
-  target_compile_options(join_server PRIVATE
-    -Wno-unsafe-buffer-usage-in-container -Wno-unsafe-buffer-usage)
   target_link_libraries(join_server PRIVATE -static)
 endif()
 
 add_executable(join_server_test test/join_server_test.cpp)
-target_link_libraries(join_server_test PRIVATE GTest::gtest_main server_and_database
-  socket_wrapper)
-target_compile_options(join_server_test PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_11_COMPILE_WARNING_FLAGS})
-if (NOT MSVC)
-  target_compile_options(join_server_test PRIVATE
-    -Wno-effc++ -Wno-strict-overflow -Wno-global-constructors)
-endif()
+target_link_libraries(join_server_test PRIVATE
+  GTest::gtest_main server_and_database socket_wrapper)
+set_warning_flags(join_server_test
+  EXTRA_CLANG -Wc++20-compat-pedantic -Wno-global-constructors
+  EXTRA_GCC -Wno-effc++)
+set_analyzer(server_and_database
+  EXCLUDE
+    "-Wno-analyzer-malloc-leak"
+    "-Wno-analyzer-use-of-uninitialized-value")
+set_analyzer(join_server
+  EXCLUDE
+    "-Wno-analyzer-use-of-uninitialized-value")
+set_analyzer(join_server_test)
+
+enable_lto(join_server join_server_test server_and_database)
 
 set(CLANG_TIDY_HW_11_OPTS
-    "-modernize-use-trailing-return-type")
+  "-modernize-use-trailing-return-type")
 
 set_smart_tidy(server_and_database
+  BUILD_PATH "${CMAKE_BINARY_DIR}"
   EXCLUDE
-    "-altera-struct-pack-align"
     "-fuchsia-default-arguments-calls"
     "-llvm-prefer-static-over-anonymous-namespace"
     "-misc-no-recursion"
@@ -83,6 +78,7 @@ set_smart_tidy(server_and_database
     "${CUSTOM_PRINT_INCLUDE_DIR}")
 
 set_smart_tidy(join_server
+  BUILD_PATH "${CMAKE_BINARY_DIR}"
   EXCLUDE
     "${CLANG_TIDY_HW_11_OPTS}"
   EXTRA_INCLUDES
@@ -90,6 +86,7 @@ set_smart_tidy(join_server
   HAS_EXCEPTIONS)
 
 set_smart_tidy(join_server_test
+  BUILD_PATH "${CMAKE_BINARY_DIR}"
   EXCLUDE
     "-fuchsia-default-arguments-calls"
     "${CLANG_TIDY_HW_11_OPTS}"

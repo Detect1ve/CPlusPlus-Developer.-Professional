@@ -32,59 +32,15 @@ namespace pc_queue
     class Queue
     {
     public:
-        /**
-        * @brief Structure for an element with priority
-        */
-        struct PriorityItem
-        {
-            /**
-            * @brief Constructor
-            *
-            * @param[in] data_     Data
-            * @param[in] priority_ Priority
-            */
-            PriorityItem(
-                T                  data_,
-                const PriorityType priority_)
-                :
-                data(std::move(data_)),
-                priority(priority_) {}
-
-            /**
-            * @brief Get data
-            *
-            * @return Data
-            */
-            [[nodiscard]] const T& getData() const
-            {
-                return data;
-            }
-
-            /**
-            * @brief Comparison operator for sorting by priority
-            * (lower priority = higher element)
-            */
-            bool operator<(const PriorityItem& other) const
-            {
-                return priority < other.priority;
-            }
-        private:
-            T data;
-            PriorityType priority;
-        };
-
         Queue() : Queue(false, QueueMode::MULTI_PRODUCER_MULTI_CONSUMER, 0) {}
-
         explicit Queue(const bool usePriority)
             :
             Queue(usePriority, QueueMode::MULTI_PRODUCER_MULTI_CONSUMER, 0) {}
-
         explicit Queue(
             const bool      usePriority,
             const QueueMode mode)
             :
             Queue(usePriority, mode, 0) {}
-
         /**
         * @brief Constructor
         *
@@ -102,12 +58,6 @@ namespace pc_queue
             maxSize_(maxSize),
             priorityQueue_(),
             queue_() {}
-
-        Queue(const Queue&) = delete;
-        Queue& operator=(const Queue&) = delete;
-        Queue(Queue&&) = delete;
-        Queue& operator=(Queue&&) = delete;
-
         /**
         * @brief Destructor
         */
@@ -115,6 +65,53 @@ namespace pc_queue
         {
             close();
         }
+        Queue(const Queue&) = delete;
+        Queue& operator=(const Queue&) = delete;
+        Queue(Queue&&) = delete;
+        Queue& operator=(Queue&&) = delete;
+
+        /**
+        * @brief Structure for an element with priority
+        */
+        class PriorityItem
+        {
+        public:
+            /**
+            * @brief Constructor
+            *
+            * @param[in] data     Data
+            * @param[in] priority Priority
+            */
+            PriorityItem(
+                T                  data,
+                const PriorityType priority)
+                :
+                data_(std::move(data)),
+                priority_(priority) {}
+
+            /**
+            * @brief Get data
+            *
+            * @return Data
+            */
+            [[nodiscard]] const T& getData() const
+            {
+                return data_;
+            }
+
+            /**
+            * @brief Comparison operator for sorting by priority
+            * (lower priority = higher element)
+            */
+            bool operator<(const PriorityItem& other) const
+            {
+                return priority_ < other.priority_;
+            }
+
+        private:
+            T data_;
+            PriorityType priority_;
+        };
 
         /**
         * @brief Places an element into a queue
@@ -286,7 +283,7 @@ namespace pc_queue
 
             if (maxSize_ > 0)
             {
-                const std::size_t currentSize = size();
+                const std::size_t currentSize{size()};
 
                 if (currentSize >= maxSize_)
                 {
@@ -444,7 +441,7 @@ namespace pc_queue
             std::unique_lock<std::mutex>& lock,
             const int                     timeout)
         {
-            const std::size_t currentSize = size();
+            const std::size_t currentSize{size()};
             const bool queueFull = currentSize >= maxSize_;
 
             if (  queueFull

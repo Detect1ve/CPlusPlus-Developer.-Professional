@@ -5,7 +5,7 @@
 
 #include <my_allocator.hpp>
 
-constexpr unsigned char CONTAINER_SIZE = 10;
+constexpr int CONTAINER_SIZE = 10;
 
 TEST(HW3, MyAllocator)
 {

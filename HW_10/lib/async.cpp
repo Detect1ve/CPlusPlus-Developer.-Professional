@@ -5,14 +5,16 @@
 #include <condition_variable>
 #include <cstddef> // std::size_t
 #include <fstream>
-#include <map>
 #include <memory> // std::unique_ptr
 #include <mutex>
 #include <queue>
+#include <ranges>
 #include <sstream>
+#include <stop_token> // std::stop_token
 #include <string> // std::string
 #include <string_view> // std::string_view
-#include <thread> // std::thread
+#include <thread>
+#include <unordered_map>
 #include <utility> // std::move
 #include <vector> // std::vector
 
@@ -22,7 +24,7 @@
 
 namespace {
 const std::string& TASK_MANAGER_NAME() {
-    static const std::string s_name = "bulk";
+    static constexpr std::string s_name{"bulk"};
 
     return s_name;
 }
@@ -30,7 +32,8 @@ const std::string& TASK_MANAGER_NAME() {
 
 namespace async {
 
-struct OutputTask {
+class OutputTask {
+public:
     OutputTask() = default;
     OutputTask(std::chrono::system_clock::time_point timestamp, std::string context_id,
         std::vector<std::string>&& commands) : timestamp_(timestamp),
@@ -47,6 +50,7 @@ struct OutputTask {
     [[nodiscard]] const std::vector<std::string>& get_commands() const {
         return commands_;
     }
+
 private:
     std::chrono::system_clock::time_point timestamp_;
     std::string context_id_;
@@ -54,21 +58,18 @@ private:
 };
 
 class taskmanager {
-    std::chrono::system_clock::time_point static_block_timestamp;
-    std::size_t max_static_task_count;
-    std::vector<std::string> static_block_task;
 public:
     explicit taskmanager(const std::size_t max_task_count):
-        max_static_task_count(max_task_count) {}
+        max_static_task_count_(max_task_count) {}
 
     void add_task(const std::string_view task) {
-        if (static_block_task.empty()) {
-            static_block_timestamp = std::chrono::system_clock::now();
+        if (static_block_task_.empty()) {
+            static_block_timestamp_ = std::chrono::system_clock::now();
         }
 
-        static_block_task.emplace_back(task);
-        if (static_block_task.size() >= max_static_task_count) {
-            process_tasks(static_block_task, static_block_timestamp);
+        static_block_task_.emplace_back(task);
+        if (static_block_task_.size() >= max_static_task_count_) {
+            process_tasks(static_block_task_, static_block_timestamp_);
         }
     }
 
@@ -98,17 +99,16 @@ public:
     }
 
     void finish() {
-        if (!static_block_task.empty()) {
-            process_tasks(static_block_task, static_block_timestamp);
+        if (!static_block_task_.empty()) {
+            process_tasks(static_block_task_, static_block_timestamp_);
         }
     }
 
-    static std::atomic<bool> should_terminate;
     static std::atomic<bool> threads_initialized;
 
-    static std::condition_variable& queue_cv() {
+    static std::condition_variable_any& queue_cv() {
         // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
-        static auto* condition = new std::condition_variable();
+        static auto* condition = new std::condition_variable_any();
 
         return *condition;
     }
@@ -133,33 +133,37 @@ public:
         return *queue;
     }
 
-    static std::thread& file_thread1() {
+    static std::jthread& file_thread1() {
         // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
-        static auto* thread = new std::thread;
+        static auto* thread = new std::jthread;
 
         return *thread;
     }
 
-    static std::thread& file_thread2() {
+    static std::jthread& file_thread2() {
         // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
-        static auto* thread = new std::thread;
+        static auto* thread = new std::jthread;
 
         return *thread;
     }
 
-    static std::thread& log_thread() {
+    static std::jthread& log_thread() {
         // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
-        static auto* thread = new std::thread;
+        static auto* thread = new std::jthread;
 
         return *thread;
     }
+
+private:
+    std::chrono::system_clock::time_point static_block_timestamp_;
+    std::size_t max_static_task_count_;
+    std::vector<std::string> static_block_task_;
 };
 
-std::atomic<bool> taskmanager::should_terminate{false};
 std::atomic<bool> taskmanager::threads_initialized{false};
 
 struct ConnectionContext {
-    int dynamic_block_nesting_level = 0;
+    int dynamic_block_nesting_level{};
     std::chrono::system_clock::time_point dynamic_block_timestamp;
     std::string id;
     std::vector<std::string> dynamic_block_task;
@@ -172,9 +176,10 @@ std::mutex& contexts_mutex() {
     return mutex;
 }
 
-std::map<void*, std::unique_ptr<ConnectionContext>>& contexts() {
+std::unordered_map<void*, std::unique_ptr<ConnectionContext>>& contexts() {
     // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
-    static auto* contexts_map = new std::map<void*, std::unique_ptr<ConnectionContext>>;
+    static auto* contexts_map =
+        new std::unordered_map<void*, std::unique_ptr<ConnectionContext>>;
 
     return *contexts_map;
 }
@@ -216,17 +221,16 @@ void process_command(ConnectionContext* context, const std::string_view command)
     }
 }
 
-void log_worker() {
+void log_worker(const std::stop_token& stop_token) {
     while (true) {
-        constexpr std::string_view delimiter = ", ";
         OutputTask task;
         {
             std::unique_lock<std::mutex> lock(taskmanager::queue_mutex());
-            taskmanager::queue_cv().wait(lock, [] {
-                return !taskmanager::log_queue().empty() || taskmanager::should_terminate;
+            taskmanager::queue_cv().wait(lock, stop_token, [] {
+                return !taskmanager::log_queue().empty();
             });
 
-            if (taskmanager::should_terminate && taskmanager::log_queue().empty()) {
+            if (stop_token.stop_requested() && taskmanager::log_queue().empty()) {
                 break;
             }
 
@@ -240,32 +244,35 @@ void log_worker() {
             continue;
         }
 
+        auto commands_view = std::views::join_with(task.get_commands(),
+            std::string_view{", "});
+#ifdef __cpp_lib_format_ranges
+        cp::println("{}: {:s}", TASK_MANAGER_NAME(), commands_view);
+#else
         cp::print("{}: ", TASK_MANAGER_NAME());
 
-        for (std::size_t i = 0; i < task.get_commands().size(); i++) {
-            cp::print("{}", task.get_commands()[i]);
-            if (i < task.get_commands().size() - 1) {
-                cp::print("{}", delimiter);
-            }
+        for (const char symbol : commands_view) {
+            cp::print("{}", symbol);
         }
 
         cp::println();
+#endif
     }
 }
 
-void file_worker(const int thread_id) {
-    static std::atomic<int> file_counter{0};
+void file_worker(const std::stop_token& stop_token, const int thread_id) {
+    static std::atomic<int> file_counter{};
+
     while (true) {
         OutputTask task;
         bool has_task = false;
         {
             std::unique_lock<std::mutex> lock(taskmanager::queue_mutex());
-            taskmanager::queue_cv().wait(lock, [] {
-                return   !taskmanager::file_queue().empty()
-                      || taskmanager::should_terminate;
+            taskmanager::queue_cv().wait(lock, stop_token, [] {
+                return !taskmanager::file_queue().empty();
             });
 
-            if (taskmanager::should_terminate && taskmanager::file_queue().empty()) {
+            if (stop_token.stop_requested() && taskmanager::file_queue().empty()) {
                 break;
             }
 
@@ -276,41 +283,40 @@ void file_worker(const int thread_id) {
             }
         }
 
-        if (has_task && !task.get_commands().empty()) {
-            auto timestamp_seconds = std::chrono::duration_cast<std::chrono::seconds>(
-                task.get_timestamp().time_since_epoch()).count();
-
-            const std::string filename = TASK_MANAGER_NAME()
-                + std::to_string(timestamp_seconds) + "_" + task.get_context_id() + "_"
-                + std::to_string(thread_id) + "_" + std::to_string(file_counter++)
-                + ".log";
-
-            std::ofstream file(filename);
-            if (file.is_open()) {
-                file << TASK_MANAGER_NAME() << ": ";
-
-                const std::string delimiter = ", ";
-                for (std::size_t i = 0; i < task.get_commands().size(); i++) {
-                    file << task.get_commands()[i];
-                    if (i < task.get_commands().size() - 1) {
-                        file << delimiter;
-                    }
-                }
-
-                file << '\n';
-                file.close();
-            }
+        if (!has_task || task.get_commands().empty()) {
+            continue;
         }
+
+        auto timestamp_seconds = std::chrono::duration_cast<std::chrono::seconds>(
+            task.get_timestamp().time_since_epoch()).count();
+
+        const std::string filename = TASK_MANAGER_NAME()
+            + std::to_string(timestamp_seconds) + "_" + task.get_context_id() + "_"
+            + std::to_string(thread_id) + "_" + std::to_string(file_counter++) + ".log";
+
+        std::ofstream file{filename};
+        if (!file.is_open()) {
+            continue;
+        }
+
+        auto commands_view = std::views::join_with(task.get_commands(),
+            std::string_view{", "});
+
+        file << TASK_MANAGER_NAME() << ": ";
+
+        for (const char symbol : commands_view) {
+            file << symbol;
+        }
+
+        file << '\n';
     }
 }
 
 void init_threads() {
     if (!taskmanager::threads_initialized.exchange(true)) {
-        taskmanager::should_terminate = false;
-
-        taskmanager::log_thread() = std::thread(log_worker);
-        taskmanager::file_thread1() = std::thread(file_worker, 1);
-        taskmanager::file_thread2() = std::thread(file_worker, 2);
+        taskmanager::log_thread() = std::jthread(log_worker);
+        taskmanager::file_thread1() = std::jthread(file_worker, 1);
+        taskmanager::file_thread2() = std::jthread(file_worker, 2);
     }
 }
 
@@ -320,20 +326,13 @@ void stop_threads() {
             shared_task_manager()->finish();
         }
 
-        taskmanager::should_terminate = true;
-        taskmanager::queue_cv().notify_all();
+        taskmanager::log_thread().request_stop();
+        taskmanager::file_thread1().request_stop();
+        taskmanager::file_thread2().request_stop();
 
-        if (taskmanager::log_thread().joinable()) {
-            taskmanager::log_thread().join();
-        }
-
-        if (taskmanager::file_thread1().joinable()) {
-            taskmanager::file_thread1().join();
-        }
-
-        if (taskmanager::file_thread2().joinable()) {
-            taskmanager::file_thread2().join();
-        }
+        taskmanager::log_thread().join();
+        taskmanager::file_thread1().join();
+        taskmanager::file_thread2().join();
 
         if (shared_task_manager()) {
             shared_task_manager().reset();
@@ -349,8 +348,8 @@ handle_t connect(std::size_t bulk) {
         init_threads();
     }
 
-    static std::atomic<int> next_id{0};
-    const int unique_id = next_id++;
+    static std::atomic<int> next_id{};
+    const int unique_id{next_id++};
 
     auto context = std::make_unique<ConnectionContext>();
     context->id = std::to_string(unique_id);

@@ -4,12 +4,13 @@
 #include <custom_print.hpp>
 #include <matrix.hpp>
 
-constexpr char CONTAINER_SIZE = 10;
+constexpr int CONTAINER_SIZE = 10;
 
 int main()
 {
     try
     {
+        // todo unsigned
         Matrix<int, 0> matrix;
 
         for (int i = 0; i < CONTAINER_SIZE; i++)
@@ -44,7 +45,7 @@ int main()
     }
     catch (...)
     {
-        cp::safe_error(nullptr);
+        cp::safe_error();
 
         return EXIT_FAILURE;
     }

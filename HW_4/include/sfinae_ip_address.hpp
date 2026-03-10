@@ -56,16 +56,16 @@ void print_ip(T const& ip_address) requires(std::is_same_v<T, std::string>)
 template <typename T>
 void print_ip(T const& ip_address) requires(std::is_integral_v<T>)
 {
-    constexpr std::size_t size = sizeof(T);
+    constexpr std::size_t SIZE = sizeof(T);
 
-    for (std::size_t i = 0; i < size; i++)
+    for (std::size_t i = 0; i < SIZE; i++)
     {
         const auto byte = static_cast<std::uint8_t>(
-            static_cast<std::make_unsigned_t<T>>(ip_address) >> ((size - 1 - i) * 8));
+            static_cast<std::make_unsigned_t<T>>(ip_address) >> ((SIZE - 1 - i) * 8));
 
         cp::print("{}", byte);
 
-        if (i < size - 1)
+        if (i < SIZE - 1)
         {
             cp::print("{}", '.');
         }

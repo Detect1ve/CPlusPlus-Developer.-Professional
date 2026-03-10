@@ -2,11 +2,11 @@
  || __cplusplus <=  202002L
 #include <charconv>
 #endif
-#include <cstddef> // std::size_t
 #include <cstdio> // stderr
 #include <fstream>
 #include <limits> // std::numeric_limits
 #include <memory> // std::make_unique
+#include <ranges>
 #include <sstream> // std::istringstream
 #include <string> // std::string
 #include <string_view> // std::string_view
@@ -35,9 +35,8 @@ namespace
     }
 } // namespace
 
-class MLP::Impl
+struct MLP::Impl
 {
-public:
     Eigen::MatrixXf W1;
     Eigen::MatrixXf W2;
 };
@@ -46,7 +45,7 @@ MLP::MLP(
     const std::string& w1_path,
     const std::string& w2_path)
     :
-    pimpl(std::make_unique<Impl>())
+    pimpl_(std::make_unique<Impl>())
 {
     if (!loadWeights(w1_path, w2_path))
     {
@@ -63,9 +62,9 @@ bool MLP::loadWeights(
     const std::string& w1_path,
     const std::string& w2_path)
 {
-    int row = 0;
-    std::ifstream w1_file(w1_path);
-    std::ifstream w2_file(w2_path);
+    int row{};
+    std::ifstream w1_file{w1_path};
+    std::ifstream w2_file{w2_path};
     std::string line;
 
     if (!w1_file.is_open())
@@ -75,24 +74,22 @@ bool MLP::loadWeights(
         return false;
     }
 
-    pimpl->W1.resize(784, 128);
+    pimpl_->W1.resize(784, 128);
 
     while (std::getline(w1_file, line) && row < 784)
     {
         float value = std::numeric_limits<float>::quiet_NaN();
-        int col = 0;
+        int col{};
         std::istringstream iss(line);
 
         while (iss >> value && col < 128)
         {
-            pimpl->W1(row, col) = value;
+            pimpl_->W1(row, col) = value;
             col++;
         }
 
         row++;
     }
-
-    w1_file.close();
 
     if (!w2_file.is_open())
     {
@@ -101,25 +98,23 @@ bool MLP::loadWeights(
         return false;
     }
 
-    pimpl->W2.resize(128, 10);
+    pimpl_->W2.resize(128, 10);
 
     row = 0;
     while (std::getline(w2_file, line) && row < 128)
     {
         float value = std::numeric_limits<float>::quiet_NaN();
-        int col = 0;
+        int col{};
         std::istringstream iss(line);
 
         while (iss >> value && col < 10)
         {
-            pimpl->W2(row, col) = value;
+            pimpl_->W2(row, col) = value;
             col++;
         }
 
         row++;
     }
-
-    w2_file.close();
 
     return true;
 }
@@ -133,13 +128,13 @@ int MLP::predict(const std::vector<float>& image)
     x = x / MLP::PIXEL_MAX_VALUE;
 
     // z_1 = W_1^T * x
-    const Eigen::VectorXf z1 = pimpl->W1.transpose() * x;
+    const Eigen::VectorXf z1 = pimpl_->W1.transpose() * x;
 
     // o_1 = sigma(z_1)
     const Eigen::VectorXf o1 = sigma(z1);
 
     // z_2 = W_2^T * o_1
-    const Eigen::VectorXf z2 = pimpl->W2.transpose() * o1;
+    const Eigen::VectorXf z2 = pimpl_->W2.transpose() * o1;
 
     // o_2 = softmax(z_2)
     const Eigen::VectorXf o2 = softmax(z2);
@@ -155,10 +150,10 @@ float MLP::evaluate_with_predictions(
     const std::string& test_data_path,
     const std::string& predictions_path)
 {
-    int correct = 0;
-    int total = 0;
-    std::ifstream pred_file(predictions_path);
-    std::ifstream test_file(test_data_path);
+    int correct{};
+    int total{};
+    std::ifstream pred_file{predictions_path};
+    std::ifstream test_file{test_data_path};
     std::string pred_line;
     std::string test_line;
 
@@ -178,8 +173,8 @@ float MLP::evaluate_with_predictions(
 
     while (std::getline(test_file, test_line) && std::getline(pred_file, pred_line))
     {
-        int true_label = 0;
-        int predicted_label = 0;
+        int true_label{};
+        int predicted_label{};
         std::istringstream pred_iss(pred_line);
         std::istringstream test_iss(test_line);
         std::string token;
@@ -209,16 +204,13 @@ float MLP::evaluate_with_predictions(
         total++;
     }
 
-    test_file.close();
-    pred_file.close();
-
     return static_cast<float>(correct) / static_cast<float>(total);
 }
 
 float MLP::evaluate(const std::string& test_data_path)
 {
-    int correct = 0;
-    int total = 0;
+    int correct{};
+    int total{};
     std::ifstream test_file(test_data_path);
     std::string line;
 
@@ -232,7 +224,7 @@ float MLP::evaluate(const std::string& test_data_path)
 
     while (std::getline(test_file, line))
     {
-        int true_label = 0;
+        int true_label{};
         std::istringstream iss(line);
         std::string token;
         std::vector<float> image(784);
@@ -254,27 +246,23 @@ float MLP::evaluate(const std::string& test_data_path)
             }
         }
 
-        for (std::size_t i = 0; i < 784; i++)
+        for (auto [idx, pixel] : std::views::enumerate(image))
         {
-            float pixel_value = 0.0F;
-
             if (!std::getline(iss, token, ','))
             {
-                cp::println(stderr, "Error reading pixel at position {}", i);
+                cp::println(stderr, "Error reading pixel at position {}", idx);
                 break;
             }
 
             const std::string_view token_sv(token);
             // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
             if (std::from_chars(token_sv.data(), token_sv.data() + token_sv.size(),
-                pixel_value).ec != std::errc{})
+                pixel).ec != std::errc{})
             {
-                cp::println(stderr, "Error converting pixel at position {}: {}", i,
+                cp::println(stderr, "Error converting pixel at position {}: {}", idx,
                     token_sv);
-                pixel_value = 0.0F;
+                pixel = 0.0F;
             }
-
-            image[i] = pixel_value;
         }
 
         const int predicted_label = predict(image);

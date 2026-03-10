@@ -10,19 +10,15 @@ class Matrix;
 template <typename T, T DefaultValue>
 class ProxyCell
 {
-    Matrix<T, DefaultValue>* matrix_;
-    int row_;
-    int col_;
-
 public:
     ProxyCell(
         Matrix<T, DefaultValue>* matrix,
         const int                row, // NOLINT(bugprone-easily-swappable-parameters)
         const int                col)
         :
-        matrix_(matrix),
+        col_(col),
         row_(row),
-        col_(col) {}
+        matrix_(matrix) {}
     ~ProxyCell() = default;
     ProxyCell(const ProxyCell&) = delete;
     ProxyCell& operator=(const ProxyCell& other)
@@ -41,11 +37,11 @@ public:
     {
         if (value == DefaultValue)
         {
-            matrix_->data.erase({row_, col_});
+            matrix_->data_.erase({row_, col_});
         }
         else
         {
-            matrix_->data[{row_, col_}] = value;
+            matrix_->data_[{row_, col_}] = value;
         }
 
         return *this;
@@ -53,46 +49,24 @@ public:
 
     operator T() const // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
     {
-        auto iter = matrix_->data.find({row_, col_});
+        auto iter = matrix_->data_.find({row_, col_});
 
-        return (iter != matrix_->data.end() ? iter->second : DefaultValue);
+        return (iter != matrix_->data_.end() ? iter->second : DefaultValue);
     }
+
+private:
+    int col_;
+    int row_;
+    Matrix<T, DefaultValue>* matrix_;
 };
 
 template <typename T, T DefaultValue>
 class Matrix
 {
-    struct PairHash
-    {
-        std::size_t operator()(const std::pair<int, int>& coords) const noexcept
-        {
-            return
-                std::hash<int>{}(coords.first) ^ (std::hash<int>{}(coords.second) << 1U);
-        }
-    };
-
-    std::unordered_map<std::pair<int, int>, T, PairHash> data;
-    friend class ProxyCell<T, DefaultValue>;
-
-    class ProxyRow
-    {
-        Matrix* matrix_;
-        int row_;
-    public:
-        ProxyRow(
-            Matrix *const matrix,
-            int const     row)
-            :
-            matrix_(matrix),
-            row_(row) {}
-
-        ProxyCell<T, DefaultValue> operator[](const int col)
-        {
-            return ProxyCell<T, DefaultValue>(matrix_, row_, col);
-        }
-    };
+    class PairHash;
+    class ProxyRow;
 public:
-    Matrix() : data() {}
+    Matrix() : data_() {}
 
     ProxyRow operator[](const int row)
     {
@@ -101,46 +75,81 @@ public:
 
     [[nodiscard]] std::size_t size() const noexcept
     {
-        return data.size();
+        return data_.size();
     }
 
     class iterator
     {
-        typename std::unordered_map<std::pair<int, int>, T, PairHash>::const_iterator it;
-
     public:
         explicit iterator(
             typename std::unordered_map<std::pair<int, int>, T, PairHash>::const_iterator
                 iter)
-            : it(iter) {}
+            : it_(iter) {}
 
         [[nodiscard]] bool operator!=(const iterator& other) const
         {
-            return it != other.it;
+            return it_ != other.it_;
         }
 
         iterator& operator++()
         {
-            it++;
+            it_++;
 
             return *this;
         }
 
         [[nodiscard]] std::tuple<int, int, T> operator*() const
         {
-            return std::make_tuple(it->first.first, it->first.second, it->second);
+            return std::make_tuple(it_->first.first, it_->first.second, it_->second);
         }
+
+    private:
+        typename std::unordered_map<std::pair<int, int>, T, PairHash>::const_iterator it_;
     };
 
     [[nodiscard]] iterator begin() const noexcept
     {
-        return iterator(data.begin());
+        return iterator(data_.begin());
     }
 
     [[nodiscard]] iterator end() const noexcept
     {
-        return iterator(data.end());
+        return iterator(data_.end());
     }
+
+private:
+    class PairHash
+    {
+    public:
+        std::size_t operator()(const std::pair<int, int>& coords) const noexcept
+        {
+            return
+                std::hash<int>{}(coords.first) ^ (std::hash<int>{}(coords.second) << 1U);
+        }
+    };
+
+    class ProxyRow
+    {
+    public:
+        ProxyRow(
+            Matrix *const matrix,
+            int const     row)
+            :
+            row_(row),
+            matrix_(matrix) {}
+
+        ProxyCell<T, DefaultValue> operator[](const int col)
+        {
+            return ProxyCell<T, DefaultValue>(matrix_, row_, col);
+        }
+
+    private:
+        int row_;
+        Matrix* matrix_;
+    };
+
+    friend class ProxyCell<T, DefaultValue>;
+    std::unordered_map<std::pair<int, int>, T, PairHash> data_;
 };
 
 template <typename T, T DefaultValue>

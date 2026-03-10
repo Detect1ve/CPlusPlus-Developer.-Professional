@@ -4,17 +4,7 @@ project(C++-Developer-Professional LANGUAGES CXX)
 
 message(STATUS "C++ Compiler: ${CMAKE_CXX_COMPILER}")
 
-if (NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release)
-endif()
-
-if (NOT MSVC)
-  if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    add_compile_options(-fcolor-diagnostics)
-  else()
-    add_compile_options(-fdiagnostics-color=always)
-  endif()
-endif()
+set(CMAKE_COLOR_DIAGNOSTICS ON)
 
 include(cmake/cxx_standard.cmake)
 set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
@@ -24,12 +14,16 @@ list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 include(cmake/clang-tidy.cmake)
 include(cmake/fetch_boost.cmake)
 include(cmake/fetch_googletest.cmake)
+include(cmake/fortify_check.cmake)
+include(cmake/lto_enable.cmake)
 include(cmake/warning_flags.cmake)
 
 include(common/attribute_wrapper.cmake)
 include(common/capture.cmake)
 include(common/custom_print.cmake)
 include(common/socket_wrapper.cmake)
+# Keep this include last, as compile_commands is generated inside it.
+include(cmake/gcc_analyzer.cmake)
 
 set(SUBDIRS
   HW_1

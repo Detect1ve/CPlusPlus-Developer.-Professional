@@ -16,8 +16,8 @@ int main(
     const int   argc,
     const char *argv[])
 {
-    constexpr unsigned char BASE = 10;
-    int ret = 0;
+    constexpr int BASE = 10;
+    int ret{};
 
     try
     {
@@ -67,7 +67,7 @@ int main(
     }
     catch (...)
     {
-        cp::safe_error(nullptr);
+        cp::safe_error();
         ret = EXIT_FAILURE;
     }
 
