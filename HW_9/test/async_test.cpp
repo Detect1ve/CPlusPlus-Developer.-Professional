@@ -4,13 +4,12 @@
 #include <charconv>
 #endif
 
-#include <algorithm>
+// #include <algorithm>
 #include <chrono> // std::chrono::system_clock
 #include <cstddef> // std::size_t
 #include <cstdint> // std::int64_t
 #include <filesystem>
 #include <fstream>
-#include <iterator> // std::back_inserter
 #include <optional> // std::optional
 #include <sstream> // std::stringstream
 #include <string> // std::string
@@ -21,6 +20,8 @@
 
 #ifdef __cpp_lib_ranges_to_container
 #include <ranges>
+#else
+#include <iterator> // std::back_inserter
 #endif
 
 #include <gtest/gtest.h>
