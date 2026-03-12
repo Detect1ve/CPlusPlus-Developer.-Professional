@@ -5,7 +5,7 @@
  || __GNUC__ < 14
 #include <cstdint>
 #endif
-#if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
+#if defined(_MSC_VER) && !defined(__INTEL_COMPILER) || defined(__apple_build_version__)
 #include <functional>
 #endif
 #include <fstream>

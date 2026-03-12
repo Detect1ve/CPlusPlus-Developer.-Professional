@@ -4,8 +4,8 @@
 #include <string_view> // std::string_view
 
 #include <gtest/gtest.h>
-#include <boost/algorithm/hex.hpp>
-#include <boost/uuid/detail/md5.hpp>
+#include <boost/hash2/digest.hpp>
+#include <boost/hash2/md5.hpp>
 
 #include <capture.hpp>
 #include <ip_filter.hpp>
@@ -14,16 +14,11 @@ namespace
 {
     std::string compute_md5(const std::string_view input)
     {
-        boost::uuids::detail::md5 hash;
-        boost::uuids::detail::md5::digest_type digest;
-        std::string result;
+        boost::hash2::md5_128 hash;
 
-        hash.process_bytes(input.data(), input.length());
-        hash.get_digest(digest);
+        hash.update(input.data(), input.size());
 
-        boost::algorithm::hex_lower(std::span(digest), std::back_inserter(result));
-
-        return result;
+        return boost::hash2::to_string(hash.result());
     }
 } // namespace
 

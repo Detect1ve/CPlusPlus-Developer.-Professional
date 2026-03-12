@@ -14,7 +14,11 @@ if (PROJECT_IS_TOP_LEVEL)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
-if (MSVC OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+message(WARNING ${CMAKE_CXX_COMPILER_ID})
+
+if (   MSVC
+    OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
+    OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
   if (PROJECT_IS_TOP_LEVEL)
     if (NOT MSVC)
       add_compile_options(-fcolor-diagnostics)
@@ -36,7 +40,7 @@ if (MSVC OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   add_executable(mapper_variance mapper_variance.cpp)
   add_executable(reducer_variance reducer_variance.cpp)
 
-  if (NOT MSVC)
+  if (NOT MSVC AND NOT APPLE)
     target_link_libraries(mapper PRIVATE -static)
     target_link_libraries(reducer PRIVATE -static)
     target_link_libraries(mapper_variance PRIVATE -static)

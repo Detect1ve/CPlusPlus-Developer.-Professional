@@ -33,7 +33,7 @@ target_link_libraries(helloworld_cli PRIVATE
     helloworld
 )
 
-if (NOT MSVC)
+if (NOT MSVC AND NOT APPLE)
     target_link_libraries(helloworld_cli PRIVATE
         -static
     )

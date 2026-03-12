@@ -55,7 +55,9 @@ target_link_libraries(bulk PRIVATE custom_print taskmanager)
 target_compile_options(bulk PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_7_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)
-  target_link_libraries(bulk PRIVATE -static)
+  if (NOT APPLE)
+    target_link_libraries(bulk PRIVATE -static)
+  endif()
   target_compile_options(bulk PRIVATE
     -Wno-unsafe-buffer-usage-in-container -Wno-unsafe-buffer-usage)
 endif()

@@ -39,7 +39,7 @@ endif()
 add_executable(matrix src/main.cpp)
 target_include_directories(matrix PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(matrix PRIVATE custom_print)
-if (NOT MSVC)
+if (NOT MSVC AND NOT APPLE)
   target_link_libraries(matrix PRIVATE -static)
 endif()
 target_compile_options(matrix PRIVATE

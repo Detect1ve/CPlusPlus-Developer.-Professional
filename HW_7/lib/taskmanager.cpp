@@ -189,7 +189,7 @@ namespace bulk
         output << std::filesystem::path(task_manager_name).filename().string() << ": ";
 
         constexpr std::string_view delimiter = ", ";
-#ifdef __cpp_lib_ranges_to_container
+#if defined(__cpp_lib_ranges_to_container) && defined(__cpp_lib_ranges_join_with)
         const std::string result = block_task | std::views::join_with(delimiter)
             | std::ranges::to<std::string>();
 #else

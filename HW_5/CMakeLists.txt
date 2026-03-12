@@ -41,7 +41,9 @@ target_link_libraries(editor PRIVATE attribute_wrapper custom_print)
 target_compile_options(editor PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_5_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)
-  target_link_libraries(editor PRIVATE -static)
+  if (NOT APPLE)
+    target_link_libraries(editor PRIVATE -static)
+  endif()
   target_compile_options(editor PRIVATE -Wno-effc++)
 endif()
 

@@ -3,6 +3,10 @@
 
 #include <fcntl.h>
 
+#ifdef __apple_build_version__
+#include <thread>
+#endif
+
 #include <gsl/pointers>
 
 namespace wrapper
@@ -49,6 +53,33 @@ class StreamCapture
     static constexpr std::uint8_t pipe_r = 0;
     static constexpr std::uint8_t pipe_w = 1;
     static constexpr std::uint16_t PIPE_SIZE = 4096;
+
+    int create_pipe(std::array<int, 2>& pipefd)
+    {
+        int ret = 0;
+#ifdef _WIN32
+        ret = _pipe(pipefd.data(), PIPE_SIZE, _O_BINARY | _O_NOINHERIT);
+#elif defined(__linux__)
+        ret = pipe2(pipefd.data(), O_CLOEXEC);
+#else
+        ret = pipe(pipefd.data());
+#endif
+        if (ret)
+        {
+            return errno;
+        }
+#ifdef __APPLE__
+        if (  fcntl(pipefd[0], F_SETFD, FD_CLOEXEC)
+           || fcntl(pipefd[1], F_SETFD, FD_CLOEXEC))
+        {
+            close(pipefd[0]);
+            close(pipefd[1]);
+
+            return errno;
+        }
+#endif
+        return ret;
+    }
 
     std::error_code cleanup() noexcept
     {
@@ -129,11 +160,7 @@ public:
     _target_fd(wrapper::fileno(target_stream)),
     _target_stream(target_stream)
     {
-#ifdef _WIN32
-        if (_pipe(_pipefd.data(), PIPE_SIZE, _O_BINARY | _O_NOINHERIT) == -1)
-#else
-        if (pipe2(_pipefd.data(), O_CLOEXEC) == -1)
-#endif
+        if (create_pipe(_pipefd))
         {
             throw std::system_error(errno, std::generic_category());
         }

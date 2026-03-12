@@ -36,7 +36,7 @@ target_link_libraries(list_and_allocator INTERFACE Microsoft.GSL::GSL)
 
 add_executable(main src/main.cpp)
 target_link_libraries(main PRIVATE custom_print list_and_allocator)
-if (NOT MSVC)
+if (NOT MSVC AND NOT APPLE)
   target_link_libraries(main PRIVATE -static)
 endif()
 target_compile_options(main PRIVATE

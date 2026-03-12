@@ -59,7 +59,7 @@ endif()
 
 add_executable(async_cli src/main.cpp)
 target_link_libraries(async_cli PRIVATE async_static)
-if (NOT MSVC)
+if (NOT MSVC AND NOT APPLE)
   target_link_libraries(async_cli PRIVATE -static)
 endif()
 target_compile_options(async_cli PRIVATE

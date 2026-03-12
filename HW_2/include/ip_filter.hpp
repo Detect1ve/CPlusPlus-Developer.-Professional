@@ -13,6 +13,9 @@
 #include <span>
 #endif
 #include <ranges>
+#ifdef __apple_build_version__
+#include <system_error>
+#endif
 #include <utility>
 #include <vector>
 #include <version>
@@ -58,6 +61,12 @@ namespace std
             return value_;
         }
 
+        template <class U>
+        [[nodiscard]] const T& value_or(const U& /*default_value*/) const &
+        {
+            return value_; 
+        }
+
         [[nodiscard]] E error() const
         {
             return {};
@@ -95,7 +104,7 @@ std::expected<std::vector<std::vector<std::string>>, std::error_code> filter(
 
     std::array<int, sizeof...(octet)> a_octet = {octet...};
 
-#ifdef __cpp_lib_ranges_to_container
+#if defined(__cpp_lib_ranges_to_container) && defined(__cpp_lib_ranges_enumerate)
     return ip_pool | std::ranges::views::filter([&a_octet](const auto& ip_address)
     {
         auto common_range = std::min(a_octet.size(), ip_address.size());

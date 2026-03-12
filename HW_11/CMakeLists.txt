@@ -56,7 +56,9 @@ target_compile_options(join_server PRIVATE
 if (NOT MSVC)
   target_compile_options(join_server PRIVATE
     -Wno-unsafe-buffer-usage-in-container -Wno-unsafe-buffer-usage)
-  target_link_libraries(join_server PRIVATE -static)
+  if (NOT APPLE)
+    target_link_libraries(join_server PRIVATE -static)
+  endif()
 endif()
 
 add_executable(join_server_test test/join_server_test.cpp)

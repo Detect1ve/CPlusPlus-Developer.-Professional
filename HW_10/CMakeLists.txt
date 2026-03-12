@@ -66,7 +66,9 @@ if (MSVC)
 else()
   target_compile_options(bulk_server PRIVATE
     -Wno-unsafe-buffer-usage-in-container -Wno-unsafe-buffer-usage)
-  target_link_libraries(bulk_server PRIVATE -static)
+  if (NOT APPLE)
+    target_link_libraries(bulk_server PRIVATE -static)
+  endif()
 endif()
 
 add_executable(bulk_server_test test/bulk_server_test.cpp)
