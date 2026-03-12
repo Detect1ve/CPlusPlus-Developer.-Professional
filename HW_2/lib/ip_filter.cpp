@@ -1,6 +1,5 @@
 #include <algorithm>
 #include <charconv> // std::from_chars
-#include <cstddef> // std::size_t
 #if !((defined(__clang_analyzer__) || defined(__clang__)) && (__clang_major__ <= 18))
 #include <expected> // std::expected
 #endif
@@ -71,27 +70,13 @@ void reverse_lexicographic_sort(std::vector<std::vector<std::string>>& ip_pool)
         const std::vector<std::string>& first_ip,
         const std::vector<std::string>& second_ip)
     {
-        auto common_range = std::min(first_ip.size(), second_ip.size());
-        auto first_view = first_ip | std::views::take(common_range);
-
-        for (const auto [idx, ip_part] : first_view | std::views::enumerate)
-        {
-            auto first_result = from_chars(ip_part);
-            auto second_result = from_chars(second_ip[static_cast<std::size_t>(idx)]);
-
-            if (!first_result || !second_result)
+        return std::ranges::lexicographical_compare(first_ip, second_ip,
+            [](
+                const std::string_view ip_1,
+                const std::string_view ip_2)
             {
-                continue;
-            }
-
-            if (auto result = first_result.value() <=> second_result.value();
-                result != std::strong_ordering::equal)
-            {
-                return result == std::strong_ordering::greater;
-            }
-        }
-
-        return false;
+                return from_chars(ip_1).value_or(0) > from_chars(ip_2).value_or(0);
+            });
     };
 
     std::ranges::sort(ip_pool, comp, std::identity{});
@@ -145,27 +130,20 @@ std::expected<std::vector<std::vector<std::string>>, std::error_code> filter_any
 
 void print(std::span<const std::vector<std::string>> ip_pool)
 {
-#ifdef __cpp_lib_ranges_to_container
     for (const auto& ip_address : ip_pool)
     {
-        cp::println("{}", ip_address | std::views::join_with(std::string_view("."))
-            | std::ranges::to<std::string>());
-    }
+        auto ip_address_view = std::views::join_with(ip_address, '.');
+#ifdef __cpp_lib_format_ranges
+        cp::println("{:s}", ip_address_view);
 #else
-    for (const auto& ip_address : ip_pool)
-    {
-        for (std::size_t i = 0; i < ip_address.size(); i++)
+        for (const char symbol : ip_address_view)
         {
-            cp::print("{}", ip_address[i]);
-            if (i + 1 < ip_address.size())
-            {
-                cp::print("{}", '.');
-            }
+            cp::print("{}", symbol);
         }
 
         cp::println();
-    }
 #endif
+    }
 }
 
 std::expected<std::vector<std::vector<std::string>>, std::error_code> stdin_to_vector()

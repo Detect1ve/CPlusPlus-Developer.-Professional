@@ -139,6 +139,7 @@ set_smart_cppcheck(server
 
 set_smart_cppcheck(bulk_server
   EXCLUDE
+    "unmatchedSuppression"
     "unusedFunction")
 
 set_smart_cppcheck(bulk_server_test

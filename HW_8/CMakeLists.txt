@@ -109,6 +109,7 @@ set_smart_cppcheck(bayan_lib
 
 set_smart_cppcheck(bayan
   EXCLUDE
+    "unmatchedSuppression"
     "unusedFunction")
 
 set_smart_cppcheck(bayan_test

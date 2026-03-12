@@ -23,7 +23,7 @@ namespace editor::controller
         primitiveController_ = std::make_unique<PrimitiveController>(document_.get());
     }
 
-    bool DocumentController::saveDocument(const std::string_view filename)
+    bool DocumentController::saveDocument(const std::string_view filename) const
     {
         if (!document_)
         {

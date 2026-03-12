@@ -40,14 +40,12 @@ namespace std
     template <class T, class E>
     class expected // NOLINT(cert-dcl58-cpp)
     {
-        T value_;
-
     public:
         expected() = default;
         // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
         expected(T val) : value_(std::move(val)) {}
         // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-        expected(const unexpected<E>& /*unused*/) : value_{} {}
+        expected(const unexpected<E>& /*unused*/) {}
 
         explicit operator bool() const
         {
@@ -59,10 +57,19 @@ namespace std
             return value_;
         }
 
+        template <class U>
+        [[nodiscard]] const T& value_or(const U& /*default_value*/) const &
+        {
+            return value_;
+        }
+
         [[nodiscard]] E error() const
         {
             return {};
         }
+
+    private:
+        T value_{};
     };
 } // namespace std
 #else

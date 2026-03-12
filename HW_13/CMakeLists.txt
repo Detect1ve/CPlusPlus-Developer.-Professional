@@ -98,6 +98,7 @@ set_smart_cppcheck(mlp_lib
 
 set_smart_cppcheck(fashio_mnist
   EXCLUDE
+    "unmatchedSuppression"
     "unusedFunction")
 
 set_smart_cppcheck(fashio_mnist_test

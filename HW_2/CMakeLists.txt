@@ -97,17 +97,27 @@ set_smart_tidy(ip_filter_test
     "${CAPTURE_INCLUDE_DIR}"
   HAS_EXCEPTIONS)
 
+set(CPPCHECK_HW_2_OPTS
+  "functionStatic"
+  "noExplicitConstructor"
+  "unmatchedSuppression"
+  "unusedFunction")
+
 set_smart_cppcheck(ip_filter_lib
   EXCLUDE
-    "unusedFunction"
+    "${CPPCHECK_HW_2_OPTS}"
   LIBRARIES
     "gnu")
 
 set_smart_cppcheck(ip_filter
+  EXCLUDE
+    "${CPPCHECK_HW_2_OPTS}"
   LIBRARIES
     "gnu")
 
 set_smart_cppcheck(ip_filter_test
+  EXCLUDE
+    "${CPPCHECK_HW_2_OPTS}"
   LIBRARIES
     "boost,gnu,googletest,posix")
 

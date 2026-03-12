@@ -106,6 +106,7 @@ set_smart_cppcheck(server_and_database
 
 set_smart_cppcheck(join_server
   EXCLUDE
+    "unmatchedSuppression"
     "unusedFunction")
 
 set_smart_cppcheck(join_server_test

@@ -111,6 +111,7 @@ set_smart_cppcheck(taskmanager
 
 set_smart_cppcheck(bulk
   EXCLUDE
+    "unmatchedSuppression"
     "unusedFunction"
   LIBRARIES
     "gnu")

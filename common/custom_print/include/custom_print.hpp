@@ -1,6 +1,11 @@
 #ifndef CUSTOM_PRINT_HPP
 #define CUSTOM_PRINT_HPP
 
+#ifdef _WIN32
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
 #include <version>
 
 #ifdef __cpp_lib_print
@@ -79,14 +84,29 @@ namespace cp
 
     inline void safe_error(const char *const message) noexcept
     {
+        auto write_out = [](const std::string_view msg) noexcept -> bool
+        {
+            if (msg.empty())
+            {
+                return true;
+            }
+#ifdef _WIN32
+            return ::_write(::_fileno(stderr), msg.data(),
+                static_cast<unsigned>(msg.size())) == static_cast<int>(msg.size());
+#else
+            return ::write(::fileno(stderr), msg.data(), msg.size())
+                == static_cast<ssize_t>(msg.size());
+#endif
+        };
+
         if (message != nullptr)
         {
-            if (std::fputs("Fatal error: ", stderr) == EOF)
+            if (!write_out("Fatal error: "))
             {
                 return;
             }
 
-            if (std::fputs(message, stderr) == EOF)
+            if (!write_out(message))
             {
                 return;
             }
@@ -98,7 +118,7 @@ namespace cp
         }
         else
         {
-            if (std::fputs("Unknown error\n", stderr) == EOF)
+            if (!write_out("Unknown error\n"))
             {
                 return;
             }
