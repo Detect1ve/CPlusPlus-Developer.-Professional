@@ -81,8 +81,7 @@ public:
 
     void push_back(const T& val)
     {
-        using NodeAllocator =
-            typename std::allocator_traits<Alloc>::template rebind_alloc<Node>;
+        using NodeAllocator = std::allocator_traits<Alloc>::template rebind_alloc<Node>;
         NodeAllocator nodeAllocator;
 
         // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)

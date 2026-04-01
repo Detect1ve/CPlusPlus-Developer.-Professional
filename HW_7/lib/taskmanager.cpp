@@ -22,7 +22,7 @@
 #include <custom_print.hpp>
 #include <taskmanager.hpp>
 
-namespace bulk::io
+namespace
 {
     class composite_stream
     {
@@ -33,13 +33,11 @@ namespace bulk::io
             :
             s1(stream1),
             s2(stream2) {}
-
+        [[maybe_unused]] ~composite_stream() = default;
         composite_stream(const composite_stream&) = delete;
         composite_stream& operator=(const composite_stream&) = delete;
         composite_stream(composite_stream&&) = delete;
         composite_stream& operator=(composite_stream&&) = delete;
-        ~composite_stream() = default;
-
 
         template<typename T>
         composite_stream& operator<<(const T& value)
@@ -58,22 +56,11 @@ namespace bulk::io
             return *this;
         }
 
-        composite_stream& operator<<(std::ostream& (*manip)(std::ostream&))
-        {
-            s1 << manip;
-            s2 << manip;
-
-            return *this;
-        }
-
     private:
         std::ostream& s1;
         std::ostream& s2;
     };
-} // namespace bulk::io
 
-namespace
-{
     [[nodiscard]] bulk::taskmanager*& get_task_manager_instance() noexcept
     {
         static bulk::taskmanager* instance = nullptr; // NOLINT(misc-const-correctness)
@@ -187,19 +174,19 @@ namespace bulk
             return ret;
         }
 
-        bulk::io::composite_stream output(std::cout, file);
+        composite_stream output(std::cout, file);
 
         output << std::filesystem::path(task_manager_name).filename().string() << ": ";
 
 #ifdef __cpp_lib_ranges_to_container
-        const std::string result = block_task | std::views::join_with(DELIMITER)
+        const std::string result = std::views::join_with(block_task, DELIMITER)
             | std::ranges::to<std::string>();
 #else
         std::string result;
 
         for (std::size_t i = 0; i < block_task.size(); i++)
         {
-            result += block_task[i];
+            result += block_task.at(i);
             if (i + 1 < block_task.size())
             {
                 result += DELIMITER;

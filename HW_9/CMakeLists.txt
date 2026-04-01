@@ -26,7 +26,6 @@ endif()
 if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
   include(../cmake/cppcheck.cmake)
-  include(../cmake/fetch_absl.cmake)
   include(../cmake/fetch_googletest.cmake)
   include(../cmake/warning_flags.cmake)
   include(../common/capture.cmake)
@@ -67,7 +66,7 @@ target_compile_options(async_cli PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_9_COMPILE_WARNING_FLAGS})
 
 add_executable(async_test test/async_test.cpp)
-target_link_libraries(async_test PRIVATE absl::strings async capture GTest::gtest_main)
+target_link_libraries(async_test PRIVATE async capture GTest::gmock GTest::gtest_main)
 target_compile_options(async_test PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_9_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)

@@ -10,6 +10,8 @@
 #include <string_view> // std::string_view
 #include <system_error> // std::errc
 
+#include <gsl/util>
+
 #include <custom_print.hpp>
 #include <taskmanager.hpp>
 
@@ -31,14 +33,14 @@ int main(
 
         if (args.size() < 2)
         {
-            cp::println(stderr, "Usage: {} <positive_number>", args[0]);
+            cp::println(stderr, "Usage: {} <positive_number>", gsl::at(args, 0));
             ret = -1;
 
             return ret;
         }
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-        if (std::from_chars(args[1].data(), args[1].data() + args[1].size(),
-            command_number, BASE).ec != std::errc{})
+        if (auto size_arg = gsl::at(args, 1); std::from_chars(size_arg.data(),
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+            size_arg.data() + size_arg.size(), command_number, BASE).ec != std::errc{})
         {
             cp::println(stderr, "Invalid number format");
             ret = -2;
@@ -54,7 +56,7 @@ int main(
             return ret;
         }
 
-        bulk::taskmanager my_task_manager(command_number, args[0]);
+        bulk::taskmanager my_task_manager(command_number, gsl::at(args, 0));
 
         my_task_manager.setup_signal_handling();
         ret = my_task_manager.run();

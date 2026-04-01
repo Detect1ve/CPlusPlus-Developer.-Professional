@@ -7,6 +7,7 @@
 #include <fstream>
 #include <limits> // std::numeric_limits
 #include <memory> // std::make_unique
+#include <ranges>
 #include <sstream> // std::istringstream
 #include <string> // std::string
 #include <string_view> // std::string_view
@@ -221,6 +222,7 @@ float MLP::evaluate(const std::string& test_data_path)
     int total = 0;
     std::ifstream test_file(test_data_path);
     std::string line;
+    std::vector<float> image(784);
 
     if (!test_file.is_open())
     {
@@ -233,60 +235,56 @@ float MLP::evaluate(const std::string& test_data_path)
     while (std::getline(test_file, line))
     {
         int true_label = 0;
-        std::istringstream iss(line);
-        std::string token;
-        std::vector<float> image(784);
+        std::string_view view{line};
+        size_t pos = view.find(',');
 
-        if (!std::getline(iss, token, ','))
+        if (pos == std::string_view::npos)
         {
             cp::println(stderr, "Error reading class label");
             continue;
         }
 
+        const auto label_token = view.substr(0, pos);
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        if (std::from_chars(label_token.data(), label_token.data() + label_token.size(),
+            true_label).ec != std::errc{})
         {
-            const std::string_view token_sv(token);
-            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-            if (std::from_chars(token_sv.data(), token_sv.data() + token_sv.size(),
-                true_label).ec != std::errc{})
-            {
-                cp::println(stderr, "Error converting class label: {}", token);
-                continue;
-            }
+            cp::println(stderr, "Error converting class label: {}", label_token);
+            continue;
         }
 
-        for (std::size_t i = 0; i < 784; i++)
-        {
-            float pixel_value = 0.0F;
+        view.remove_prefix(pos + 1);
 
-            if (!std::getline(iss, token, ','))
+        for (auto [idx, pixel] : std::views::enumerate(image))
+        {
+            pos = view.find(',');
+            const std::string_view pixel_token =
+                (pos == std::string_view::npos ? view : view.substr(0, pos));
+
+            if (std::from_chars(pixel_token.data(),
+                // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+                pixel_token.data() + pixel_token.size(), pixel).ec != std::errc{})
             {
-                cp::println(stderr, "Error reading pixel at position {}", i);
+                cp::println(stderr, "Error converting pixel at position {}: {}", idx,
+                    pixel_token);
+                pixel = 0.0F;
+            }
+
+            if (pos == std::string_view::npos)
+            {
                 break;
             }
 
-            const std::string_view token_sv(token);
-            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-            if (std::from_chars(token_sv.data(), token_sv.data() + token_sv.size(),
-                pixel_value).ec != std::errc{})
-            {
-                cp::println(stderr, "Error converting pixel at position {}: {}", i,
-                    token_sv);
-                pixel_value = 0.0F;
-            }
-
-            image[i] = pixel_value;
+            view.remove_prefix(pos + 1);
         }
 
-        const int predicted_label = predict(image);
-        if (predicted_label == true_label)
+        if (predict(image) == true_label)
         {
             correct++;
         }
 
         total++;
     }
-
-    test_file.close();
 
     return static_cast<float>(correct) / static_cast<float>(total);
 }

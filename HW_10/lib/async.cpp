@@ -30,6 +30,7 @@ const std::string& TASK_MANAGER_NAME() {
 } // namespace
 
 namespace async {
+namespace {
 
 struct OutputTask {
     OutputTask() = default;
@@ -101,8 +102,8 @@ public:
         }
     }
 
-    static std::atomic<bool> should_terminate;
-    static std::atomic<bool> threads_initialized;
+    inline static std::atomic<bool> should_terminate{false};
+    inline static std::atomic<bool> threads_initialized{false};
 
     static std::condition_variable& queue_cv() {
         // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
@@ -158,9 +159,6 @@ private:
     std::vector<std::string> static_block_task;
 };
 
-std::atomic<bool> taskmanager::should_terminate{false};
-std::atomic<bool> taskmanager::threads_initialized{false};
-
 struct ConnectionContext {
     int dynamic_block_nesting_level = 0;
     std::chrono::system_clock::time_point dynamic_block_timestamp;
@@ -168,7 +166,6 @@ struct ConnectionContext {
     std::vector<std::string> dynamic_block_task;
 };
 
-namespace {
 std::mutex& contexts_mutex() {
     static std::mutex mutex;
 
@@ -245,7 +242,7 @@ void log_worker() {
         cp::print("{}: ", TASK_MANAGER_NAME());
 
         for (std::size_t i = 0; i < task.get_commands().size(); i++) {
-            cp::print("{}", task.get_commands()[i]);
+            cp::print("{}", task.get_commands().at(i));
             if (i < task.get_commands().size() - 1) {
                 cp::print(", ");
             }
@@ -294,7 +291,7 @@ void file_worker(const int thread_id) {
 
             const std::string DELIMITER = ", ";
             for (std::size_t i = 0; i < task.get_commands().size(); i++) {
-                file << task.get_commands()[i];
+                file << task.get_commands().at(i);
                 if (i < task.get_commands().size() - 1) {
                     file << DELIMITER;
                 }

@@ -52,7 +52,7 @@ if (NOT MSVC)
 endif()
 
 add_executable(bulk src/main.cpp)
-target_link_libraries(bulk PRIVATE custom_print taskmanager)
+target_link_libraries(bulk PRIVATE custom_print Microsoft.GSL::GSL taskmanager)
 target_compile_options(bulk PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_7_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)

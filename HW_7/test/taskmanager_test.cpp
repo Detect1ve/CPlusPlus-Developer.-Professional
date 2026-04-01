@@ -110,32 +110,33 @@ namespace
     {
         clear_log_files(std::nullopt, std::nullopt);
     }
+
+    class HW7 : public ::testing::Test
+    {
+    public:
+        HW7() = default;
+        ~HW7() override = default;
+        HW7(const HW7&) = delete;
+        HW7& operator=(const HW7&) = delete;
+        HW7(HW7&&) = delete;
+        HW7& operator=(HW7&&) = delete;
+
+    protected:
+        void SetUp() override
+        {
+            clear_log_files();
+            start_time_ = std::chrono::system_clock::now();
+        }
+
+        void TearDown() override
+        {
+            clear_log_files(start_time_, std::chrono::system_clock::now());
+        }
+
+    private:
+        std::chrono::system_clock::time_point start_time_;
+    };
 } // namespace
-
-class HW7 : public ::testing::Test
-{
-    std::chrono::system_clock::time_point start_time_;
-protected:
-    void SetUp() override
-    {
-        clear_log_files();
-        start_time_ = std::chrono::system_clock::now();
-    }
-
-    void TearDown() override
-    {
-        clear_log_files(start_time_, std::chrono::system_clock::now());
-    }
-public:
-    HW7() = default;
-    HW7(const HW7&) = delete;
-    HW7(HW7&&) = delete;
-    HW7& operator=(const HW7&) = delete;
-    HW7& operator=(HW7&&) = delete;
-    ~HW7() override;
-};
-
-HW7::~HW7() = default;
 
 TEST_F(HW7, StaticBlocks)
 {

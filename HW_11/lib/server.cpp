@@ -49,29 +49,34 @@ namespace
 
 class Session;
 
-class SessionImpl
+namespace
 {
-    void do_read();
-    void do_write(std::string_view message);
-    void do_write(const std::vector<std::string>& messages);
-    void process_command(std::string_view command);
+    class SessionImpl
+    {
+    public:
+        SessionImpl(
+            tcp::socket socket,
+            Database*   database);
+        ~SessionImpl() = default;
+        SessionImpl(const SessionImpl&) = delete;
+        SessionImpl& operator=(const SessionImpl&) = delete;
+        SessionImpl(SessionImpl&&) = delete;
+        SessionImpl& operator=(SessionImpl&&) = delete;
 
-    tcp::socket socket_;
-    Database* database_;
-    std::unique_ptr<boost::asio::streambuf> buffer_;
-    std::shared_ptr<Session> self_;
-public:
-    SessionImpl(
-        tcp::socket socket,
-        Database*   database);
-    ~SessionImpl() = default;
-    SessionImpl(const SessionImpl&) = delete;
-    SessionImpl& operator=(const SessionImpl&) = delete;
-    SessionImpl(SessionImpl&&) = delete;
-    SessionImpl& operator=(SessionImpl&&) = delete;
+        void start(std::shared_ptr<Session> self);
 
-    void start(std::shared_ptr<Session> self);
-};
+    private:
+        void do_read();
+        void do_write(std::string_view message);
+        void do_write(const std::vector<std::string>& messages);
+        void process_command(std::string_view command);
+
+        tcp::socket socket_;
+        Database* database_;
+        std::unique_ptr<boost::asio::streambuf> buffer_;
+        std::shared_ptr<Session> self_;
+    };
+} // namespace
 
 class Session : public std::enable_shared_from_this<Session>
 {

@@ -30,7 +30,7 @@ const std::string& TASK_MANAGER_NAME() {
 } // namespace
 
 namespace async {
-
+namespace {
 struct OutputTask {
     OutputTask() = default;
     OutputTask(std::chrono::system_clock::time_point timestamp, std::string&& context_id,
@@ -191,6 +191,7 @@ private:
     std::vector<std::string> dynamic_block_task;
     std::vector<std::string> static_block_task;
 };
+} // namespace
 
 std::atomic<bool> taskmanager::should_terminate{false};
 std::atomic<bool> taskmanager::threads_initialized{false};
@@ -235,7 +236,7 @@ void log_worker() {
         cp::print("{}: ", TASK_MANAGER_NAME());
 
         for (std::size_t i = 0; i < task.get_commands().size(); i++) {
-            cp::print("{}", task.get_commands()[i]);
+            cp::print("{}", task.get_commands().at(i));
             if (i < task.get_commands().size() - 1) {
                 cp::print(", ");
             }
@@ -284,7 +285,7 @@ void file_worker(const int thread_id) {
 
             const std::string DELIMITER = ", ";
             for (std::size_t i = 0; i < task.get_commands().size(); i++) {
-                file << task.get_commands()[i];
+                file << task.get_commands().at(i);
                 if (i < task.get_commands().size() - 1) {
                     file << DELIMITER;
                 }

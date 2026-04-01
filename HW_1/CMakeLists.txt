@@ -89,6 +89,13 @@ if (NOT MSVC)
     target_compile_options(test_version PRIVATE
         -Wno-used-but-marked-unused -Wno-global-constructors
     )
+
+    if (  CMAKE_CXX_COMPILER_ID STREQUAL "GNU"
+       OR (   CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
+          AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 21))
+        target_compile_options(test_version PRIVATE -Wno-c2y-extensions)
+    endif()
+
 endif()
 target_compile_options(g_test_version PRIVATE
     ${COMPILE_WARNING_FLAGS} ${HW_1_COMPILE_WARNING_FLAGS}
@@ -135,6 +142,7 @@ set_smart_tidy(test_version
         "-fuchsia-statically-constructed-objects"
         "-hicpp-vararg"
         "-misc-include-cleaner"
+        "-misc-use-internal-linkage"
         "-readability-identifier-length"
         "${CLANG_TIDY_HW_1_OPTS}"
     MAIN_INCLUDE_DIR

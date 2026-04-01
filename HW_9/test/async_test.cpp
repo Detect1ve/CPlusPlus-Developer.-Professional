@@ -4,7 +4,6 @@
 #include <charconv>
 #endif
 
-// #include <algorithm>
 #include <chrono> // std::chrono::system_clock
 #include <cstddef> // std::size_t
 #include <cstdint> // std::int64_t
@@ -21,11 +20,12 @@
 #ifdef __cpp_lib_ranges_to_container
 #include <ranges>
 #else
+#include <algorithm> // std::ranges::transform
 #include <iterator> // std::back_inserter
 #endif
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <absl/strings/match.h>
 
 #include <async.h>
 #include <capture.hpp>
@@ -114,37 +114,38 @@ namespace
 
         return buffer.str();
     }
+
+    class HW9 : public ::testing::Test
+    {
+    public:
+        HW9() = default;
+        ~HW9() override = default;
+        HW9(const HW9&) = delete;
+        HW9(HW9&&) = delete;
+        HW9& operator=(const HW9&) = delete;
+        HW9& operator=(HW9&&) = delete;
+
+    protected:
+        void SetUp() override
+        {
+            clear_log_files();
+            start_time = std::chrono::system_clock::now();
+        }
+
+        void TearDown() override
+        {
+            clear_log_files(start_time, std::chrono::system_clock::now());
+        }
+
+        [[nodiscard]] auto get_start_time() const
+        {
+            return start_time;
+        }
+
+    private:
+        std::chrono::system_clock::time_point start_time;
+    };
 } // namespace
-
-class HW9 : public ::testing::Test
-{
-    std::chrono::system_clock::time_point start_time;
-protected:
-    void SetUp() override
-    {
-        clear_log_files();
-        start_time = std::chrono::system_clock::now();
-    }
-
-    void TearDown() override
-    {
-        clear_log_files(start_time, std::chrono::system_clock::now());
-    }
-
-    [[nodiscard]] auto get_start_time() const
-    {
-        return start_time;
-    }
-public:
-    HW9() = default;
-    HW9(const HW9&) = delete;
-    HW9(HW9&&) = delete;
-    HW9& operator=(const HW9&) = delete;
-    HW9& operator=(HW9&&) = delete;
-    ~HW9() override;
-};
-
-HW9::~HW9() = default;
 
 TEST_F(HW9, MainFunctionality)
 {
@@ -164,11 +165,12 @@ TEST_F(HW9, MainFunctionality)
 
     const std::string output = StdoutCapture::End();
 
-    ASSERT_TRUE(absl::StrContains(output, "bulk: 1\n"));
-    ASSERT_TRUE(absl::StrContains(output, "bulk: 1, 2, 3, 4, 5\n"));
-    ASSERT_TRUE(absl::StrContains(output, "bulk: 6\n"));
-    ASSERT_TRUE(absl::StrContains(output, "bulk: a, b, c, d\n"));
-    ASSERT_TRUE(absl::StrContains(output, "bulk: 89\n"));
+    ASSERT_THAT(output, testing::AllOf(
+        testing::HasSubstr("bulk: 1\n"),
+        testing::HasSubstr("bulk: 1, 2, 3, 4, 5\n"),
+        testing::HasSubstr("bulk: 6\n"),
+        testing::HasSubstr("bulk: a, b, c, d\n"),
+        testing::HasSubstr("bulk: 89\n")));
 #ifdef __cpp_lib_ranges_to_container
     const auto log_contents =
         get_log_files(get_start_time(), std::chrono::system_clock::now())
@@ -185,39 +187,10 @@ TEST_F(HW9, MainFunctionality)
 #endif
     ASSERT_GE(log_contents.size(), 4);
 
-    bool block1_found = false;
-    bool block2_found = false;
-    bool block3_found = false;
-    bool block4_found = false;
-    bool block5_found = false;
-
-    for (const auto &content : log_contents)
-    {
-        if (absl::StrContains(content, "bulk: 1\n"))
-        {
-            block1_found = true;
-        }
-        else if (absl::StrContains(content, "bulk: 1, 2, 3, 4, 5\n"))
-        {
-            block2_found = true;
-        }
-        else if (absl::StrContains(content, "bulk: 6\n"))
-        {
-            block3_found = true;
-        }
-        else if (absl::StrContains(content, "bulk: a, b, c, d\n"))
-        {
-            block4_found = true;
-        }
-        else if (absl::StrContains(content, "bulk: 89\n"))
-        {
-            block5_found = true;
-        }
-    }
-
-    ASSERT_TRUE(block1_found);
-    ASSERT_TRUE(block2_found);
-    ASSERT_TRUE(block3_found);
-    ASSERT_TRUE(block4_found);
-    ASSERT_TRUE(block5_found);
+    ASSERT_THAT(log_contents, testing::UnorderedElementsAre(
+        "bulk: 1\n",
+        "bulk: 1, 2, 3, 4, 5\n",
+        "bulk: 6\n",
+        "bulk: a, b, c, d\n",
+        "bulk: 89\n"));
 }

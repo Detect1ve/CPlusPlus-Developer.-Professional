@@ -129,7 +129,7 @@ std::expected<std::vector<std::vector<std::string>>, std::error_code> filter(
 
         for (std::size_t idx = 0; idx < common_range; idx++)
         {
-            auto res = from_chars(ip_address[idx]);
+            auto res = from_chars(ip_address.at(idx));
             if (  !res
                || res.value() != a_octet.at(idx))
             {

@@ -30,7 +30,7 @@ namespace editor::model
     {
         if (index < primitives_.size())
         {
-            return primitives_[index].get();
+            return primitives_.at(index).get();
         }
 
         return nullptr;

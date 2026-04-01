@@ -82,7 +82,7 @@ public:
                 "cleanup() also returned " + err_cleanup.message());
         }
 
-        if (wrapper::dup2(pipefd_[PIPE_W], target_fd_) == -1)
+        if (wrapper::dup2(std::get<PIPE_W>(pipefd_), target_fd_) == -1)
         {
             const int err = errno;
 
@@ -170,6 +170,7 @@ private:
 
     std::error_code cleanup() noexcept
     {
+        auto& [r_fd, w_fd] = pipefd_;
         std::error_code er_code;
 
         if (fd_old_ != -1)
@@ -187,14 +188,14 @@ private:
             fd_old_ = -1;
         }
 
-        if (pipefd_[PIPE_W] != -1)
+        if (w_fd != -1)
         {
-            if (wrapper::close(pipefd_[PIPE_W]) == -1)
+            if (wrapper::close(w_fd) == -1)
             {
                 er_code = std::error_code(errno, std::generic_category());
             }
 
-            pipefd_[PIPE_W] = -1;
+            w_fd = -1;
         }
 
         if (reader_thread_.joinable())
@@ -202,14 +203,14 @@ private:
             reader_thread_.join();
         }
 
-        if (pipefd_[PIPE_R] != -1)
+        if (r_fd != -1)
         {
-            if (wrapper::close(pipefd_[PIPE_R]) == -1)
+            if (wrapper::close(r_fd) == -1)
             {
                 er_code = std::error_code(errno, std::generic_category());
             }
 
-            pipefd_[PIPE_R] = -1;
+            r_fd = -1;
         }
 
         return er_code;
@@ -222,10 +223,10 @@ private:
         while (true)
         {
 #ifdef _WIN32
-            const int bytes_read = _read(pipefd_[PIPE_R], buffer.data(),
+            const int bytes_read = _read(std::get<PIPE_R>(pipefd_), buffer.data(),
                 static_cast<unsigned>(buffer.size()));
 #else
-            const ssize_t bytes_read = read(pipefd_[PIPE_R], buffer.data(),
+            const ssize_t bytes_read = read(std::get<PIPE_R>(pipefd_), buffer.data(),
                 buffer.size());
 #endif
             if (bytes_read > 0)

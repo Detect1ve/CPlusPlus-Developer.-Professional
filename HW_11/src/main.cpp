@@ -11,6 +11,8 @@
 #include <string_view> // std::string_view
 #include <system_error> // std::errc
 
+#include <gsl/util>
+
 #include <custom_print.hpp>
 #include <server.hpp>
 
@@ -32,14 +34,15 @@ int main(
 
         if (args.size() != 2)
         {
-            cp::println(stderr, "Usage: {} <port>", args[0]);
+            cp::println(stderr, "Usage: {} <port>", gsl::at(args, 0));
             ret = -1;
 
             return ret;
         }
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-        if (std::from_chars(args[1].data(), args[1].data() + args[1].size(), port,
-            BASE).ec != std::errc{})
+
+        if (auto port_arg = gsl::at(args, 1); std::from_chars(port_arg.data(),
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+            port_arg.data() + port_arg.size(), port, BASE).ec != std::errc{})
         {
             cp::println(stderr, "Invalid port format");
             ret = -2;

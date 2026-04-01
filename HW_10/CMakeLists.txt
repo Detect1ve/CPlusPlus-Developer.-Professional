@@ -58,7 +58,7 @@ if (NOT MSVC)
 endif()
 
 add_executable(bulk_server src/main.cpp)
-target_link_libraries(bulk_server PRIVATE custom_print server)
+target_link_libraries(bulk_server PRIVATE custom_print Microsoft.GSL::GSL server)
 target_compile_options(bulk_server PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_10_COMPILE_WARNING_FLAGS})
 if (MSVC)
@@ -71,8 +71,8 @@ else()
 endif()
 
 add_executable(bulk_server_test test/bulk_server_test.cpp)
-target_link_libraries(bulk_server_test PRIVATE capture GTest::gtest_main server
-  socket_wrapper)
+target_link_libraries(bulk_server_test PRIVATE
+  capture GTest::gmock GTest::gtest_main server socket_wrapper)
 target_compile_options(bulk_server_test PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_10_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)

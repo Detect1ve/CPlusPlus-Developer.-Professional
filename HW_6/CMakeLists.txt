@@ -33,7 +33,10 @@ if (PROJECT_IS_TOP_LEVEL)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+if (   CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
+   # Some versions of clang suffer from the following problem:
+   # https://github.com/llvm/llvm-project/issues/138775
+   AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 18.1.3)
   set(HW_6_COMPILE_WARNING_FLAGS -Wc++20-compat-pedantic)
 endif()
 
@@ -57,6 +60,7 @@ endif()
 
 set(CLANG_TIDY_HW_6_OPTS
   "-altera-struct-pack-align"
+  "-cppcoreguidelines-pro-bounds-avoid-unchecked-container-access"
   "-fuchsia-overloaded-operator"
   "-modernize-use-trailing-return-type")
 

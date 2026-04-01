@@ -28,6 +28,7 @@ if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/cppcheck.cmake)
   include(../cmake/fetch_boost.cmake)
   include(../cmake/fetch_googletest.cmake)
+  include(../cmake/fetch_gsl.cmake)
   include(../cmake/warning_flags.cmake)
   include(../common/custom_print.cmake)
   include(../common/socket_wrapper.cmake)
@@ -51,7 +52,8 @@ else()
 endif()
 
 add_executable(join_server src/main.cpp)
-target_link_libraries(join_server PRIVATE custom_print server_and_database)
+target_link_libraries(join_server PRIVATE
+  custom_print Microsoft.GSL::GSL server_and_database)
 target_compile_options(join_server PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_11_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)

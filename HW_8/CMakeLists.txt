@@ -26,7 +26,6 @@ endif()
 if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
   include(../cmake/cppcheck.cmake)
-  include(../cmake/fetch_absl.cmake)
   include(../cmake/fetch_boost.cmake)
   include(../cmake/fetch_googletest.cmake)
   include(../cmake/warning_flags.cmake)
@@ -65,7 +64,7 @@ endif()
 
 add_executable(bayan_test test/bayan_test.cpp)
 target_link_libraries(bayan_test PRIVATE
-  absl::strings bayan_lib Boost::filesystem capture GTest::gtest_main)
+  bayan_lib Boost::filesystem capture GTest::gtest_main)
 target_compile_options(bayan_test PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_8_COMPILE_WARNING_FLAGS})
 if (NOT MSVC)

@@ -152,7 +152,7 @@ private:
 };
 
 template <typename T, T DefaultValue>
-// NOLINTNEXTLINE(cert-dcl58-cpp)
+// NOLINTNEXTLINE(bugprone-std-namespace-modification, cert-dcl58-cpp)
 struct std::formatter<ProxyCell<T, DefaultValue>> : std::formatter<T>
 {
     auto format(
@@ -164,7 +164,7 @@ struct std::formatter<ProxyCell<T, DefaultValue>> : std::formatter<T>
 };
 
 template <typename T, T DefaultValue>
-// NOLINTNEXTLINE(cert-dcl58-cpp)
+// NOLINTNEXTLINE(bugprone-std-namespace-modification, cert-dcl58-cpp)
 struct std::formatter<Matrix<T, DefaultValue>>
 {
     static constexpr auto parse(std::format_parse_context& ctx)

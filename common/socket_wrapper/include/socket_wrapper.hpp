@@ -7,8 +7,6 @@
 #include <netdb.h>
 #endif
 
-#include <absl/strings/match.h>
-
 namespace test_util
 {
     class ClientSocket
@@ -137,7 +135,7 @@ namespace test_util
 
                 if (  result.length() >= 4
                    && result.starts_with("ERR")
-                   && absl::StrContains(result, '\n'))
+                   && result.contains('\n'))
                 {
                     break;
                 }

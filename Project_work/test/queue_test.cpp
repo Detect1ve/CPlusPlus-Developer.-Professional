@@ -171,7 +171,7 @@ TEST(ProjectWork, SingleProducerSingleConsumer)
     ASSERT_EQ(consumed.size(), items_to_produce);
     for (std::size_t i = 0; i < consumed.size(); i++)
     {
-        ASSERT_EQ(consumed[i], i);
+        ASSERT_EQ(consumed.at(i), i);
     }
 }
 

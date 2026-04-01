@@ -119,10 +119,12 @@ if (NOT MSVC)
     # -Rsearch-path-usage
     if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19)
       set(COMPILE_WARNING_FLAGS ${COMPILE_WARNING_FLAGS}
-        -Wdecls-in-multiple-modules -Wexperimental-lifetime-safety -Wfunction-effects
-        -Whlsl-implicit-binding -Wignored-base-class-qualifiers
-        -Wmodule-file-mapping-mismatch -Rmodule-map -Wms-bitfield-padding -Wnvcc-compat
-        -Wshift-bool -Wthread-safety-pointer -Wunique-object-duplication)
+        -Wdecls-in-multiple-modules -Wexperimental-lifetime-safety
+        -Wexperimental-lifetime-safety-suggestions -Wfunction-effect-redeclarations
+        -Wfunction-effects -Whlsl-implicit-binding -Wignored-base-class-qualifiers
+        -Wmodule-file-mapping-mismatch -Rmodule-map -Rmodule-validation
+        -Wms-bitfield-padding -Wnvcc-compat -Wshadow-header -Wshift-bool
+        -Wthread-safety-pointer -Wunique-object-duplication)
     endif()
   endif()
 else()

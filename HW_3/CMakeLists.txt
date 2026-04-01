@@ -11,7 +11,7 @@ if (PROJECT_IS_TOP_LEVEL)
     endif()
   endif()
 
-  set(MINIMUM_CXX_STANDARD 14)
+  set(MINIMUM_CXX_STANDARD 20)
   include(../cmake/cxx_standard.cmake)
   set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 endif()
@@ -26,8 +26,11 @@ if (PROJECT_IS_TOP_LEVEL)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  set(HW_3_COMPILE_WARNING_FLAGS -Wc++14-compat-pedantic)
+if (   CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
+   # Some versions of clang suffer from the following problem:
+   # https://github.com/llvm/llvm-project/issues/138775
+   AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 18.1.3)
+  set(HW_3_COMPILE_WARNING_FLAGS -Wc++20-compat-pedantic)
 endif()
 
 add_library(list_and_allocator INTERFACE)
