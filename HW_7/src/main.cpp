@@ -1,4 +1,4 @@
-#if __GNUC__ < 14
+#if defined(__GNUC__) && __GNUC__ < 14
 #include <charconv>
 #endif
 #include <cstddef> // std::size_t

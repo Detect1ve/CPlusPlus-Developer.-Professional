@@ -23,9 +23,9 @@
 
 namespace {
 const std::string& TASK_MANAGER_NAME() {
-    static const std::string s_name = "bulk";
+    static const auto* s_name = new std::string("bulk");
 
-    return s_name;
+    return *s_name;
 }
 } // namespace
 

@@ -61,38 +61,45 @@ namespace
 
 int main()
 {
-    std::map<double, int> price_counts;
-    std::string line;
-
-    while (std::getline(std::cin, line))
+    try
     {
-        const std::string price_field =
-            extract_price_field(line, {','}, {PRICE_FIELD_INDEX});
-        double price = 0.0;
+        std::map<double, int> price_counts;
+        std::string line;
 
-        if (price_field.empty())
+        while (std::getline(std::cin, line))
         {
-            continue;
+            const std::string price_field =
+                extract_price_field(line, {','}, {PRICE_FIELD_INDEX});
+            double price = 0.0;
+
+            if (price_field.empty())
+            {
+                continue;
+            }
+
+            const std::string_view price_field_sv(price_field);
+
+            if (std::from_chars(price_field_sv.data(),
+                // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+                price_field_sv.data() + price_field_sv.size(), price,
+                std::chars_format::general).ec == std::errc{})
+            {
+                price_counts[price]++;
+            }
         }
 
-        const std::string_view price_field_sv(price_field);
-
-        if (std::from_chars(price_field_sv.data(),
-            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-            price_field_sv.data() + price_field_sv.size(), price,
-            std::chars_format::general).ec == std::errc{})
+        for (const auto& [price, count] : price_counts)
         {
-            price_counts[price]++;
+            const double price_squared = price * price;
+
+            std::cout << "price\t" << std::setw(MAX_PRICE_LENGTH) << price << '\t'
+                << std::setw(MAX_PRICE_SQUARED_LENGTH) << price_squared << '\t'
+                << std::setw(4) << count << '\n';
         }
     }
-
-    for (const auto& [price, count] : price_counts)
+    catch (...)
     {
-        const double price_squared = price * price;
-
-        std::cout << "price\t" << std::setw(MAX_PRICE_LENGTH) << price << '\t'
-            << std::setw(MAX_PRICE_SQUARED_LENGTH) << price_squared << '\t'
-            << std::setw(4) << count << '\n';
+        // @TODO
     }
 
     return 0;

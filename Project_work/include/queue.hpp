@@ -2,7 +2,7 @@
 #define QUEUE_HPP
 
 #include <condition_variable>
-#if __GNUC__ < 14\
+#if defined(__GNUC__) && __GNUC__ < 14\
  || __cplusplus <=  202002L
 #include <optional>
 #endif

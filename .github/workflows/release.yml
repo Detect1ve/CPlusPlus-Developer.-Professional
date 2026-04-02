@@ -16,7 +16,6 @@ jobs:
         include:
           - os: ubuntu-latest
             name: GCC-Release
-            compiler: gcc
             c_compiler: gcc-14
             cpp_compiler: g++-14
             build_dir: build-gcc-release
@@ -26,7 +25,6 @@ jobs:
             build_docs: true
           - os: ubuntu-latest
             name: GCC-Debug
-            compiler: gcc
             c_compiler: gcc-14
             cpp_compiler: g++-14
             build_dir: build-gcc-debug
@@ -34,29 +32,25 @@ jobs:
             install_compiler: true
           - os: ubuntu-latest
             name: GCC-MinSizeRel
-            compiler: gcc
             c_compiler: gcc-14
             cpp_compiler: g++-14
             build_dir: build-gcc-minsizerel
             build_type: MinSizeRel
             install_compiler: true
           - os: ubuntu-latest
-            name: Clang-Release
-            compiler: clang
+            name: Clang-Release-Linux
             c_compiler: clang
             cpp_compiler: clang++
             build_dir: build-clang-release
             build_type: Release
           - os: ubuntu-latest
-            name: Clang-Debug
-            compiler: clang
+            name: Clang-Debug-Linux
             c_compiler: clang
             cpp_compiler: clang++
             build_dir: build-clang-debug
             build_type: Debug
           - os: ubuntu-latest
-            name: Clang-MinSizeRel
-            compiler: clang
+            name: Clang-MinSizeRel-Linux
             c_compiler: clang
             cpp_compiler: clang++
             build_dir: build-clang-minsizerel
@@ -79,6 +73,24 @@ jobs:
             build_type: MinSizeRel
             c_compiler: cl
             cpp_compiler: cl
+          - os: windows-2025-vs2026
+            name: Clang-Release-Windows
+            c_compiler: clang
+            cpp_compiler: clang++
+            build_dir: build-clang-release
+            build_type: Release
+          - os: windows-2025-vs2026
+            name: Clang-Debug-Windows
+            c_compiler: clang
+            cpp_compiler: clang++
+            build_dir: build-clang-debug
+            build_type: Debug
+          - os: windows-2025-vs2026
+            name: Clang-MinSizeRel-Windows
+            c_compiler: clang
+            cpp_compiler: clang++
+            build_dir: build-clang-minsizerel
+            build_type: MinSizeRel
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.name }}
     steps:

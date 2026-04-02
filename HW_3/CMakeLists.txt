@@ -29,7 +29,7 @@ endif()
 if (   CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
    # Some versions of clang suffer from the following problem:
    # https://github.com/llvm/llvm-project/issues/138775
-   AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 18.1.3)
+   AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 20.1.8)
   set(HW_3_COMPILE_WARNING_FLAGS -Wc++20-compat-pedantic)
 endif()
 

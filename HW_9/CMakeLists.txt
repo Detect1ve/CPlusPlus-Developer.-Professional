@@ -42,7 +42,7 @@ target_include_directories(async PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(async PRIVATE custom_print)
 target_compile_options(async PRIVATE
   ${COMPILE_WARNING_FLAGS} ${HW_9_COMPILE_WARNING_FLAGS})
-if (MSVC)
+if (WIN32)
   set_target_properties(async PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 else()
   target_compile_options(async PRIVATE -Wno-effc++ -Wno-strict-overflow)

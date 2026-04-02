@@ -17,7 +17,7 @@ if (NOT MSVC)
   if (  (  CMAKE_CXX_COMPILER_ID STREQUAL "GNU"
        AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 14)
     OR  ( CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
-       AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19))
+       AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 20.1.8))
     set(COMPILE_WARNING_FLAGS ${COMPILE_WARNING_FLAGS}
       -Werror=nrvo)
   endif()
@@ -119,11 +119,15 @@ if (NOT MSVC)
     # -Rsearch-path-usage
     if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19)
       set(COMPILE_WARNING_FLAGS ${COMPILE_WARNING_FLAGS}
-        -Wdecls-in-multiple-modules -Wexperimental-lifetime-safety
-        -Wexperimental-lifetime-safety-suggestions -Wfunction-effect-redeclarations
-        -Wfunction-effects -Whlsl-implicit-binding -Wignored-base-class-qualifiers
-        -Wmodule-file-mapping-mismatch -Rmodule-map -Rmodule-validation
-        -Wms-bitfield-padding -Wnvcc-compat -Wshadow-header -Wshift-bool
+        -Wdecls-in-multiple-modules -Wfunction-effects -Wnvcc-compat)
+    endif()
+
+    if (CMAKE_CXX_COMPILER_VECSTION VERSION_GREATER 20.1.8)
+      set(COMPILE_WARNING_FLAGS ${COMPILE_WARNING_FLAGS}
+        -Wexperimental-lifetime-safety -Wexperimental-lifetime-safety-suggestions
+        -Wfunction-effect-redeclarations -Whlsl-implicit-binding
+        -Wignored-base-class-qualifiers -Wmodule-file-mapping-mismatch -Rmodule-map
+        -Rmodule-validation -Wms-bitfield-padding -Wshadow-header -Wshift-bool
         -Wthread-safety-pointer -Wunique-object-duplication)
     endif()
   endif()

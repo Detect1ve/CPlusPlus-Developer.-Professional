@@ -5,7 +5,7 @@
  || __GNUC__ < 14
 #include <cstdint>
 #endif
-#if __GNUC__ < 14
+#if defined(__GNUC__) && __GNUC__ < 14
 #include <array>
 #include <charconv>
 #include <format>

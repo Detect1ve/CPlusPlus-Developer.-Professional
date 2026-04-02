@@ -67,6 +67,7 @@ if (MSVC OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 
   set_smart_tidy(mapper
     EXCLUDE
+      "-bugprone-exception-escape"
       "-clang-diagnostic-unused-parameter"
       "-llvm-prefer-static-over-anonymous-namespace"
       "-misc-unused-parameters"
@@ -75,6 +76,7 @@ if (MSVC OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 
   set_smart_tidy(reducer
     EXCLUDE
+      "-bugprone-exception-escape"
       "-clang-diagnostic-unused-parameter"
       "-misc-unused-parameters"
       "-performance-avoid-endl"
@@ -83,11 +85,13 @@ if (MSVC OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set_smart_tidy(mapper_variance
     EXCLUDE
       "-llvm-prefer-static-over-anonymous-namespace"
-      "${CLANG_TIDY_HW_12_OPTS}")
+      "${CLANG_TIDY_HW_12_OPTS}"
+    HAS_EXCEPTIONS)
 
   set_smart_tidy(reducer_variance
     EXCLUDE
-      "${CLANG_TIDY_HW_12_OPTS}")
+      "${CLANG_TIDY_HW_12_OPTS}"
+    HAS_EXCEPTIONS)
 
   set_smart_cppcheck(mapper)
   set_smart_cppcheck(reducer)

@@ -2,7 +2,7 @@
 #define SOCKET_WRAPPER_HPP
 
 #ifdef _WIN32
-#include <ws2tcpip.h>
+#include <WS2tcpip.h>
 #else
 #include <netdb.h>
 #endif
