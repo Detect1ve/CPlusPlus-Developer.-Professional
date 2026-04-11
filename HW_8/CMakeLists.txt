@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25..4.2.3)
+cmake_minimum_required(VERSION 3.25..4.3.1)
 
 if (NOT DEFINED PATCH_VERSION)
   set(PATCH_VERSION
@@ -10,20 +10,12 @@ set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 project(bayan VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 if (PROJECT_IS_TOP_LEVEL)
-  if (NOT MSVC)
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-      add_compile_options(-fcolor-diagnostics)
-    else()
-      add_compile_options(-fdiagnostics-color=always)
-    endif()
-  endif()
+  set(CMAKE_COLOR_DIAGNOSTICS ON)
 
   set(MINIMUM_CXX_STANDARD 23)
   include(../cmake/cxx_standard.cmake)
   set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
-endif()
 
-if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
   include(../cmake/cppcheck.cmake)
   include(../cmake/fetch_boost.cmake)
@@ -35,41 +27,36 @@ if (PROJECT_IS_TOP_LEVEL)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  set(HW_8_COMPILE_WARNING_FLAGS -Wc++20-compat-pedantic)
-endif()
-
 add_library(bayan_lib STATIC lib/bayan.cpp)
 target_include_directories(bayan_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(bayan_lib PRIVATE
   attribute_wrapper Boost::algorithm Boost::crc Boost::filesystem Boost::program_options
   Boost::uuid custom_print)
-target_compile_options(bayan_lib PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_8_COMPILE_WARNING_FLAGS})
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  target_compile_options(bayan_lib PRIVATE
-    -Wno-alloc-zero -Wno-effc++ -Wno-null-dereference -Wno-strict-overflow)
-endif()
+set_warning_flags(bayan_lib
+  EXTRA_CLANG
+    -Wc++20-compat-pedantic
+  EXTRA_GCC
+    -Wno-alloc-zero
+    -Wno-effc++
+    -Wno-strict-overflow)
 
 add_executable(bayan src/main.cpp)
 target_link_libraries(bayan PRIVATE bayan_lib custom_print)
 if (NOT MSVC)
   target_link_libraries(bayan PRIVATE -static)
 endif()
-target_compile_options(bayan PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_8_COMPILE_WARNING_FLAGS})
-if (NOT MSVC)
-  target_compile_options(bayan PRIVATE -Wno-unsafe-buffer-usage-in-container)
-endif()
+set_warning_flags(bayan
+  EXTRA_CLANG
+    -Wc++20-compat-pedantic
+    -Wno-unsafe-buffer-usage-in-container)
 
 add_executable(bayan_test test/bayan_test.cpp)
 target_link_libraries(bayan_test PRIVATE
   bayan_lib Boost::filesystem capture GTest::gtest_main)
-target_compile_options(bayan_test PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_8_COMPILE_WARNING_FLAGS})
-if (NOT MSVC)
-  target_compile_options(bayan_test PRIVATE -Wno-global-constructors)
-endif()
+set_warning_flags(bayan_test
+  EXTRA_CLANG
+    -Wc++20-compat-pedantic
+    -Wno-global-constructors)
 
 set(CLANG_TIDY_HW_8_OPTS
     "-altera-struct-pack-align"

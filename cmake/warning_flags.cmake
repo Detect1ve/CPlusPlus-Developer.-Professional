@@ -1,37 +1,72 @@
+include(CheckCXXCompilerFlag)
+
+function(add_flag_if_supported FLAG_LIST_VAR FLAG)
+  string(REGEX REPLACE "[^a-zA-Z0-9]" "_" SAFE_FLAG "HAS_FLAG_${FLAG}")
+
+  check_cxx_compiler_flag("${FLAG}" ${SAFE_FLAG})
+
+  if (${SAFE_FLAG})
+    set(${FLAG_LIST_VAR} "${${FLAG_LIST_VAR}};${FLAG}" PARENT_SCOPE)
+  endif()
+endfunction()
+
+function(set_warning_flags TARGET_NAME)
+  cmake_parse_arguments(WARNING_FLAGS
+    "NO_BASE"
+    "SCOPE"
+    "EXTRA_CLANG;EXTRA_GCC;EXTRA_MSVC"
+    ${ARGN})
+
+  if (NOT WARNING_FLAGS_SCOPE)
+    set(WARNING_FLAGS_SCOPE PRIVATE)
+  endif()
+
+  if (NOT WARNING_FLAGS_NO_BASE)
+    target_compile_options(${TARGET_NAME} ${WARNING_FLAGS_SCOPE} ${COMPILE_WARNING_FLAGS})
+  endif()
+
+  set(SUPPORTED_EXTRA_FLAGS "")
+
+  if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    foreach(FLAG IN LISTS WARNING_FLAGS_EXTRA_CLANG)
+      add_flag_if_supported(SUPPORTED_EXTRA_FLAGS "${FLAG}")
+    endforeach()
+  elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    foreach(FLAG IN LISTS WARNING_FLAGS_EXTRA_GCC)
+      add_flag_if_supported(SUPPORTED_EXTRA_FLAGS "${FLAG}")
+    endforeach()
+  elseif (MSVC)
+    foreach(FLAG IN LISTS WARNING_FLAGS_EXTRA_MSVC)
+      add_flag_if_supported(SUPPORTED_EXTRA_FLAGS "${FLAG}")
+    endforeach()
+  endif()
+
+  if (SUPPORTED_EXTRA_FLAGS)
+    target_compile_options(${TARGET_NAME} ${WARNING_FLAGS_SCOPE} ${SUPPORTED_EXTRA_FLAGS})
+  endif()
+
+  if (NOT WARNING_FLAGS_NO_BASE)
+    set_target_properties(${TARGET_NAME} PROPERTIES COMPILE_WARNING_AS_ERROR ON)
+  endif()
+
+endfunction()
+
 if (NOT MSVC)
   # Common flags between GCC and Clang.
-  set(COMPILE_WARNING_FLAGS -Werror=alloca -Werror=cast-qual
-    -Werror=ctad-maybe-unsupported -Werror=date-time -Werror=double-promotion
-    -Werror=extra-semi -Werror=float-equal -Werror=format=2 -Werror=missing-include-dirs
-    -Werror=missing-noreturn -Werror=effc++ -Werror=old-style-cast -Werror=packed
-    -Werror=pedantic -Werror=suggest-override -Werror=switch-default -Werror=switch-enum
-    -Werror=undef -Werror=vla -Werror=zero-as-null-pointer-constant)
-
-  if (  CMAKE_CXX_COMPILER_ID STREQUAL "GNU"
-     OR (  CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
-        AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19))
-    set(COMPILE_WARNING_FLAGS ${COMPILE_WARNING_FLAGS}
-      -Werror=format-signedness)
-  endif()
-
-  if (  (  CMAKE_CXX_COMPILER_ID STREQUAL "GNU"
-       AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 14)
-    OR  ( CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
-       AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 20.1.8))
-    set(COMPILE_WARNING_FLAGS ${COMPILE_WARNING_FLAGS}
-      -Werror=nrvo)
-  endif()
+  set(POTENTIAL_FLAGS -Walloca -Wcast-qual -Wctad-maybe-unsupported -Wdate-time
+    -Wdouble-promotion -Wextra-semi -Wfloat-equal -Wformat=2 -Wmissing-include-dirs
+    -Wmissing-noreturn -Weffc++ -Wold-style-cast -Wpacked -Wpedantic -Wsuggest-override
+    -Wswitch-default -Wswitch-enum -Wundef -Wvla -Wzero-as-null-pointer-constant
+    -Wformat-signedness -Wnrvo)
 
   if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     # https://gcc.gnu.org/onlinedocs/gcc-15.2.0/gcc/C_002b_002b-Dialect-Options.html
-    set(COMPILE_WARNING_FLAGS ${COMPILE_WARNING_FLAGS}
-      -fstrict-enums -fvisibility-inlines-hidden -Werror=ctor-dtor-privacy
-      -Werror=invalid-constexpr -Werror=invalid-imported-macros -Werror=noexcept
-      -Werror=redundant-tags -Werror=strict-null-sentinel -Werror=overloaded-virtual
-      -Werror=sign-promo -Werror=mismatched-tags -Werror=multiple-inheritance
-      -Werror=virtual-inheritance -Werror=placement-new=2 -Werror=catch-value=3
-      -Werror=conditionally-supported -Werror=suggest-final-types
-      -Werror=suggest-final-methods -Werror=unused-macros)
+    list(APPEND POTENTIAL_FLAGS
+      -fstrict-enums -fvisibility-inlines-hidden -Wctor-dtor-privacy -Winvalid-constexpr
+      -Winvalid-imported-macros -Wnoexcept -Wredundant-tags -Wstrict-null-sentinel
+      -Woverloaded-virtual -Wsign-promo -Wmismatched-tags -Wmultiple-inheritance
+      -Wvirtual-inheritance -Wplacement-new=2 -Wcatch-value=3 -Wconditionally-supported
+      -Wsuggest-final-types -Wsuggest-final-methods -Wunused-macros)
 
     # clang-tidy cannot use it:
     # 1. -fimplicit-constexpr
@@ -41,37 +76,23 @@ if (NOT MSVC)
     # 1. -fvisibility-ms-compat
 
     # https://gcc.gnu.org/onlinedocs/gcc-15.2.0/gcc/Warning-Options.html
-    set(COMPILE_WARNING_FLAGS ${COMPILE_WARNING_FLAGS}
-      -Werror=all -Werror=extra -Werror=format-overflow=2 -Werror=format-truncation=2
-      -Werror=null-dereference -Werror=shift-negative-value -Werror=shift-overflow=2
-      -Werror=sync-nand -Werror=trivial-auto-var-init -Werror=unused-const-variable=2
-      -Werror=use-after-free=3 -Werror=useless-cast -Werror=strict-overflow=5
-      -Werror=stringop-overflow=4 -Werror=suggest-attribute=pure
-      -Werror=suggest-attribute=const -Werror=suggest-attribute=noreturn
-      -Werror=suggest-attribute=malloc -Werror=suggest-attribute=format
-      -Werror=missing-format-attribute -Werror=suggest-attribute=cold -Werror=alloc-zero
-      -Werror=arith-conversion -Werror=array-bounds=2 -Werror=attribute-alias=2
-      -Werror=bidi-chars=any -Werror=duplicated-branches -Werror=duplicated-cond
-      -Werror=trampolines -Werror=shadow -Werror=unsafe-loop-optimizations
-      -Werror=cast-align=strict -Werror=conversion -Werror=enum-conversion
-      -Werror=sign-conversion -Werror=logical-op -Werror=missing-declarations
-      -Werror=redundant-decls -Werror=interference-size -Werror=invalid-pch
-      -Werror=invalid-utf8 -Werror=vector-operation-performance
-      -Werror=disabled-optimization -Werror=stack-protector
-      )
-
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 14)
-      set(COMPILE_WARNING_FLAGS ${COMPILE_WARNING_FLAGS}
-        -Werror=flex-array-member-not-at-end)
-    endif()
-
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 15)
-      set(COMPILE_WARNING_FLAGS ${COMPILE_WARNING_FLAGS}
-        -Werror=trailing-whitespace=any -Werror=leading-whitespace=spaces)
-    endif()
+    list(APPEND POTENTIAL_FLAGS
+      -Wall -Wextra -Wformat-overflow=2 -Wformat-truncation=2 -Wnull-dereference
+      -Wshift-negative-value -Wshift-overflow=2 -Wsync-nand -Wtrivial-auto-var-init
+      -Wunused-const-variable=2 -Wuse-after-free=3 -Wuseless-cast -Wstrict-overflow=5
+      -Wstringop-overflow=4 -Wsuggest-attribute=pure -Wsuggest-attribute=const
+      -Wsuggest-attribute=noreturn -Wsuggest-attribute=malloc -Wsuggest-attribute=format
+      -Wmissing-format-attribute -Wsuggest-attribute=cold -Walloc-zero -Warith-conversion
+      -Warray-bounds=2 -Wattribute-alias=2 -Wbidi-chars=any -Wduplicated-branches
+      -Wduplicated-cond -Wtrampolines -Wshadow -Wunsafe-loop-optimizations
+      -Wcast-align=strict -Wconversion -Wenum-conversion -Wsign-conversion -Wlogical-op
+      -Wmissing-declarations -Wredundant-decls -Winterference-size -Winvalid-pch
+      -Winvalid-utf8 -Wvector-operation-performance -Wdisabled-optimization
+      -Wstack-protector -Wflex-array-member-not-at-end -Wtrailing-whitespace=any
+      -Wleading-whitespace=spaces)
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  # https://releases.llvm.org/21.1.0/tools/clang/docs/DiagnosticsReference.html
-    set(COMPILE_WARNING_FLAGS ${COMPILE_WARNING_FLAGS}
+    # https://releases.llvm.org/22.1.0/tools/clang/docs/DiagnosticsReference.html
+    list(APPEND POTENTIAL_FLAGS
       -fsafe-buffer-usage-suggestions -Werror -WCL4 -Wabstract-vbase-init
       -Wanon-enum-enum-conversion -Warc-repeated-use-of-weak
       -Warray-bounds-pointer-arithmetic -Wassign-enum -Watomic-implicit-seq-cst
@@ -112,27 +133,20 @@ if (NOT MSVC)
       -Wunreachable-code-aggressive -Wunsafe-buffer-usage
       -Wunsupported-dll-base-class-template -Wunused-exception-parameter
       -Wunused-member-function -Wunused-template -Wused-but-marked-unused
-      -Wvariadic-macros -Wvector-conversion -Wweak-template-vtables -Wweak-vtables)
+      -Wvariadic-macros -Wvector-conversion -Wweak-template-vtables -Wweak-vtables
+      -Wdecls-in-multiple-modules -Wfunction-effects -Wnvcc-compat
+      -Wexperimental-lifetime-safety -Wexperimental-lifetime-safety-suggestions
+      -Wfunction-effect-redeclarations -Whlsl-implicit-binding
+      -Wignored-base-class-qualifiers -Wmodule-file-mapping-mismatch -Rmodule-map
+      -Rmodule-validation -Wms-bitfield-padding -Wshadow-header -Wshift-bool
+      -Wthread-safety-pointer -Wunique-object-duplication)
     # -Rpass
     # -Rpass-analysis
     # -Rpass-missed
     # -Rsearch-path-usage
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19)
-      set(COMPILE_WARNING_FLAGS ${COMPILE_WARNING_FLAGS}
-        -Wdecls-in-multiple-modules -Wfunction-effects -Wnvcc-compat)
-    endif()
-
-    if (CMAKE_CXX_COMPILER_VECSTION VERSION_GREATER 20.1.8)
-      set(COMPILE_WARNING_FLAGS ${COMPILE_WARNING_FLAGS}
-        -Wexperimental-lifetime-safety -Wexperimental-lifetime-safety-suggestions
-        -Wfunction-effect-redeclarations -Whlsl-implicit-binding
-        -Wignored-base-class-qualifiers -Wmodule-file-mapping-mismatch -Rmodule-map
-        -Rmodule-validation -Wms-bitfield-padding -Wshadow-header -Wshift-bool
-        -Wthread-safety-pointer -Wunique-object-duplication)
-    endif()
   endif()
 else()
-  set(COMPILE_WARNING_FLAGS
+  set(POTENTIAL_FLAGS
     # https://learn.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-by-category?view=msvc-170#language
     /Zc:__cplusplus /Zc:inline /Zc:preprocessor /Zc:templateScope /Zc:throwingNew
     # https://learn.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-by-category?view=msvc-170#diagnostics
@@ -142,3 +156,7 @@ else()
     /Wall /wd4365 /wd4514 /wd4668 /wd4710 /wd4711 /wd4820 /wd4865 /wd5039 /wd5045
     /WX)
 endif()
+
+foreach(FLAG IN LISTS POTENTIAL_FLAGS)
+  add_flag_if_supported(COMPILE_WARNING_FLAGS "${FLAG}")
+endforeach()

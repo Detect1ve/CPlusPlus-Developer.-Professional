@@ -93,6 +93,8 @@ function(set_smart_tidy TARGET_NAME)
     list(APPEND TIDY_COMMAND "--extra-arg=-Qunused-arguments")
   endif()
 
+  list(APPEND TIDY_COMMAND "--extra-arg=-Wno-unknown-warning-option")
+
   if (NOT TIDY_MAIN_INCLUDE_DIR)
     if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/include")
       set(BASE_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")

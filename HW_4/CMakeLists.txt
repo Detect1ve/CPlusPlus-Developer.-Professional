@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25..4.2.3)
+cmake_minimum_required(VERSION 3.25..4.3.1)
 
 if (NOT DEFINED PATCH_VERSION)
   set(PATCH_VERSION
@@ -13,20 +13,12 @@ set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 project(print_ip VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 if (PROJECT_IS_TOP_LEVEL)
-  if (NOT MSVC)
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-      add_compile_options(-fcolor-diagnostics)
-    else()
-      add_compile_options(-fdiagnostics-color=always)
-    endif()
-  endif()
+  set(CMAKE_COLOR_DIAGNOSTICS ON)
 
   set(MINIMUM_CXX_STANDARD 20)
   include(../cmake/cxx_standard.cmake)
   set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
-endif()
 
-if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
   include(../cmake/cppcheck.cmake)
   include(../cmake/fetch_googletest.cmake)
@@ -34,10 +26,6 @@ if (PROJECT_IS_TOP_LEVEL)
   include(../common/capture.cmake)
   include(../common/custom_print.cmake)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  set(HW_4_COMPILE_WARNING_FLAGS -Wc++20-compat-pedantic)
 endif()
 
 add_library(ip_address INTERFACE)
@@ -55,23 +43,23 @@ target_link_libraries(print_ip PRIVATE ip_address)
 if (NOT MSVC)
   target_link_libraries(print_ip PRIVATE -static)
 endif()
-target_compile_options(print_ip PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_4_COMPILE_WARNING_FLAGS})
+set_warning_flags(print_ip
+  EXTRA_CLANG
+    -Wc++20-compat-pedantic)
 
 add_executable(print_ip_test test/sfinae_ip_address_test.cpp)
 target_link_libraries(print_ip_test PRIVATE capture GTest::gtest_main ip_address)
-target_compile_options(print_ip_test PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_4_COMPILE_WARNING_FLAGS})
-if (NOT MSVC)
-  target_compile_options(print_ip_test PRIVATE -Wno-global-constructors)
-endif()
+set_warning_flags(print_ip_test
+  EXTRA_CLANG
+    -Wc++20-compat-pedantic
+    -Wno-global-constructors)
 
 set(CLANG_TIDY_HW_4_OPTS
-    "-cppcoreguidelines-avoid-magic-numbers"
-    "-fuchsia-default-arguments-calls"
-    "-google-runtime-int"
-    "-modernize-use-trailing-return-type"
-    "-readability-magic-numbers")
+  "-cppcoreguidelines-avoid-magic-numbers"
+  "-fuchsia-default-arguments-calls"
+  "-google-runtime-int"
+  "-modernize-use-trailing-return-type"
+  "-readability-magic-numbers")
 
 set_smart_tidy(print_ip
   BUILD_PATH "${CMAKE_BINARY_DIR}"

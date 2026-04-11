@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25..4.2.3)
+cmake_minimum_required(VERSION 3.25..4.3.1)
 
 if (NOT DEFINED PATCH_VERSION)
   set(PATCH_VERSION
@@ -10,20 +10,12 @@ set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 project(async VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 if (PROJECT_IS_TOP_LEVEL)
-  if (NOT MSVC)
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-      add_compile_options(-fcolor-diagnostics)
-    else()
-      add_compile_options(-fdiagnostics-color=always)
-    endif()
-  endif()
+  set(CMAKE_COLOR_DIAGNOSTICS ON)
 
   set(MINIMUM_CXX_STANDARD 20)
   include(../cmake/cxx_standard.cmake)
   set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
-endif()
 
-if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
   include(../cmake/cppcheck.cmake)
   include(../cmake/fetch_googletest.cmake)
@@ -33,46 +25,45 @@ if (PROJECT_IS_TOP_LEVEL)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  set(HW_9_COMPILE_WARNING_FLAGS -Wc++20-compat-pedantic)
-endif()
-
 add_library(async SHARED lib/async.cpp include/async.h)
 target_include_directories(async PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(async PRIVATE custom_print)
-target_compile_options(async PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_9_COMPILE_WARNING_FLAGS})
+set_warning_flags(async
+  EXTRA_CLANG
+    -Wc++20-compat-pedantic
+  EXTRA_GCC
+    -Wno-effc++
+    -Wno-strict-overflow)
 if (WIN32)
   set_target_properties(async PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
-else()
-  target_compile_options(async PRIVATE -Wno-effc++ -Wno-strict-overflow)
 endif()
 
 add_library(async_static STATIC lib/async.cpp)
 target_include_directories(async_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(async_static PRIVATE custom_print)
-target_compile_options(async_static PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_9_COMPILE_WARNING_FLAGS})
-if (NOT MSVC)
-  target_compile_options(async_static PRIVATE -Wno-effc++ -Wno-strict-overflow)
-endif()
+set_warning_flags(async_static
+  EXTRA_CLANG
+    -Wc++20-compat-pedantic
+  EXTRA_GCC
+    -Wno-effc++
+    -Wno-strict-overflow)
 
 add_executable(async_cli src/main.cpp)
 target_link_libraries(async_cli PRIVATE async_static)
 if (NOT MSVC)
   target_link_libraries(async_cli PRIVATE -static)
 endif()
-target_compile_options(async_cli PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_9_COMPILE_WARNING_FLAGS})
+set_warning_flags(async_cli
+  EXTRA_CLANG
+    -Wc++20-compat-pedantic)
 
 add_executable(async_test test/async_test.cpp)
 target_link_libraries(async_test PRIVATE async capture GTest::gmock GTest::gtest_main)
-target_compile_options(async_test PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_9_COMPILE_WARNING_FLAGS})
-if (NOT MSVC)
-  target_compile_options(async_test PRIVATE
-    -Wno-unsafe-buffer-usage -Wno-global-constructors)
-endif()
+set_warning_flags(async_test
+  EXTRA_CLANG
+    -Wc++20-compat-pedantic
+    -Wno-global-constructors
+    -Wno-unsafe-buffer-usage)
 
 set(CLANG_TIDY_HW_9_OPTS
   "-llvm-header-guard"

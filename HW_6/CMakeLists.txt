@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25..4.2.3)
+cmake_minimum_required(VERSION 3.25..4.3.1)
 
 if (NOT DEFINED PATCH_VERSION)
   set(PATCH_VERSION
@@ -10,20 +10,12 @@ set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 project(matrix VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 if (PROJECT_IS_TOP_LEVEL)
-  if (NOT MSVC)
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-      add_compile_options(-fcolor-diagnostics)
-    else()
-      add_compile_options(-fdiagnostics-color=always)
-    endif()
-  endif()
+  set(CMAKE_COLOR_DIAGNOSTICS ON)
 
   set(MINIMUM_CXX_STANDARD 20)
   include(../cmake/cxx_standard.cmake)
   set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
-endif()
 
-if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
   include(../cmake/cppcheck.cmake)
   include(../cmake/fetch_googletest.cmake)
@@ -37,7 +29,7 @@ if (   CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
    # Some versions of clang suffer from the following problem:
    # https://github.com/llvm/llvm-project/issues/138775
    AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 20.1.8)
-  set(HW_6_COMPILE_WARNING_FLAGS -Wc++20-compat-pedantic)
+  set(HW_6_EXTRA_CLANG -Wc++20-compat-pedantic)
 endif()
 
 add_executable(matrix src/main.cpp)
@@ -46,17 +38,17 @@ target_link_libraries(matrix PRIVATE custom_print)
 if (NOT MSVC)
   target_link_libraries(matrix PRIVATE -static)
 endif()
-target_compile_options(matrix PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_6_COMPILE_WARNING_FLAGS})
+set_warning_flags(matrix
+  EXTRA_CLANG
+    ${HW_6_EXTRA_CLANG})
 
 add_executable(matrix_test test/matrix_test.cpp)
 target_include_directories(matrix_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(matrix_test PRIVATE capture GTest::gtest_main)
-target_compile_options(matrix_test PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_6_COMPILE_WARNING_FLAGS})
-if (NOT MSVC)
-  target_compile_options(matrix_test PRIVATE -Wno-global-constructors)
-endif()
+set_warning_flags(matrix_test
+  EXTRA_CLANG
+    ${HW_6_EXTRA_CLANG}
+    -Wno-global-constructors)
 
 set(CLANG_TIDY_HW_6_OPTS
   "-altera-struct-pack-align"

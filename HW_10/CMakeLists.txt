@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25..4.2.3)
+cmake_minimum_required(VERSION 3.25..4.3.1)
 
 if (NOT DEFINED PATCH_VERSION)
   set(PATCH_VERSION
@@ -10,20 +10,12 @@ set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 project(bulk_server VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 if (PROJECT_IS_TOP_LEVEL)
-  if (NOT MSVC)
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-      add_compile_options(-fcolor-diagnostics)
-    else()
-      add_compile_options(-fdiagnostics-color=always)
-    endif()
-  endif()
+  set(CMAKE_COLOR_DIAGNOSTICS ON)
 
   set(MINIMUM_CXX_STANDARD 20)
   include(../cmake/cxx_standard.cmake)
   set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
-endif()
 
-if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
   include(../cmake/cppcheck.cmake)
   include(../cmake/fetch_boost.cmake)
@@ -35,54 +27,49 @@ if (PROJECT_IS_TOP_LEVEL)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  set(HW_10_COMPILE_WARNING_FLAGS -Wc++20-compat-pedantic)
-endif()
-
 add_library(server_async STATIC lib/async.cpp)
 target_include_directories(server_async PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(server_async PRIVATE custom_print)
-target_compile_options(server_async PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_10_COMPILE_WARNING_FLAGS})
-if (NOT MSVC)
-  target_compile_options(server_async PRIVATE -Wno-effc++)
-endif()
+set_warning_flags(server_async
+  EXTRA_CLANG
+    -Wc++20-compat-pedantic
+  EXTRA_GCC
+    -Wno-effc++)
 
 add_library(server STATIC lib/server.cpp)
 target_include_directories(server PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(server PRIVATE Boost::asio custom_print server_async)
-target_compile_options(server PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_10_COMPILE_WARNING_FLAGS})
-if (NOT MSVC)
-  target_compile_options(server PRIVATE -Wno-effc++ -Wno-null-dereference)
-endif()
+set_warning_flags(server
+  EXTRA_CLANG
+    -Wc++20-compat-pedantic
+  EXTRA_GCC
+    -Wno-effc++
+    -Wno-null-dereference)
 
 add_executable(bulk_server src/main.cpp)
 target_link_libraries(bulk_server PRIVATE custom_print Microsoft.GSL::GSL server)
-target_compile_options(bulk_server PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_10_COMPILE_WARNING_FLAGS})
+set_warning_flags(bulk_server
+  EXTRA_CLANG
+    -Wc++20-compat-pedantic
+    -Wno-unsafe-buffer-usage)
 if (MSVC)
   target_compile_definitions(server PRIVATE _WIN32_WINNT=0x0A00)
   target_compile_definitions(bulk_server PRIVATE _WIN32_WINNT=0x0A00)
 else()
-  target_compile_options(bulk_server PRIVATE
-    -Wno-unsafe-buffer-usage-in-container -Wno-unsafe-buffer-usage)
   target_link_libraries(bulk_server PRIVATE -static)
 endif()
 
 add_executable(bulk_server_test test/bulk_server_test.cpp)
 target_link_libraries(bulk_server_test PRIVATE
   capture GTest::gmock GTest::gtest_main server socket_wrapper)
-target_compile_options(bulk_server_test PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_10_COMPILE_WARNING_FLAGS})
-if (NOT MSVC)
-  if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(bulk_server_test PRIVATE -Wno-alloc-zero -Wno-strict-overflow)
-  else()
-    target_compile_options(bulk_server_test PRIVATE
-      -Wno-unsafe-buffer-usage -Wno-global-constructors)
-  endif()
-endif()
+set_warning_flags(bulk_server_test
+  EXTRA_CLANG
+    -Wc++20-compat-pedantic
+    -Wno-global-constructors
+    -Wno-unsafe-buffer-usage
+  EXTRA_GCC
+    -Wno-alloc-zero
+    -Wno-strict-overflow)
 
 set(CLANG_TIDY_HW_10_OPTS
     "-llvm-header-guard"
