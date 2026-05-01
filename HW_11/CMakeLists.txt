@@ -63,32 +63,25 @@ set_warning_flags(join_server_test
   EXTRA_GCC
     -Wno-effc++)
 
-set(CLANG_TIDY_HW_11_OPTS
-  "-modernize-use-trailing-return-type")
-
 set_smart_tidy(server_and_database
   EXCLUDE
     "-altera-struct-pack-align"
     "-fuchsia-default-arguments-calls"
     "-llvm-prefer-static-over-anonymous-namespace"
     "-misc-no-recursion"
-    "${CLANG_TIDY_HW_11_OPTS}"
-  EXTRA_INCLUDES
-    "${CUSTOM_PRINT_INCLUDE_DIR}")
+  EXTRA_TARGETS
+    custom_print)
 
 set_smart_tidy(join_server
-  EXCLUDE
-    "${CLANG_TIDY_HW_11_OPTS}"
-  EXTRA_INCLUDES
-    "${CUSTOM_PRINT_INCLUDE_DIR}"
+  EXTRA_TARGETS
+    custom_print
   HAS_EXCEPTIONS)
 
 set_smart_tidy(join_server_test
   EXCLUDE
     "-fuchsia-default-arguments-calls"
-    "${CLANG_TIDY_HW_11_OPTS}"
-  EXTRA_INCLUDES
-    "${SOCKET_WRAPPER_INCLUDE_DIR}"
+  EXTRA_TARGETS
+    socket_wrapper
   HAS_EXCEPTIONS)
 
 set_smart_cppcheck(server_and_database

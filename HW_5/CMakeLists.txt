@@ -40,10 +40,9 @@ set_smart_tidy(editor
   EXCLUDE
     "-altera-struct-pack-align"
     "-fuchsia-default-arguments-calls"
-    "-modernize-use-trailing-return-type"
-  EXTRA_INCLUDES
-    "${ATTRIBUTE_WRAPPER_INCLUDE_DIR}"
-    "${CUSTOM_PRINT_INCLUDE_DIR}"
+  EXTRA_TARGETS
+    attribute_wrapper
+    custom_print
   HAS_EXCEPTIONS)
 
 set_smart_cppcheck(editor

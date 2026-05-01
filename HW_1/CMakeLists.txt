@@ -90,7 +90,6 @@ set_warning_flags(g_test_version
 
 set(CLANG_TIDY_HW_1_OPTS
     "-llvm-header-guard"
-    "-modernize-use-trailing-return-type"
     "-portability-avoid-pragma-once"
 )
 

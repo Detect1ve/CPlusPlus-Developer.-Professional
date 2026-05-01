@@ -63,12 +63,13 @@ set_warning_flags(async_test
   EXTRA_CLANG
     -Wc++20-compat-pedantic
     -Wno-global-constructors
-    -Wno-unsafe-buffer-usage)
+    -Wno-unsafe-buffer-usage
+  EXTRA_GCC
+    -Wno-strict-overflow)
 
 set(CLANG_TIDY_HW_9_OPTS
   "-llvm-header-guard"
   "-llvm-namespace-comment"
-  "-modernize-use-trailing-return-type"
   "-portability-avoid-pragma-once")
 
 set_smart_tidy(async
@@ -77,8 +78,8 @@ set_smart_tidy(async
     "-fuchsia-default-arguments-calls"
     "-llvm-prefer-static-over-anonymous-namespace"
     "${CLANG_TIDY_HW_9_OPTS}"
-  EXTRA_INCLUDES
-    "${CUSTOM_PRINT_INCLUDE_DIR}")
+  EXTRA_TARGETS
+    custom_print)
 
 set_smart_tidy(async_static
   EXCLUDE
@@ -86,8 +87,8 @@ set_smart_tidy(async_static
     "-fuchsia-default-arguments-calls"
     "-llvm-prefer-static-over-anonymous-namespace"
     "${CLANG_TIDY_HW_9_OPTS}"
-  EXTRA_INCLUDES
-    "${CUSTOM_PRINT_INCLUDE_DIR}")
+  EXTRA_TARGETS
+    custom_print)
 
 set_smart_tidy(async_cli
   EXCLUDE
@@ -108,8 +109,8 @@ set_smart_tidy(async_test
     "-fuchsia-default-arguments-calls"
     "-llvm-prefer-static-over-anonymous-namespace"
     "${CLANG_TIDY_HW_9_OPTS}"
-  EXTRA_INCLUDES
-    "${CAPTURE_INCLUDE_DIR}"
+  EXTRA_TARGETS
+    capture
   HAS_EXCEPTIONS)
 
 set_smart_cppcheck(async

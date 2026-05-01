@@ -633,16 +633,9 @@ std::pair<ProcessStatus, Options> option_process(std::span<const char *const> ar
                 "masks of file names allowed for comparison (case-insensitive)")
             ("hash_algorithm", boost::program_options::value<std::string>()
                 ->default_value("crc32")->notifier(
-                    [&options](const std::string_view value)
+                    [&options](const std::string& value)
                 {
-                    try
-                    {
-                        options.hash_algorithm = HashAlgorithm(value);
-                    }
-                    catch (const boost::program_options::validation_error&)
-                    {
-                        throw;
-                    }
+                    options.hash_algorithm = HashAlgorithm(value);
                 }),
                 "hashing algorithm to use (allowed values: crc32, md5)");
 

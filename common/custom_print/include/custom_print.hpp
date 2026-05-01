@@ -84,7 +84,7 @@ namespace cp
 
     inline void safe_error(const char *const message) noexcept
     {
-        auto write_out = [](const std::string_view msg) noexcept -> bool
+        auto write_out = [](const std::string_view msg) noexcept
         {
             if (msg.empty())
             {

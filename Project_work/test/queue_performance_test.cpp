@@ -7,7 +7,6 @@
 #include <cstdlib> // EXIT_FAILURE
 #include <exception> // std::exception
 #include <format> // std::format
-#include <limits> // std::numeric_limits
 #include <ratio> // std::milli
 #include <thread> // std::thread
 #include <utility>

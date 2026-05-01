@@ -55,7 +55,8 @@ if (ENABLE_CLANG_TIDY)
       "-altera-id-dependent-backward-branch"
       "-altera-unroll-loops"
       "-clang-diagnostic-c++98-compat*"
-      "-llvmlibc-*")
+      "-llvmlibc-*"
+      "-modernize-use-trailing-return-type")
   else()
     message(STATUS "clang-tidy not found, static analysis will be skipped.")
   endif()
@@ -71,7 +72,7 @@ function(set_smart_tidy TARGET_NAME)
   cmake_parse_arguments(TIDY
     "COGNITIVE_IGNORE_MACROS;HAS_EXCEPTIONS"
     "BUILD_PATH;MAIN_INCLUDE_DIR"
-    "EXCLUDE;EXTRA_INCLUDES"
+    "EXCLUDE;EXTRA_TARGETS"
     ${ARGN})
 
   set(TIDY_COMMAND "${CLANG_TIDY_BIN}")
@@ -104,14 +105,25 @@ function(set_smart_tidy TARGET_NAME)
   endif()
 
   set(FILTER_REGEX "")
-  if (BASE_INCLUDE_DIR OR TIDY_EXTRA_INCLUDES)
+  if (BASE_INCLUDE_DIR OR TIDY_EXTRA_TARGETS)
     set(FILTER_REGEX "(")
 
     if (BASE_INCLUDE_DIR)
       string(APPEND FILTER_REGEX "${BASE_INCLUDE_DIR}/.*")
     endif()
 
-    foreach(DIR IN LISTS TIDY_EXTRA_INCLUDES)
+    set(ALL_EXTRA_INCLUDES "")
+
+    foreach(TG IN LISTS TIDY_EXTRA_TARGETS)
+      if (TARGET ${TG})
+        get_target_property(TG_INCLUDES ${TG} INTERFACE_INCLUDE_DIRECTORIES)
+        if (TG_INCLUDES AND NOT TG_INCLUDES MATCHES "-NOTFOUND$")
+          list(APPEND ALL_EXTRA_INCLUDES ${TG_INCLUDES})
+        endif()
+      endif()
+    endforeach()
+
+    foreach(DIR IN LISTS ALL_EXTRA_INCLUDES)
       if (NOT FILTER_REGEX STREQUAL "(" AND NOT FILTER_REGEX MATCHES "\\|$")
         string(APPEND FILTER_REGEX "|")
       endif()

@@ -256,10 +256,10 @@ TEST_F(HW10, CombinedConnectionTest)
 
         ASSERT_EQ(file_contents.size(), 4);
         ASSERT_THAT(file_contents, testing::UnorderedElementsAre(
-            "bulk: 9\n",
             "bulk: 0, 1, 2\n",
+            "bulk: 3, 4, 5\n",
             "bulk: 6, 7, 8\n",
-            "bulk: 3, 4, 5\n"));
+            "bulk: 9\n"));
 
         std::this_thread::sleep_for(1s); // NOLINT(misc-include-cleaner)
 
@@ -309,8 +309,8 @@ TEST_F(HW10, CombinedConnectionTest)
         for (std::sregex_iterator i = words_begin; i != words_end; i++)
         {
             const std::smatch& match = *i;
-            const char *const first = &(*match[0].first);
-            const char *const last  = &(*match[0].second);
+            const char *const first = std::to_address(match.begin()->first);
+            const char *const last  = std::to_address(match.begin()->second);
             int value{};
 
             if (std::from_chars(first, last, value).ec == std::errc{})
@@ -328,8 +328,8 @@ TEST_F(HW10, CombinedConnectionTest)
         for (std::sregex_iterator i = words_begin_stdout; i != words_end_stdout; i++)
         {
             const std::smatch& match = *i;
-            const char *const first = &(*match[0].first);
-            const char *const last  = &(*match[0].second);
+            const char *const first = std::to_address(match.begin()->first);
+            const char *const last  = std::to_address(match.begin()->second);
             int value{};
 
             if (std::from_chars(first, last, value).ec == std::errc{})

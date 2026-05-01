@@ -13,6 +13,13 @@
 #include <string_view> // std::string_view
 #include <system_error> // std::errc
 #include <vector> // std::vector
+#include <version> // IWYU pragma: keep
+
+#ifdef __cpp_lib_ranges_to_container
+#include <ranges>
+#else
+#include <iterator> // std::back_inserter
+#endif
 
 #include <database.hpp>
 
@@ -70,7 +77,6 @@ void Database::truncate(const std::string_view table)
 std::vector<std::string> Database::intersection()
 {
     std::set<int> common_ids;
-    std::vector<std::string> result;
 
     const std::scoped_lock<std::mutex, std::mutex> lock(table_a_mutex_, table_b_mutex_);
 
@@ -81,16 +87,24 @@ std::vector<std::string> Database::intersection()
             common_ids.insert(record_id);
         }
     }
-
+#ifdef __cpp_lib_ranges_to_container
+    return common_ids | std::views::transform([&](const int record_id)
+    {
+        return std::format("{},{},{}", record_id, table_a_[record_id],
+            table_b_[record_id]);
+    }) | std::ranges::to<std::vector<std::string>>();
+#else
+    std::vector<std::string> result;
     result.reserve(common_ids.size());
 
-    for (const int record_id : common_ids)
-    {
-        result.emplace_back(std::format("{},{},{}", record_id, table_a_[record_id],
-            table_b_[record_id]));
-    }
+    std::ranges::transform(common_ids, std::back_inserter(result),[&](int record_id)
+        {
+            return std::format("{},{},{}", record_id, table_a_[record_id],
+                table_b_[record_id]);
+        });
 
     return result;
+#endif
 }
 
 std::vector<std::string> Database::symmetric_difference()

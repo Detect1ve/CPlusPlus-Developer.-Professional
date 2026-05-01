@@ -81,8 +81,7 @@ public:
     {
     public:
         explicit iterator(
-            typename std::unordered_map<std::pair<int, int>, T, PairHash>::const_iterator
-                iter)
+            std::unordered_map<std::pair<int, int>, T, PairHash>::const_iterator iter)
             : it_(iter) {}
 
         [[nodiscard]] bool operator!=(const iterator& other) const
@@ -103,7 +102,7 @@ public:
         }
 
     private:
-        typename std::unordered_map<std::pair<int, int>, T, PairHash>::const_iterator it_;
+        std::unordered_map<std::pair<int, int>, T, PairHash>::const_iterator it_;
     };
 
     [[nodiscard]] iterator begin() const noexcept

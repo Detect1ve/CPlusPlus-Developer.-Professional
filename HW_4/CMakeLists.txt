@@ -31,11 +31,14 @@ endif()
 add_library(ip_address INTERFACE)
 target_include_directories(ip_address INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(ip_address INTERFACE custom_print)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS_EQUAL 9.4)
-    target_compile_options(ip_address INTERFACE -fconcepts)
-    set(PATCH_COMPILE_COMMANDS TRUE)
-  endif()
+if (   CMAKE_CXX_COMPILER_ID STREQUAL "GNU"
+   AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS_EQUAL 9.4)
+  set_warning_flags(ip_address
+    EXTRA_GCC
+      -fconcepts
+    NO_BASE
+    SCOPE "INTERFACE")
+  set(PATCH_COMPILE_COMMANDS TRUE)
 endif()
 
 add_executable(print_ip src/main.cpp)
@@ -58,23 +61,22 @@ set(CLANG_TIDY_HW_4_OPTS
   "-cppcoreguidelines-avoid-magic-numbers"
   "-fuchsia-default-arguments-calls"
   "-google-runtime-int"
-  "-modernize-use-trailing-return-type"
   "-readability-magic-numbers")
 
 set_smart_tidy(print_ip
   BUILD_PATH "${CMAKE_BINARY_DIR}"
   EXCLUDE
     "${CLANG_TIDY_HW_4_OPTS}"
-  EXTRA_INCLUDES
-    "${CUSTOM_PRINT_INCLUDE_DIR}")
+  EXTRA_TARGETS
+    custom_print)
 
 set_smart_tidy(print_ip_test
   BUILD_PATH "${CMAKE_BINARY_DIR}"
   EXCLUDE
     "${CLANG_TIDY_HW_4_OPTS}"
-  EXTRA_INCLUDES
-    "${CAPTURE_INCLUDE_DIR}"
-    "${CUSTOM_PRINT_INCLUDE_DIR}")
+  EXTRA_TARGETS
+    capture
+    custom_print)
 
 set_smart_cppcheck(print_ip)
 set_smart_cppcheck(print_ip_test

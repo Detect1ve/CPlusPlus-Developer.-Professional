@@ -55,15 +55,14 @@ set_warning_flags(my_list_test
 
 set(CLANG_TIDY_HW_3_OPTS
     "-altera-struct-pack-align"
-    "-fuchsia-overloaded-operator"
-    "-modernize-use-trailing-return-type")
+    "-fuchsia-overloaded-operator")
 
 set_smart_tidy(main
   EXCLUDE
     "-llvm-prefer-static-over-anonymous-namespace"
     "${CLANG_TIDY_HW_3_OPTS}"
-  EXTRA_INCLUDES
-    "${CUSTOM_PRINT_INCLUDE_DIR}"
+  EXTRA_TARGETS
+    custom_print
   HAS_EXCEPTIONS)
 
 set_smart_tidy(my_allocator_test

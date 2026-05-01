@@ -58,29 +58,26 @@ set_smart_tidy(ip_filter_lib
   EXCLUDE
     "-fuchsia-default-arguments-calls"
     "-llvm-prefer-static-over-anonymous-namespace"
-    "-modernize-use-trailing-return-type"
-  EXTRA_INCLUDES
-    "${ATTRIBUTE_WRAPPER_INCLUDE_DIR}"
-    "${CUSTOM_PRINT_INCLUDE_DIR}"
+  EXTRA_TARGETS
+    attribute_wrapper
+    custom_print
   HAS_EXCEPTIONS)
 
 set_smart_tidy(ip_filter
   EXCLUDE
     "-google-readability-todo"
-    "-modernize-use-trailing-return-type"
-  EXTRA_INCLUDES
-    "${ATTRIBUTE_WRAPPER_INCLUDE_DIR}"
-    "${CUSTOM_PRINT_INCLUDE_DIR}"
+  EXTRA_TARGETS
+    attribute_wrapper
+    custom_print
   HAS_EXCEPTIONS)
 
 set_smart_tidy(ip_filter_test
   EXCLUDE
     "-fuchsia-default-arguments-calls"
     "-llvm-prefer-static-over-anonymous-namespace"
-    "-modernize-use-trailing-return-type"
-  EXTRA_INCLUDES
-    "${ATTRIBUTE_WRAPPER_INCLUDE_DIR}"
-    "${CAPTURE_INCLUDE_DIR}"
+  EXTRA_TARGETS
+    attribute_wrapper
+    capture
   HAS_EXCEPTIONS)
 
 set(CPPCHECK_HW_2_OPTS

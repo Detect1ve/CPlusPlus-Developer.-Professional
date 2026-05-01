@@ -60,38 +60,39 @@ set_warning_flags(taskmanager_test
   EXTRA_CLANG
     -Wc++20-compat-pedantic
     -Wno-global-constructors
-    -Wno-unsafe-buffer-usage)
+    -Wno-unsafe-buffer-usage
+  EXTRA_GCC
+    -Wno-strict-overflow)
 
 set(CLANG_TIDY_HW_7_OPTS
-  "-fuchsia-default-arguments-calls"
-  "-modernize-use-trailing-return-type")
+  "-fuchsia-default-arguments-calls")
 
 set_smart_tidy(taskmanager
   EXCLUDE
     "-fuchsia-overloaded-operator"
     "-llvm-prefer-static-over-anonymous-namespace"
     "${CLANG_TIDY_HW_7_OPTS}"
-  EXTRA_INCLUDES
-    "${ATTRIBUTE_WRAPPER_INCLUDE_DIR}"
-    "${CUSTOM_PRINT_INCLUDE_DIR}"
+  EXTRA_TARGETS
+    attribute_wrapper
+    custom_print
   HAS_EXCEPTIONS)
 
 set_smart_tidy(bulk
   EXCLUDE
     "${CLANG_TIDY_HW_7_OPTS}"
-  EXTRA_INCLUDES
-    "${ATTRIBUTE_WRAPPER_INCLUDE_DIR}"
-    "${CUSTOM_PRINT_INCLUDE_DIR}"
+  EXTRA_TARGETS
+    attribute_wrapper
+    custom_print
   HAS_EXCEPTIONS)
 
 set_smart_tidy(taskmanager_test
   EXCLUDE
     "-llvm-prefer-static-over-anonymous-namespace"
     "${CLANG_TIDY_HW_7_OPTS}"
-  EXTRA_INCLUDES
-    "${ATTRIBUTE_WRAPPER_INCLUDE_DIR}"
-    "${CAPTURE_INCLUDE_DIR}"
-    "${CUSTOM_PRINT_INCLUDE_DIR}"
+  EXTRA_TARGETS
+    attribute_wrapper
+    capture
+    custom_print
   HAS_EXCEPTIONS)
 
 set_smart_cppcheck(taskmanager

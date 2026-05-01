@@ -63,8 +63,7 @@ if (MSVC OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
       -Wc++17-compat-pedantic)
 
   set(CLANG_TIDY_HW_12_OPTS
-      "-fuchsia-default-arguments-calls"
-      "-modernize-use-trailing-return-type")
+      "-fuchsia-default-arguments-calls")
 
   set_smart_tidy(mapper
     EXCLUDE

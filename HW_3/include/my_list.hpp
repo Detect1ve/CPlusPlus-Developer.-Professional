@@ -11,8 +11,7 @@ public:
     MyList() = default;
     ~MyList()
     {
-        using NodeAllocator =
-            typename std::allocator_traits<Alloc>::template rebind_alloc<Node>;
+        using NodeAllocator = std::allocator_traits<Alloc>::template rebind_alloc<Node>;
         NodeAllocator nodeAllocator;
 
         Node* current_ = head_;

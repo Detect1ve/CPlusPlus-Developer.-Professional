@@ -20,7 +20,7 @@ int main(
     const char **const argv)
 {
     auto const args = std::span(argv, static_cast<std::size_t>(argc))
-        | std::views::transform([](char const *const arg) noexcept
+        | std::views::transform([](auto arg) noexcept
         {
             return std::string_view(arg);
         });

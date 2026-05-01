@@ -38,6 +38,7 @@ set_warning_flags(bayan_lib
   EXTRA_GCC
     -Wno-alloc-zero
     -Wno-effc++
+    -Wno-null-dereference
     -Wno-strict-overflow)
 
 add_executable(bayan src/main.cpp)
@@ -60,30 +61,29 @@ set_warning_flags(bayan_test
 
 set(CLANG_TIDY_HW_8_OPTS
     "-altera-struct-pack-align"
-    "-fuchsia-default-arguments-calls"
-    "-modernize-use-trailing-return-type")
+    "-fuchsia-default-arguments-calls")
 
 set_smart_tidy(bayan_lib
   EXCLUDE
     "${CLANG_TIDY_HW_8_OPTS}"
-  EXTRA_INCLUDES
-    "${ATTRIBUTE_WRAPPER_INCLUDE_DIR}"
-    "${CUSTOM_PRINT_INCLUDE_DIR}"
+  EXTRA_TARGETS
+    attribute_wrapper
+    custom_print
   HAS_EXCEPTIONS)
 
 set_smart_tidy(bayan
   EXCLUDE
     "${CLANG_TIDY_HW_8_OPTS}"
-  EXTRA_INCLUDES
-    "${CUSTOM_PRINT_INCLUDE_DIR}"
+  EXTRA_TARGETS
+    custom_print
   HAS_EXCEPTIONS)
 
 set_smart_tidy(bayan_test
   COGNITIVE_IGNORE_MACROS
   EXCLUDE
     "${CLANG_TIDY_HW_8_OPTS}"
-  EXTRA_INCLUDES
-    "${CAPTURE_INCLUDE_DIR}"
+  EXTRA_TARGETS
+    capture
   HAS_EXCEPTIONS)
 
 set_smart_cppcheck(bayan_lib

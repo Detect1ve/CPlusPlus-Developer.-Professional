@@ -18,9 +18,13 @@ endif()
 
 add_library(data_queue INTERFACE)
 target_include_directories(data_queue INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-if (NOT MSVC)
-  target_compile_options(data_queue INTERFACE -Wno-effc++ -Wno-strict-overflow)
-endif()
+set_warning_flags(data_queue
+  EXTRA_GCC
+    -Wno-effc++
+    -Wno-strict-overflow
+    -Wno-zero-as-null-pointer-constant
+  NO_BASE
+  SCOPE "INTERFACE")
 
 add_executable(queue_test test/queue_test.cpp)
 target_link_libraries(queue_test PRIVATE data_queue GTest::gtest_main)
@@ -42,8 +46,7 @@ set(CLANG_TIDY_PROJECT_WORK_OPTS
     "-altera-struct-pack-align"
     "-fuchsia-default-arguments-calls"
     "-fuchsia-default-arguments-declarations"
-    "-fuchsia-overloaded-operator"
-    "-modernize-use-trailing-return-type")
+    "-fuchsia-overloaded-operator")
 
 set_smart_tidy(queue_test
   COGNITIVE_IGNORE_MACROS
@@ -55,8 +58,8 @@ set_smart_tidy(queue_performance_test
   EXCLUDE
     "-llvm-prefer-static-over-anonymous-namespace"
     "${CLANG_TIDY_PROJECT_WORK_OPTS}"
-  EXTRA_INCLUDES
-    "${CUSTOM_PRINT_INCLUDE_DIR}"
+  EXTRA_TARGETS
+    custom_print
   HAS_EXCEPTIONS)
 
 set_smart_cppcheck(queue_test

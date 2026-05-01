@@ -17,15 +17,11 @@ if (ENABLE_CPPCHECK)
                     OUTPUT_STRIP_TRAILING_WHITESPACE)
     message(STATUS "cppcheck version: ${CPPCHECK_VERSION}")
     set(CPPCHECK_BASE_ARGS
-      # "--addon=cert"
-      # "--addon=misra"
       "--check-level=exhaustive"
       "--enable=all"
       "--error-exitcode=1"
       "--inconclusive"
       "--suppress=missingIncludeSystem")
-      # "-v")
-      # "--inline-suppr"
   else()
     message(STATUS "cppcheck not found, static analysis will be skipped.")
   endif()
@@ -58,5 +54,5 @@ function(set_smart_cppcheck TARGET_NAME)
   endif()
 
   set_target_properties(${TARGET_NAME} PROPERTIES
-    CXX_CPPCHECK "${CPPCHECK_COMMAND}")
+    CXX_CPPCHECK "${CMAKE_COMMAND};-E;env;CLICOLOR_FORCE=1;${CPPCHECK_COMMAND}")
 endfunction()

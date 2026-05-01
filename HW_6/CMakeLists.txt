@@ -53,14 +53,13 @@ set_warning_flags(matrix_test
 set(CLANG_TIDY_HW_6_OPTS
   "-altera-struct-pack-align"
   "-cppcoreguidelines-pro-bounds-avoid-unchecked-container-access"
-  "-fuchsia-overloaded-operator"
-  "-modernize-use-trailing-return-type")
+  "-fuchsia-overloaded-operator")
 
 set_smart_tidy(matrix
   EXCLUDE
     "${CLANG_TIDY_HW_6_OPTS}"
-  EXTRA_INCLUDES
-    "${CUSTOM_PRINT_INCLUDE_DIR}"
+  EXTRA_TARGETS
+    custom_print
   HAS_EXCEPTIONS)
 
 set_smart_tidy(matrix_test
@@ -72,8 +71,8 @@ set_smart_tidy(matrix_test
     "-readability-identifier-length"
     "-readability-magic-numbers"
     "${CLANG_TIDY_HW_6_OPTS}"
-  EXTRA_INCLUDES
-    "${CAPTURE_INCLUDE_DIR}"
+  EXTRA_TARGETS
+    capture
   HAS_EXCEPTIONS)
 
 set_smart_cppcheck(matrix

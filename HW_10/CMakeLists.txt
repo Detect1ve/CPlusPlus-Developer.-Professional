@@ -74,7 +74,6 @@ set_warning_flags(bulk_server_test
 set(CLANG_TIDY_HW_10_OPTS
     "-llvm-header-guard"
     "-llvm-namespace-comment"
-    "-modernize-use-trailing-return-type"
     "-portability-avoid-pragma-once")
 
 set_smart_tidy(server_async
@@ -83,8 +82,8 @@ set_smart_tidy(server_async
     "-fuchsia-default-arguments-calls"
     "-llvm-prefer-static-over-anonymous-namespace"
     "${CLANG_TIDY_HW_10_OPTS}"
-  EXTRA_INCLUDES
-    "${CUSTOM_PRINT_INCLUDE_DIR}")
+  EXTRA_TARGETS
+    custom_print)
 
 set_smart_tidy(server
   EXCLUDE
@@ -92,14 +91,14 @@ set_smart_tidy(server
     "-llvm-prefer-static-over-anonymous-namespace"
     "-misc-no-recursion"
     "${CLANG_TIDY_HW_10_OPTS}"
-  EXTRA_INCLUDES
-    "${CUSTOM_PRINT_INCLUDE_DIR}")
+  EXTRA_TARGETS
+    custom_print)
 
 set_smart_tidy(bulk_server
   EXCLUDE
     "${CLANG_TIDY_HW_10_OPTS}"
-  EXTRA_INCLUDES
-    "${CUSTOM_PRINT_INCLUDE_DIR}"
+  EXTRA_TARGETS
+    custom_print
   HAS_EXCEPTIONS)
 
 set_smart_tidy(bulk_server_test
@@ -108,9 +107,9 @@ set_smart_tidy(bulk_server_test
     "-fuchsia-default-arguments-calls"
     "-llvm-prefer-static-over-anonymous-namespace"
     "${CLANG_TIDY_HW_10_OPTS}"
-  EXTRA_INCLUDES
-    "${CAPTURE_INCLUDE_DIR}"
-    "${SOCKET_WRAPPER_INCLUDE_DIR}"
+  EXTRA_TARGETS
+    capture
+    socket_wrapper
   HAS_EXCEPTIONS)
 
 set_smart_cppcheck(server_async
