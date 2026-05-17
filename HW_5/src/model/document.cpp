@@ -30,7 +30,7 @@ namespace editor::model
     {
         if (index < primitives_.size())
         {
-            return primitives_[index].get();
+            return primitives_.at(index).get();
         }
 
         return nullptr;
@@ -41,7 +41,7 @@ namespace editor::model
         return primitives_.size();
     }
 
-    std::string_view Document::getName() const
+    const std::string& Document::getName() const
     {
         return name_;
     }

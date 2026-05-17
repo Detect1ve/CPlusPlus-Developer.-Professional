@@ -2,7 +2,7 @@
 #define QUEUE_HPP
 
 #include <condition_variable>
-#if __GNUC__ < 14\
+#if defined(__GNUC__) && __GNUC__ < 14\
  || __cplusplus <=  202002L
 #include <optional>
 #endif
@@ -240,8 +240,8 @@ namespace pc_queue
 
             if (usePriority_)
             {
-                std::priority_queue<PriorityItem> empty;
-                std::swap(priorityQueue_, empty);
+                std::priority_queue<PriorityItem> empty_;
+                std::swap(priorityQueue_, empty_);
             }
 
             notFull_.notify_all();

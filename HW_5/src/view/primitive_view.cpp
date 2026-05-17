@@ -8,30 +8,33 @@
 
 namespace editor::view
 {
-    class LineView final : public PrimitiveView
+    namespace
     {
-    public:
-        ~LineView() override;
-        LineView(const LineView&) = delete;
-        LineView(LineView&&) = delete;
-        LineView& operator=(const LineView&) = delete;
-        LineView& operator=(LineView&&) = delete;
-
-        explicit LineView(const model::Primitive* primitive) : PrimitiveView(primitive) {}
-
-        void render() const override
+        class LineView final : public PrimitiveView
         {
-            const auto* line = dynamic_cast<const model::Line*>(getPrimitive());
-            if (line != nullptr)
-            {
-                cp::println("Rendering Line from ({},{}) to ({},{}) with thickness {}",
-                    line->getX1(), line->getY1(), line->getX2(), line->getY2(),
-                    line->getThickness());
-            }
-        }
-    };
+        public:
+            explicit LineView(const model::Primitive *const primitive)
+                : PrimitiveView(primitive) {}
+            ~LineView() override = default;
+            LineView(const LineView&) = delete;
+            LineView(LineView&&) = delete;
+            LineView& operator=(const LineView&) = delete;
+            LineView& operator=(LineView&&) = delete;
 
-    LineView::~LineView() = default;
+            void render() const override
+            {
+                const auto* line = dynamic_cast<const model::Line*>(getPrimitive());
+                if (line != nullptr)
+                {
+                    cp::println(
+                        "Rendering Line from ({},{}) to ({},{}) with thickness {}",
+                        line->getX1(), line->getY1(), line->getX2(), line->getY2(),
+                        line->getThickness());
+                }
+            }
+        };
+    } // namespace
+
     PrimitiveView::PrimitiveView(const model::Primitive* primitive)
         : primitive_(primitive) {}
 

@@ -9,6 +9,8 @@
 #include <string_view> // std::string_view
 #include <system_error> // std::errc
 
+#include <gsl/util>
+
 #include <custom_print.hpp>
 #include <server.hpp>
 
@@ -31,23 +33,24 @@ int main(
 
         if (args.size() != 3)
         {
-            cp::println(stderr, "Usage: {} <port> <bulk_size>", args[0]);
+            cp::println(stderr, "Usage: {} <port> <bulk_size>", gsl::at(args, 0));
             ret = -1;
 
             return ret;
         }
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-        if (std::from_chars(args[1].data(), args[1].data() + args[1].size(), port,
-            BASE).ec != std::errc{})
+
+        if (auto port_arg = gsl::at(args, 1); std::from_chars(port_arg.data(),
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+            port_arg.data() + port_arg.size(), port, BASE).ec != std::errc{})
         {
             cp::println(stderr, "Invalid port format");
             ret = -2;
 
             return ret;
         }
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-        if (std::from_chars(args[2].data(), args[2].data() + args[2].size(), bulk_size,
-            BASE).ec != std::errc{})
+        if (auto size_arg = gsl::at(args, 2); std::from_chars(size_arg.data(),
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+            size_arg.data() + size_arg.size(), bulk_size, BASE).ec != std::errc{})
         {
             cp::println(stderr, "Invalid bulk_size format");
             ret = -3;

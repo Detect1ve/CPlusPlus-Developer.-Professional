@@ -5,7 +5,6 @@
 #include <string> // std::string
 
 #include <gtest/gtest.h>
-#include <absl/strings/match.h>
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
 
@@ -141,13 +140,13 @@ TEST(HW8, FindDuplicatesTest)
 
     ASSERT_EQ(result, ProcessStatus::SUCCESS);
 
-    ASSERT_FALSE(absl::StrContains(capturedStdout, "No duplicate files found.\n"));
+    ASSERT_FALSE(capturedStdout.contains("No duplicate files found.\n"));
 
-    ASSERT_TRUE(capturedStdout.find(cpp_file1.string()) != std::string::npos);
-    ASSERT_TRUE(capturedStdout.find(cpp_file2.string()) != std::string::npos);
-    ASSERT_TRUE(capturedStdout.find(world_file1.string()) != std::string::npos);
-    ASSERT_TRUE(capturedStdout.find(world_file2.string()) != std::string::npos);
-    ASSERT_TRUE(capturedStdout.find(world_file3.string()) != std::string::npos);
+    ASSERT_TRUE(capturedStdout.contains(cpp_file1.string()));
+    ASSERT_TRUE(capturedStdout.contains(cpp_file2.string()));
+    ASSERT_TRUE(capturedStdout.contains(world_file1.string()));
+    ASSERT_TRUE(capturedStdout.contains(world_file2.string()));
+    ASSERT_TRUE(capturedStdout.contains(world_file3.string()));
 
     boost::filesystem::remove_all(temp_dir);
 }
@@ -166,7 +165,7 @@ TEST(HW8, HelpOptionTest)
 
     ASSERT_EQ(status, ProcessStatus::HELP_REQUESTED);
     ASSERT_FALSE(capturedStdout.empty());
-    ASSERT_TRUE(absl::StrContains(capturedStdout, "produce help message"));
+    ASSERT_TRUE(capturedStdout.contains("produce help message"));
 }
 
 TEST(HW8, UnrecognisedOptionTest)
@@ -182,7 +181,7 @@ TEST(HW8, UnrecognisedOptionTest)
     auto capturedStderr = StderrCapture::End();
 
     ASSERT_EQ(status, ProcessStatus::OPTION_ERROR);
-    ASSERT_TRUE(absl::StrContains(capturedStderr, "unrecognised option"));
+    ASSERT_TRUE(capturedStderr.contains("unrecognised option"));
 }
 
 TEST(HW8, MissingMandatoryOptionTest)
@@ -199,7 +198,7 @@ TEST(HW8, MissingMandatoryOptionTest)
     auto capturedStderr = StderrCapture::End();
 
     ASSERT_EQ(status, ProcessStatus::OPTION_ERROR);
-    ASSERT_TRUE(absl::StrContains(capturedStderr, "required"));
+    ASSERT_TRUE(capturedStderr.contains("required"));
 }
 
 TEST(HW8, BadValueOptionTest)
@@ -217,7 +216,7 @@ TEST(HW8, BadValueOptionTest)
     auto capturedStderr = StderrCapture::End();
 
     ASSERT_EQ(status, ProcessStatus::OPTION_ERROR);
-    ASSERT_TRUE(absl::StrContains(capturedStderr, "non-negative"));
+    ASSERT_TRUE(capturedStderr.contains("non-negative"));
 }
 
 TEST(HW8, BadHashAlgorithmTest)
@@ -236,5 +235,5 @@ TEST(HW8, BadHashAlgorithmTest)
     auto capturedStderr = StderrCapture::End();
 
     ASSERT_EQ(status, ProcessStatus::OPTION_ERROR);
-    ASSERT_TRUE(absl::StrContains(capturedStderr, "is invalid"));
+    ASSERT_TRUE(capturedStderr.contains("is invalid"));
 }

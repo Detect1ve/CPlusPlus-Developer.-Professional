@@ -7,7 +7,6 @@
 #include <cstdlib> // EXIT_FAILURE
 #include <exception> // std::exception
 #include <format> // std::format
-#include <limits> // std::numeric_limits
 #include <ratio> // std::milli
 #include <thread> // std::thread
 #include <utility>
@@ -51,7 +50,6 @@ namespace
     {
         bool consumerReady(false);
         bool producerDone(false);
-        float itemsPerSecond = std::numeric_limits<float>::quiet_NaN();
         Queue<int> queue(false, QueueMode::SINGLE_PRODUCER_SINGLE_CONSUMER, queueSize);
         std::atomic<int> consumed(0);
 
@@ -89,7 +87,7 @@ namespace
         auto end = std::chrono::steady_clock::now();
 
         auto duration = end - start;
-        itemsPerSecond =
+        const float itemsPerSecond =
             static_cast<float>(numItems) / std::chrono::duration<float>(duration).count();
 
         cp::println("Lead time: {}", formatDuration(duration));
@@ -110,7 +108,6 @@ namespace
     {
         bool producersDone(false);
         const std::size_t itemsPerProducer = config.numItems / config.numProducers;
-        float itemsPerSecond = std::numeric_limits<float>::quiet_NaN();
         Queue<std::size_t> queue(false, QueueMode::MULTI_PRODUCER_MULTI_CONSUMER,
             config.queueSize);
         std::atomic<int> produced(0);
@@ -174,7 +171,7 @@ namespace
         auto end = std::chrono::steady_clock::now();
 
         auto duration = end - start;
-        itemsPerSecond =
+        const float itemsPerSecond =
             static_cast<float>(produced) / std::chrono::duration<float>(duration).count();
 
         cp::println("Lead time: {}", formatDuration(duration));
@@ -188,8 +185,6 @@ namespace
         const int         numPriorities)
     {
         int consumed = 0;
-        float popPerSecond = std::numeric_limits<float>::quiet_NaN();
-        float pushPerSecond = std::numeric_limits<float>::quiet_NaN();
         Queue<int, int> queue(true, QueueMode::MULTI_PRODUCER_MULTI_CONSUMER, 0);
 
         cp::println("=== Performance Test: Priority Queue ===");
@@ -221,14 +216,14 @@ namespace
 
         auto endPop = std::chrono::steady_clock::now();
 
-        auto durationPush = endPush - startPush;
         auto durationPop = endPop - startPop;
+        auto durationPush = endPush - startPush;
         auto durationTotal = durationPush + durationPop;
 
-        pushPerSecond = static_cast<float>(numItems)
-            / std::chrono::duration<float>(durationPush).count();
-        popPerSecond = static_cast<float>(consumed)
+        const float popPerSecond = static_cast<float>(consumed)
             / std::chrono::duration<float>(durationPop).count();
+        const float pushPerSecond = static_cast<float>(numItems)
+            / std::chrono::duration<float>(durationPush).count();
 
         cp::println("Add time: {}", formatDuration(durationPush));
         cp::println("Extraction time: {}", formatDuration(durationPop));
@@ -241,10 +236,6 @@ namespace
     {
         int priorityConsumed = 0;
         int regularConsumed = 0;
-        float priorityPopPerSecond = std::numeric_limits<float>::quiet_NaN();
-        float priorityPushPerSecond = std::numeric_limits<float>::quiet_NaN();
-        float regularPopPerSecond = std::numeric_limits<float>::quiet_NaN();
-        float regularPushPerSecond = std::numeric_limits<float>::quiet_NaN();
         Queue<int> regularQueue;
         Queue<int, int> priorityQueue(true, QueueMode::MULTI_PRODUCER_MULTI_CONSUMER, 0);
 
@@ -312,14 +303,14 @@ namespace
         cp::println("  Extraction time: {}", formatDuration(durPriorityPop));
         cp::println("  Total time: {}", formatDuration(durPriorityPush + durPriorityPop));
 
-        regularPushPerSecond = static_cast<float>(numItems)
-            / std::chrono::duration<float>(durRegularPush).count();
-        regularPopPerSecond = static_cast<float>(regularConsumed)
+        const float regularPopPerSecond = static_cast<float>(regularConsumed)
             / std::chrono::duration<float>(durRegularPop).count();
-        priorityPushPerSecond = static_cast<float>(numItems)
-            / std::chrono::duration<float>(durPriorityPush).count();
-        priorityPopPerSecond = static_cast<float>(priorityConsumed)
+        const float regularPushPerSecond = static_cast<float>(numItems)
+            / std::chrono::duration<float>(durRegularPush).count();
+        const float priorityPopPerSecond = static_cast<float>(priorityConsumed)
             / std::chrono::duration<float>(durPriorityPop).count();
+        const float priorityPushPerSecond = static_cast<float>(numItems)
+            / std::chrono::duration<float>(durPriorityPush).count();
 
         cp::println("Comparison of append performance:");
         cp::println("  Regular queue: {:.2f} elements/sec", regularPushPerSecond);

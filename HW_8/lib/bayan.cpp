@@ -37,83 +37,90 @@
 #include <bayan.hpp>
 #include <custom_print.hpp>
 
-class FileInfo
+namespace
 {
-public:
-    FileInfo(
-        boost::filesystem::path path,
-        std::uintmax_t          size,
-        std::size_t             block_size);
-    ~FileInfo() noexcept = default;
-    FileInfo(const FileInfo& other);
-    FileInfo(FileInfo&&) noexcept = default;
-    FileInfo& operator=(const FileInfo& other);
-    FileInfo& operator=(FileInfo&&) noexcept = default;
+    class FileInfo
+    {
+    public:
+        FileInfo(
+            boost::filesystem::path path,
+            std::uintmax_t          size,
+            std::size_t             block_size);
+        ~FileInfo() noexcept = default;
+        FileInfo(const FileInfo& other);
+        FileInfo(FileInfo&&) noexcept = default;
+        [[maybe_unused]] FileInfo& operator=(const FileInfo& other);
+        FileInfo& operator=(FileInfo&&) noexcept = delete;
 
-    ATTRIBUTE_PURE [[nodiscard]] std::uintmax_t get_size() const;
-    ATTRIBUTE_CONST [[nodiscard]] const std::vector<std::string>& get_hashes() const;
-    ATTRIBUTE_CONST const boost::filesystem::path& get_path() const;
-    std::string compute_block_hash(
-        std::size_t          block_index,
-        const HashAlgorithm& hash_algo) const;
+        ATTRIBUTE_PURE [[nodiscard]] std::uintmax_t get_size() const;
+        ATTRIBUTE_CONST [[nodiscard]] const std::vector<std::string>& get_hashes() const;
+        ATTRIBUTE_CONST const boost::filesystem::path& get_path() const;
+        std::string compute_block_hash(
+            std::size_t          block_index,
+            const HashAlgorithm& hash_algo) const;
 
-private:
-    void open_file() const;
-    void close_file() const;
+    private:
+        void open_file() const;
+        void close_file() const;
 
-    boost::filesystem::path path_;
-    mutable bool file_opened_{false};
-    mutable std::vector<std::string> hashes_;
-    mutable std::unique_ptr<std::ifstream> file_stream_;
-    std::size_t block_size_;
-    std::uintmax_t size_;
-};
+        boost::filesystem::path path_;
+        mutable bool file_opened_{false};
+        mutable std::vector<std::string> hashes_;
+        mutable std::unique_ptr<std::ifstream> file_stream_;
+        std::size_t block_size_;
+        std::uintmax_t size_;
+    };
 
-class FileScanner
-{
-    void scan_directory_recursive(
-        const boost::filesystem::path& dir,
-        std::vector<FileInfo>&         files);
-    void scan_directory_non_recursive(
-        const boost::filesystem::path& dir,
-        std::vector<FileInfo>&         files);
-    [[nodiscard]] bool matches_masks(const boost::filesystem::path& file_path) const;
-    [[nodiscard]] bool is_excluded(const boost::filesystem::path& dir) const;
+    class FileScanner
+    {
+    public:
+        FileScanner(
+            bool               scan_level,
+            BlockSize          block_size,
+            MinFileSize        min_file_size,
+            const ExcludeDirs& exclude_dirs,
+            const FileMasks&   file_masks,
+            const ScanDirs&    scan_dirs);
 
-    bool scan_level_;
-    std::uintmax_t block_size_;
-    std::uintmax_t min_file_size_;
-    std::vector<std::regex> mask_regexes_;
-    std::vector<std::string> exclude_dirs_;
-    std::vector<std::string> file_masks_;
-    std::vector<std::string> scan_dirs_;
-public:
-    FileScanner(
-        bool               scan_level,
-        BlockSize          block_size,
-        MinFileSize        min_file_size,
-        const ExcludeDirs& exclude_dirs,
-        const FileMasks&   file_masks,
-        const ScanDirs&    scan_dirs);
+        std::vector<FileInfo> scan_directories();
 
-    std::vector<FileInfo> scan_directories();
-};
+    private:
+        void scan_directory_recursive(
+            const boost::filesystem::path& dir,
+            std::vector<FileInfo>&         files);
+        void scan_directory_non_recursive(
+            const boost::filesystem::path& dir,
+            std::vector<FileInfo>&         files);
+        [[nodiscard]] bool matches_masks(const boost::filesystem::path& file_path) const;
+        [[nodiscard]] bool is_excluded(const boost::filesystem::path& dir) const;
 
-class DuplicateFinder
-{
-    std::vector<std::vector<FileInfo>>
-        find_duplicates_in_group(std::vector<const FileInfo*>& files);
+        bool scan_level_;
+        std::uintmax_t block_size_;
+        std::uintmax_t min_file_size_;
+        std::vector<std::regex> mask_regexes_;
+        std::vector<std::string> exclude_dirs_;
+        std::vector<std::string> file_masks_;
+        std::vector<std::string> scan_dirs_;
+    };
 
-    HashAlgorithm hash_algo_;
-    std::uintmax_t block_size_;
-public:
-    DuplicateFinder(
-        HashAlgorithm  hash_algo,
-        std::uintmax_t block_size);
+    class DuplicateFinder
+    {
+    public:
+        DuplicateFinder(
+            HashAlgorithm  hash_algo,
+            std::uintmax_t block_size);
 
-    std::vector<std::vector<FileInfo>> find_duplicates(
-        const std::vector<FileInfo>& files);
-};
+        std::vector<std::vector<FileInfo>> find_duplicates(
+            const std::vector<FileInfo>& files);
+
+    private:
+        std::vector<std::vector<FileInfo>>
+            find_duplicates_in_group(std::vector<const FileInfo*>& files);
+
+        HashAlgorithm hash_algo_;
+        std::uintmax_t block_size_;
+    };
+} // namespace
 
 std::string compute_crc32(const std::string_view input)
 {
@@ -212,7 +219,7 @@ FileInfo::FileInfo(const FileInfo& other)
     block_size_(other.block_size_),
     size_(other.size_) {}
 
-FileInfo& FileInfo::operator=(const FileInfo& other)
+[[maybe_unused]] FileInfo& FileInfo::operator=(const FileInfo& other)
 {
     if (this != &other)
     {
@@ -250,9 +257,9 @@ std::string FileInfo::compute_block_hash(
 {
     std::vector<char> buffer(block_size_, 0);
 
-    if (!hashes_[block_index].empty())
+    if (!hashes_.at(block_index).empty())
     {
-        return hashes_[block_index];
+        return hashes_.at(block_index);
     }
 
     if (!file_opened_)
@@ -268,9 +275,9 @@ std::string FileInfo::compute_block_hash(
     const std::string block_data(buffer.data(),
         static_cast<std::string::size_type>(bytes_read));
 
-    hashes_[block_index] = hash_algo.compute_hash(block_data);
+    hashes_.at(block_index) = hash_algo.compute_hash(block_data);
 
-    return hashes_[block_index];
+    return hashes_.at(block_index);
 }
 
 void FileInfo::open_file() const
@@ -312,11 +319,10 @@ FileScanner::FileScanner(
     file_masks_(file_masks.value),
     scan_dirs_(scan_dirs.value)
 {
-    for (const auto& mask : file_masks_)
+    for (const auto& regex_str : file_masks_)
     {
-        const std::string regex_str = mask;
-
         std::string result;
+
         for (const char character : regex_str)
         {
             if (character == '.')
@@ -501,7 +507,8 @@ std::vector<std::vector<FileInfo>>
 std::vector<std::vector<FileInfo>>
     DuplicateFinder::find_duplicates_in_group(std::vector<const FileInfo*>& files)
 {
-    const std::size_t num_blocks = (files[0]->get_size() + block_size_ - 1) / block_size_;
+    const std::size_t num_blocks =
+        (files.at(0)->get_size() + block_size_ - 1) / block_size_;
     std::unordered_map<std::string, std::vector<const FileInfo*>> files_by_all_hashes;
     std::vector<std::vector<FileInfo>> duplicate_groups;
 
@@ -626,16 +633,9 @@ std::pair<ProcessStatus, Options> option_process(std::span<const char *const> ar
                 "masks of file names allowed for comparison (case-insensitive)")
             ("hash_algorithm", boost::program_options::value<std::string>()
                 ->default_value("crc32")->notifier(
-                    [&options](const std::string_view value)
+                    [&options](const std::string& value)
                 {
-                    try
-                    {
-                        options.hash_algorithm = HashAlgorithm(value);
-                    }
-                    catch (const boost::program_options::validation_error&)
-                    {
-                        throw;
-                    }
+                    options.hash_algorithm = HashAlgorithm(value);
                 }),
                 "hashing algorithm to use (allowed values: crc32, md5)");
 

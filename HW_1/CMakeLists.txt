@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25..4.2.3)
+cmake_minimum_required(VERSION 3.25..4.3.1)
 
 if (NOT DEFINED PATCH_VERSION)
     set(PATCH_VERSION "1" CACHE INTERNAL "Patch version")
@@ -8,16 +8,18 @@ set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 project(helloworld VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 if (PROJECT_IS_TOP_LEVEL)
-    if (NOT MSVC)
-        if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-            add_compile_options(-fcolor-diagnostics)
-        else ()
-            add_compile_options(-fdiagnostics-color=always)
-        endif()
-    endif()
+    set(CMAKE_COLOR_DIAGNOSTICS ON)
+
     set(MINIMUM_CXX_STANDARD 11)
     include(../cmake/cxx_standard.cmake)
     set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
+
+    include(../cmake/clang-tidy.cmake)
+    include(../cmake/cppcheck.cmake)
+    include(../cmake/fetch_boost.cmake)
+    include(../cmake/fetch_googletest.cmake)
+    include(../cmake/warning_flags.cmake)
+    list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
 configure_file(version.h.in version.h)
@@ -39,14 +41,6 @@ if (NOT MSVC)
     )
 endif()
 
-if (PROJECT_IS_TOP_LEVEL)
-    include(../cmake/clang-tidy.cmake)
-    include(../cmake/fetch_boost.cmake)
-    include(../cmake/fetch_googletest.cmake)
-    include(../cmake/warning_flags.cmake)
-    list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
-endif()
-
 add_executable(test_version test_version.cpp)
 
 target_link_libraries(test_version
@@ -61,45 +55,41 @@ target_link_libraries(g_test_version
     helloworld
 )
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 15)
-        set(HW_1_COMPILE_WARNING_FLAGS -Wleading-whitespace=none)
-    endif()
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set(HW_1_COMPILE_WARNING_FLAGS -Wc++11-compat-pedantic)
-endif()
+set_warning_flags(helloworld_cli
+    EXTRA_CLANG
+        -Wc++11-compat-pedantic
+    EXTRA_GCC
+        -Wleading-whitespace=none
+)
 
-target_compile_options(helloworld_cli PRIVATE
-    ${COMPILE_WARNING_FLAGS} ${HW_1_COMPILE_WARNING_FLAGS}
-)
-target_compile_options(helloworld PRIVATE
-    ${COMPILE_WARNING_FLAGS} ${HW_1_COMPILE_WARNING_FLAGS}
-)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(helloworld PRIVATE
+set_warning_flags(helloworld
+    EXTRA_CLANG
+        -Wc++11-compat-pedantic
+    EXTRA_GCC
+        -Wleading-whitespace=none
         -Wno-suggest-attribute=const
-    )
-endif()
-target_compile_options(test_version PRIVATE
-    ${COMPILE_WARNING_FLAGS} ${HW_1_COMPILE_WARNING_FLAGS}
 )
-if (NOT MSVC)
-    target_compile_options(test_version PRIVATE
-        -Wno-used-but-marked-unused -Wno-global-constructors
-    )
-endif()
-target_compile_options(g_test_version PRIVATE
-    ${COMPILE_WARNING_FLAGS} ${HW_1_COMPILE_WARNING_FLAGS}
-)
-if (NOT MSVC)
-    target_compile_options(g_test_version PRIVATE
+
+set_warning_flags(test_version
+    EXTRA_CLANG
+        -Wc++11-compat-pedantic
+        -Wno-c2y-extensions
         -Wno-global-constructors
-    )
-endif()
+        -Wno-used-but-marked-unused
+    EXTRA_GCC
+        -Wleading-whitespace=none
+)
+
+set_warning_flags(g_test_version
+    EXTRA_CLANG
+        -Wc++11-compat-pedantic
+        -Wno-global-constructors
+    EXTRA_GCC
+        -Wleading-whitespace=none
+)
 
 set(CLANG_TIDY_HW_1_OPTS
     "-llvm-header-guard"
-    "-modernize-use-trailing-return-type"
     "-portability-avoid-pragma-once"
 )
 
@@ -133,6 +123,7 @@ set_smart_tidy(test_version
         "-fuchsia-statically-constructed-objects"
         "-hicpp-vararg"
         "-misc-include-cleaner"
+        "-misc-use-internal-linkage"
         "-readability-identifier-length"
         "${CLANG_TIDY_HW_1_OPTS}"
     MAIN_INCLUDE_DIR
@@ -148,6 +139,26 @@ set_smart_tidy(g_test_version
         "${CLANG_TIDY_HW_1_OPTS}"
     MAIN_INCLUDE_DIR
         "${CMAKE_CURRENT_SOURCE_DIR}"
+)
+
+set_smart_cppcheck(helloworld_cli)
+
+set_smart_cppcheck(helloworld
+    EXCLUDE
+        "unmatchedSuppression"
+        "unusedFunction"
+)
+
+set_smart_cppcheck(test_version
+    EXCLUDE
+        "unusedFunction"
+    LIBRARIES
+        "boost"
+)
+
+set_smart_cppcheck(g_test_version
+    LIBRARIES
+        "googletest"
 )
 
 install(TARGETS helloworld_cli RUNTIME DESTINATION bin

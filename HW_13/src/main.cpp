@@ -8,6 +8,8 @@
 #endif
 #include <string> // std::string
 
+#include <gsl/util>
+
 #include <custom_print.hpp>
 #include <mlp.hpp>
 
@@ -32,14 +34,14 @@ int main(
         if (args.size() != 3)
         {
             cp::println(stderr, "Error: Invalid number of arguments!");
-            printUsage(args[0]);
+            printUsage(gsl::at(args, 0));
             ret = -1;
 
             return ret;
         }
 
-        const std::string test_data_path(args[1]);
-        const std::string model_dir(args[2]);
+        const std::string test_data_path(gsl::at(args, 1));
+        const std::string model_dir(gsl::at(args, 2));
 
         const std::string w1_path = model_dir + "/w1.txt";
         const std::string w2_path = model_dir + "/w2.txt";

@@ -16,7 +16,6 @@ jobs:
         include:
           - os: ubuntu-latest
             name: GCC-Release
-            compiler: gcc
             c_compiler: gcc-14
             cpp_compiler: g++-14
             build_dir: build-gcc-release
@@ -26,7 +25,6 @@ jobs:
             build_docs: true
           - os: ubuntu-latest
             name: GCC-Debug
-            compiler: gcc
             c_compiler: gcc-14
             cpp_compiler: g++-14
             build_dir: build-gcc-debug
@@ -34,67 +32,153 @@ jobs:
             install_compiler: true
           - os: ubuntu-latest
             name: GCC-MinSizeRel
-            compiler: gcc
             c_compiler: gcc-14
             cpp_compiler: g++-14
             build_dir: build-gcc-minsizerel
             build_type: MinSizeRel
             install_compiler: true
           - os: ubuntu-latest
-            name: Clang-Release
-            compiler: clang
+            name: Clang-Release-Linux
             c_compiler: clang
             cpp_compiler: clang++
             build_dir: build-clang-release
             build_type: Release
           - os: ubuntu-latest
-            name: Clang-Debug
-            compiler: clang
+            name: Clang-Debug-Linux
             c_compiler: clang
             cpp_compiler: clang++
             build_dir: build-clang-debug
             build_type: Debug
           - os: ubuntu-latest
-            name: Clang-MinSizeRel
-            compiler: clang
+            name: Clang-MinSizeRel-Linux
             c_compiler: clang
             cpp_compiler: clang++
             build_dir: build-clang-minsizerel
             build_type: MinSizeRel
-          - os: windows-latest
+          - os: windows-2025-vs2026
             name: MSVC-Release
             build_dir: build-msvc-release
             build_type: Release
             c_compiler: cl
             cpp_compiler: cl
-          - os: windows-latest
+          - os: windows-2025-vs2026
             name: MSVC-Debug
             build_dir: build-msvc-debug
             build_type: Debug
             c_compiler: cl
             cpp_compiler: cl
-          - os: windows-latest
+          - os: windows-2025-vs2026
             name: MSVC-MinSizeRel
             build_dir: build-msvc-minsizerel
             build_type: MinSizeRel
             c_compiler: cl
             cpp_compiler: cl
+          - os: windows-2025-vs2026
+            name: Clang-Release-Windows
+            c_compiler: clang
+            cpp_compiler: clang++
+            build_dir: build-clang-release
+            build_type: Release
+          - os: windows-2025-vs2026
+            name: Clang-Debug-Windows
+            c_compiler: clang
+            cpp_compiler: clang++
+            build_dir: build-clang-debug
+            build_type: Debug
+          - os: windows-2025-vs2026
+            name: Clang-MinSizeRel-Windows
+            c_compiler: clang
+            cpp_compiler: clang++
+            build_dir: build-clang-minsizerel
+            build_type: MinSizeRel
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.name }}
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: true
-      - name: Install CMake
+      - name: Install CMake (Linux)
         if: runner.os == 'Linux'
         run: |
-          wget -qO- "https://cmake.org/files/v4.2/cmake-4.2.3-linux-x86_64.tar.gz" | sudo tar --strip-components=1 -xz -C /usr/local
+          wget -qO- "https://cmake.org/files/v4.3/cmake-4.3.1-linux-x86_64.tar.gz" | sudo tar --strip-components=1 -xz -C /usr/local
       - name: Install GCC
         if: matrix.install_compiler
         run: sudo apt-get update && sudo apt-get install -y ${{ matrix.cpp_compiler }}
       - name: Setup MSVC environment
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
+      # - name: Setup MSVC 2026 environment
+      #   if: runner.os == 'Windows'
+      #   run: |
+      #     $vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+      #     $vcvars = Join-Path $vsPath "VC\Auxiliary\Build\vcvarsall.bat"
+
+      #     $newPathList = New-Object System.Collections.Generic.List[string]
+
+      #     $newPathList.Add("C:\Program Files\Git\bin")
+
+      #     $envVars = cmd /c "`"$vcvars`" x64 && set"
+
+      #     foreach ($line in $envVars) {
+      #       if ($line -match '^([^=]+)=(.*)$') {
+      #         $name = $matches[1]
+      #         $value = $matches[2]
+      #         if ($name -ieq "Path") {
+      #           $value.Split(';') | ForEach-Object {
+      #             $p = $_.Trim()
+      #             if ($p -and $p -notmatch "Strawberry") {
+      #               if (-not $newPathList.Contains($p)) {
+      #                 $newPathList.Add($p)
+      #               }
+      #             }
+      #           }
+      #         } else {
+      #           echo "$name=$value" >> $env:GITHUB_ENV
+      #         }
+      #       }
+      #     }
+
+      #     $systemPaths = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
+      #     $systemPaths.Split(';') | ForEach-Object {
+      #       $p = $_.Trim()
+      #       if ($p -and $p -notmatch "Strawberry") {
+      #         if (-not $newPathList.Contains($p)) {
+      #           $newPathList.Add($p)
+      #         }
+      #       }
+      #     }
+
+      #     $finalPath = $newPathList -join ';'
+
+      #     echo "PATH=$finalPath" >> $env:GITHUB_ENV
+      #   shell: pwsh
+      - name: Install Cppcheck (Windows)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          $msiUrl = "https://github.com/danmar/cppcheck/releases/download/2.20.0/cppcheck-2.20.0-x64-Setup.msi"
+          $msiPath = "$env:TEMP\cppcheck.msi"
+
+          Write-Host "Downloading Cppcheck 2.20.0..."
+          Invoke-WebRequest -Uri $msiUrl -OutFile $msiPath
+
+          Write-Host "Installing MSI..."
+          Start-Process msiexec.exe -ArgumentList "/i $msiPath /qn /norestart" -Wait
+
+          $installPath = "C:\Program Files\Cppcheck"
+          echo "$installPath" >> $env:GITHUB_PATH
+
+          Write-Host "Installation complete."
+          Remove-Item $msiPath
+      - name: Install Cppcheck (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          wget -qO- "https://github.com/danmar/cppcheck/archive/refs/tags/2.20.0.tar.gz" | tar -xz -C /tmp \
+          && cmake -S /tmp/cppcheck-2.20.0 -B /tmp/cppcheck-2.20.0/build -G Ninja -D CMAKE_BUILD_TYPE=Release \
+          && cmake --build /tmp/cppcheck-2.20.0/build \
+          && sudo cmake --install /tmp/cppcheck-2.20.0/build \
+          && rm -rf /tmp/cppcheck-2.20.0
       - shell: bash
         run: |
           cmake -G Ninja \

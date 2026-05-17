@@ -5,13 +5,14 @@
  || __GNUC__ < 14
 #include <cstdint>
 #endif
-#if __GNUC__ < 14
+#if defined(__GNUC__) && __GNUC__ < 14
 #include <array>
 #include <charconv>
 #include <format>
 #include <limits>
 #include <span>
 #endif
+#include <algorithm>
 #include <ranges>
 #include <utility>
 #include <vector>
@@ -39,14 +40,12 @@ namespace std
     template <class T, class E>
     class expected // NOLINT(cert-dcl58-cpp)
     {
-        T value_;
-
     public:
         expected() = default;
         // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
         expected(T val) : value_(std::move(val)) {}
         // NOLINTNEXTLINE(google-explicit-constructor, hicpp-explicit-conversions)
-        expected(const unexpected<E>& /*unused*/) : value_{} {}
+        expected(const unexpected<E>& /*unused*/) {}
 
         explicit operator bool() const
         {
@@ -58,10 +57,19 @@ namespace std
             return value_;
         }
 
+        template <class U>
+        [[nodiscard]] const T& value_or(const U& /*default_value*/) const &
+        {
+            return value_;
+        }
+
         [[nodiscard]] E error() const
         {
             return {};
         }
+
+    private:
+        T value_{};
     };
 } // namespace std
 #else
@@ -84,13 +92,13 @@ std::expected<std::vector<std::vector<std::string>>, std::error_code> filter(
 {
     auto octet_list = std::initializer_list<int>{octet...};
 
-    for (const auto& val : octet_list)
-    {
-        if (  std::cmp_less(val, std::numeric_limits<unsigned char>::min())
-           || std::cmp_greater(val, std::numeric_limits<unsigned char>::max()))
+    if (std::ranges::any_of(octet_list, [](auto val) noexcept
         {
-            return std::unexpected(std::make_error_code(std::errc::value_too_large));
-        }
+            return   std::cmp_less(val, std::numeric_limits<unsigned char>::min())
+                  || std::cmp_greater(val, std::numeric_limits<unsigned char>::max());
+        }, std::identity{}))
+    {
+        return std::unexpected(std::make_error_code(std::errc::value_too_large));
     }
 
     std::array<int, sizeof...(octet)> a_octet = {octet...};
@@ -121,7 +129,7 @@ std::expected<std::vector<std::vector<std::string>>, std::error_code> filter(
 
         for (std::size_t idx = 0; idx < common_range; idx++)
         {
-            auto res = from_chars(ip_address[idx]);
+            auto res = from_chars(ip_address.at(idx));
             if (  !res
                || res.value() != a_octet.at(idx))
             {

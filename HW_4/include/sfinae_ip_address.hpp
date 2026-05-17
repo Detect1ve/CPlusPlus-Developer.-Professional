@@ -18,7 +18,7 @@
 #if defined(__clang__) || __GNUC__ < 14
 #include <cstdint>
 #endif
-#if __GNUC__ < 14
+#if defined(__GNUC__) && __GNUC__ < 14
 #include <tuple>
 #endif
 #include <list>

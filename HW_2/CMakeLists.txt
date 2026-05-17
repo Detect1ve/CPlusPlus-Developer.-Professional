@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25..4.2.3)
+cmake_minimum_required(VERSION 3.25..4.3.1)
 
 if (NOT DEFINED PATCH_VERSION)
   set(PATCH_VERSION
@@ -10,21 +10,14 @@ set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 project(ip_filter VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 if (PROJECT_IS_TOP_LEVEL)
-  if (NOT MSVC)
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-      add_compile_options(-fcolor-diagnostics)
-    else()
-      add_compile_options(-fdiagnostics-color=always)
-    endif()
-  endif()
+  set(CMAKE_COLOR_DIAGNOSTICS ON)
 
   set(MINIMUM_CXX_STANDARD 23)
   include(../cmake/cxx_standard.cmake)
   set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
-endif()
 
-if (PROJECT_IS_TOP_LEVEL)
   include(../cmake/clang-tidy.cmake)
+  include(../cmake/cppcheck.cmake)
   include(../cmake/fetch_boost.cmake)
   include(../cmake/fetch_googletest.cmake)
   include(../cmake/warning_flags.cmake)
@@ -34,67 +27,82 @@ if (PROJECT_IS_TOP_LEVEL)
   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  set(HW_2_COMPILE_WARNING_FLAGS -Wc++20-compat-pedantic)
-endif()
-
 add_library(ip_filter_lib STATIC lib/ip_filter.cpp)
 target_include_directories(ip_filter_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(ip_filter_lib
   PRIVATE custom_print
   PUBLIC attribute_wrapper)
-target_compile_options(ip_filter_lib PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_2_COMPILE_WARNING_FLAGS})
-if (NOT MSVC)
-  target_compile_options(ip_filter_lib PRIVATE
-    -Wno-strict-overflow -Wno-unsafe-buffer-usage)
-endif()
+set_warning_flags(ip_filter_lib
+  EXTRA_CLANG
+    -Wc++20-compat-pedantic
+    -Wno-unsafe-buffer-usage)
 
 add_executable(ip_filter src/main.cpp)
 target_link_libraries(ip_filter PRIVATE custom_print ip_filter_lib)
 if (NOT MSVC)
   target_link_libraries(ip_filter PRIVATE -static)
 endif()
-target_compile_options(ip_filter PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_2_COMPILE_WARNING_FLAGS})
+set_warning_flags(ip_filter
+  EXTRA_CLANG
+    -Wc++20-compat-pedantic)
 
 add_executable(ip_filter_test test/ip_filter_test.cpp)
 target_link_libraries(ip_filter_test PRIVATE
   Boost::algorithm Boost::uuid capture GTest::gtest_main ip_filter_lib)
-target_compile_options(ip_filter_test PRIVATE
-  ${COMPILE_WARNING_FLAGS} ${HW_2_COMPILE_WARNING_FLAGS})
-if (NOT MSVC)
-  target_compile_options(ip_filter_test PRIVATE -Wno-global-constructors)
-endif()
+set_warning_flags(ip_filter_test
+  EXTRA_CLANG
+    -Wc++20-compat-pedantic
+    -Wno-global-constructors)
 
 set_smart_tidy(ip_filter_lib
   EXCLUDE
     "-fuchsia-default-arguments-calls"
     "-llvm-prefer-static-over-anonymous-namespace"
-    "-modernize-use-trailing-return-type"
-  EXTRA_INCLUDES
-    "${ATTRIBUTE_WRAPPER_INCLUDE_DIR}"
-    "${CUSTOM_PRINT_INCLUDE_DIR}"
+  EXTRA_TARGETS
+    attribute_wrapper
+    custom_print
   HAS_EXCEPTIONS)
 
 set_smart_tidy(ip_filter
   EXCLUDE
     "-google-readability-todo"
-    "-modernize-use-trailing-return-type"
-  EXTRA_INCLUDES
-    "${ATTRIBUTE_WRAPPER_INCLUDE_DIR}"
-    "${CUSTOM_PRINT_INCLUDE_DIR}"
+  EXTRA_TARGETS
+    attribute_wrapper
+    custom_print
   HAS_EXCEPTIONS)
 
 set_smart_tidy(ip_filter_test
   EXCLUDE
     "-fuchsia-default-arguments-calls"
     "-llvm-prefer-static-over-anonymous-namespace"
-    "-modernize-use-trailing-return-type"
-  EXTRA_INCLUDES
-    "${ATTRIBUTE_WRAPPER_INCLUDE_DIR}"
-    "${CAPTURE_INCLUDE_DIR}"
+  EXTRA_TARGETS
+    attribute_wrapper
+    capture
   HAS_EXCEPTIONS)
+
+set(CPPCHECK_HW_2_OPTS
+  "functionStatic"
+  "noExplicitConstructor"
+  "unmatchedSuppression"
+  "unusedFunction")
+
+set_smart_cppcheck(ip_filter_lib
+  EXCLUDE
+    "${CPPCHECK_HW_2_OPTS}"
+  LIBRARIES
+    "gnu")
+
+set_smart_cppcheck(ip_filter
+  EXCLUDE
+    "${CPPCHECK_HW_2_OPTS}"
+  LIBRARIES
+    "gnu")
+
+set_smart_cppcheck(ip_filter_test
+  EXCLUDE
+    "${CPPCHECK_HW_2_OPTS}"
+  LIBRARIES
+    "boost,gnu,googletest,posix")
 
 enable_testing()
 add_test(

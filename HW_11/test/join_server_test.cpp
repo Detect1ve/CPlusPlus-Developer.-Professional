@@ -10,60 +10,64 @@
 #include <server.hpp>
 #include <socket_wrapper.hpp>
 
-class HW11 : public ::testing::Test
+namespace
 {
-    std::thread server_thread_;
-    std::uint16_t port_ = 0;
-    std::unique_ptr<Server> server_;
-protected:
-    void SetUp() override
+    class HW11 : public ::testing::Test
     {
-        std::promise<std::uint16_t> port_promise;
-        auto port_future = port_promise.get_future();
+    public:
+        HW11() = default;
+        ~HW11() override = default;
+        HW11(const HW11&) = delete;
+        HW11(HW11&&) = delete;
+        HW11& operator=(const HW11&) = delete;
+        HW11& operator=(HW11&&) = delete;
 
-        server_thread_ = std::thread([&, &promise = port_promise]()
+    protected:
+        void SetUp() override
         {
-            try
-            {
-                server_ = std::make_unique<Server>(promise, std::int16_t{0});
-                server_->run();
-            }
-            catch (const std::exception&)
-            {
-                promise.set_exception(std::current_exception());
-            }
-        });
+            std::promise<std::uint16_t> port_promise;
+            auto port_future = port_promise.get_future();
 
-        port_ = port_future.get();
-    }
+            server_thread_ = std::thread([&, &promise = port_promise]()
+            {
+                try
+                {
+                    server_ = std::make_unique<Server>(promise, std::int16_t{0});
+                    server_->run();
+                }
+                catch (const std::exception&)
+                {
+                    promise.set_exception(std::current_exception());
+                }
+            });
 
-    void TearDown() override
-    {
-        server_->stop();
-        if (server_thread_.joinable())
-        {
-            server_thread_.join();
+            port_ = port_future.get();
         }
-    }
 
-    [[nodiscard]] std::string communicate(const std::string& message) const
-    {
-        const test_util::ClientSocket socket("127.0.0.1", port_);
+        void TearDown() override
+        {
+            server_->stop();
+            if (server_thread_.joinable())
+            {
+                server_thread_.join();
+            }
+        }
 
-        socket.send_data(message + '\n');
+        [[nodiscard]] std::string communicate(const std::string& message) const
+        {
+            const test_util::ClientSocket socket("127.0.0.1", port_);
 
-        return socket.receive_data();
-    }
-public:
-    HW11() = default;
-    HW11(const HW11&) = delete;
-    HW11(HW11&&) = delete;
-    HW11& operator=(const HW11&) = delete;
-    HW11& operator=(HW11&&) = delete;
-    ~HW11() override;
-};
+            socket.send_data(message + '\n');
 
-HW11::~HW11() = default;
+            return socket.receive_data();
+        }
+
+    private:
+        std::thread server_thread_;
+        std::uint16_t port_ = 0;
+        std::unique_ptr<Server> server_;
+    };
+} // namespace
 
 TEST_F(HW11, InsertDuplicate)
 {

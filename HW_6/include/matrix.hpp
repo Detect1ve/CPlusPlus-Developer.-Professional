@@ -81,8 +81,7 @@ public:
     {
     public:
         explicit iterator(
-            typename std::unordered_map<std::pair<int, int>, T, PairHash>::const_iterator
-                iter)
+            std::unordered_map<std::pair<int, int>, T, PairHash>::const_iterator iter)
             : it_(iter) {}
 
         [[nodiscard]] bool operator!=(const iterator& other) const
@@ -92,7 +91,7 @@ public:
 
         iterator& operator++()
         {
-            it_++;
+            ++it_;
 
             return *this;
         }
@@ -103,7 +102,7 @@ public:
         }
 
     private:
-        typename std::unordered_map<std::pair<int, int>, T, PairHash>::const_iterator it_;
+        std::unordered_map<std::pair<int, int>, T, PairHash>::const_iterator it_;
     };
 
     [[nodiscard]] iterator begin() const noexcept
@@ -152,7 +151,7 @@ private:
 };
 
 template <typename T, T DefaultValue>
-// NOLINTNEXTLINE(cert-dcl58-cpp)
+// NOLINTNEXTLINE(bugprone-std-namespace-modification, cert-dcl58-cpp)
 struct std::formatter<ProxyCell<T, DefaultValue>> : std::formatter<T>
 {
     auto format(
@@ -164,17 +163,17 @@ struct std::formatter<ProxyCell<T, DefaultValue>> : std::formatter<T>
 };
 
 template <typename T, T DefaultValue>
-// NOLINTNEXTLINE(cert-dcl58-cpp)
+// NOLINTNEXTLINE(bugprone-std-namespace-modification, cert-dcl58-cpp)
 struct std::formatter<Matrix<T, DefaultValue>>
 {
-    constexpr auto parse(std::format_parse_context& ctx)
+    static constexpr auto parse(std::format_parse_context& ctx)
     {
         return ctx.begin();
     }
 
-    auto format(
+    static auto format(
         const Matrix<T, DefaultValue>& matrix,
-        std::format_context&           ctx) const -> decltype(ctx.out())
+        std::format_context&           ctx) -> decltype(ctx.out())
     {
         auto out = ctx.out();
 

@@ -20,8 +20,8 @@
 #include <utility> // std::move
 #include <vector> // std::vector
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <absl/strings/match.h>
 
 #include <capture.hpp>
 #include <server.hpp>
@@ -122,85 +122,90 @@ namespace
     {
         clear_log_files(std::nullopt, std::nullopt);
     }
+
+    class HW10 : public ::testing::Test
+    {
+    public:
+        HW10() = default;
+        ~HW10() override = default;
+        HW10(const HW10&) = delete;
+        HW10(HW10&&) = delete;
+        HW10& operator=(const HW10&) = delete;
+        HW10& operator=(HW10&&) = delete;
+
+    protected:
+        static void SetUpTestSuite()
+        {
+            clear_log_files();
+        }
+
+        void SetUp() override
+        {
+            start_time_ = std::chrono::system_clock::now();
+
+            port_ = DEFAULT_PORT;
+            bulk_size_ = 3;
+
+            server_ = std::make_unique<async::Server>(port_, bulk_size_);
+            server_thread_ = std::thread([this]()
+            {
+                try
+                {
+                    server_->run();
+                }
+                catch (const std::exception& e)
+                {
+                    server_exception_ = std::make_exception_ptr(e);
+                }
+            });
+
+            std::this_thread::sleep_for(SERVER_STARTUP_SLEEP_DURATION);
+        }
+
+        void TearDown() override
+        {
+            if (server_)
+            {
+                server_->stop();
+            }
+
+            if (server_thread_.joinable())
+            {
+                server_thread_.join();
+            }
+
+            if (!HasFailure())
+            {
+                clear_log_files(start_time_, std::chrono::system_clock::now());
+            }
+
+            if (server_exception_)
+            {
+                try
+                {
+                    std::rethrow_exception(server_exception_);
+                }
+                catch(const std::exception& e)
+                {
+                    FAIL() << "Server thread threw exception: " << e.what();
+                }
+            }
+        }
+
+        [[nodiscard]] auto get_port() const
+        {
+            return port_;
+        }
+
+    private:
+        std::uint16_t port_{};
+        std::size_t bulk_size_{};
+        std::thread server_thread_;
+        std::unique_ptr<async::Server> server_;
+        std::exception_ptr server_exception_;
+        std::chrono::system_clock::time_point start_time_;
+    };
 } // namespace
-
-class HW10 : public ::testing::Test
-{
-    std::uint16_t port_{};
-    std::size_t bulk_size_{};
-    std::thread server_thread_;
-    std::unique_ptr<async::Server> server_;
-    std::exception_ptr server_exception_{nullptr};
-    std::chrono::system_clock::time_point start_time_;
-protected:
-    void SetUp() override
-    {
-        clear_log_files();
-        start_time_ = std::chrono::system_clock::now();
-
-        port_ = DEFAULT_PORT;
-        bulk_size_ = 3;
-
-        server_ = std::make_unique<async::Server>(port_, bulk_size_);
-        server_thread_ = std::thread([this]()
-        {
-            try
-            {
-                server_->run();
-            }
-            catch (const std::exception& e)
-            {
-                server_exception_ = std::make_exception_ptr(e);
-            }
-        });
-
-        std::this_thread::sleep_for(SERVER_STARTUP_SLEEP_DURATION);
-    }
-
-    void TearDown() override
-    {
-        if (server_)
-        {
-            server_->stop();
-        }
-
-        if (server_thread_.joinable())
-        {
-            server_thread_.join();
-        }
-
-        if (!HasFailure())
-        {
-            clear_log_files(start_time_, std::chrono::system_clock::now());
-        }
-
-        if (server_exception_)
-        {
-            try
-            {
-                std::rethrow_exception(server_exception_);
-            }
-            catch(const std::exception& e)
-            {
-                FAIL() << "Server thread threw exception: " << e.what();
-            }
-        }
-    }
-
-    [[nodiscard]] auto get_port() const
-    {
-        return port_;
-    }
-public:
-    HW10() = default;
-    HW10(const HW10&) = delete;
-    HW10(HW10&&) = delete;
-    HW10& operator=(const HW10&) = delete;
-    HW10& operator=(HW10&&) = delete;
-    ~HW10() override;
-};
-
-HW10::~HW10() = default;
 
 TEST_F(HW10, CombinedConnectionTest)
 {
@@ -233,10 +238,11 @@ TEST_F(HW10, CombinedConnectionTest)
         std::this_thread::sleep_for(THREAD_SLEEP_DURATION);
 
         const std::string output = StdoutCapture::End();
-        ASSERT_TRUE(absl::StrContains(output, "bulk: 0, 1, 2"));
-        ASSERT_TRUE(absl::StrContains(output, "bulk: 3, 4, 5"));
-        ASSERT_TRUE(absl::StrContains(output, "bulk: 6, 7, 8"));
-        ASSERT_TRUE(absl::StrContains(output, "bulk: 9"));
+        ASSERT_THAT(output, testing::AllOf(
+            testing::HasSubstr("bulk: 0, 1, 2"),
+            testing::HasSubstr("bulk: 3, 4, 5"),
+            testing::HasSubstr("bulk: 6, 7, 8"),
+            testing::HasSubstr("bulk: 9")));
 
         for (const auto& path :
                 get_log_files(single_conn_start_time, std::chrono::system_clock::now()))
@@ -249,11 +255,11 @@ TEST_F(HW10, CombinedConnectionTest)
         }
 
         ASSERT_EQ(file_contents.size(), 4);
-        std::ranges::sort(file_contents);
-        ASSERT_EQ(file_contents[0], "bulk: 0, 1, 2\n");
-        ASSERT_EQ(file_contents[1], "bulk: 3, 4, 5\n");
-        ASSERT_EQ(file_contents[2], "bulk: 6, 7, 8\n");
-        ASSERT_EQ(file_contents[3], "bulk: 9\n");
+        ASSERT_THAT(file_contents, testing::UnorderedElementsAre(
+            "bulk: 0, 1, 2\n",
+            "bulk: 3, 4, 5\n",
+            "bulk: 6, 7, 8\n",
+            "bulk: 9\n"));
 
         std::this_thread::sleep_for(1s); // NOLINT(misc-include-cleaner)
 
@@ -303,8 +309,8 @@ TEST_F(HW10, CombinedConnectionTest)
         for (std::sregex_iterator i = words_begin; i != words_end; i++)
         {
             const std::smatch& match = *i;
-            const char *const first = &(*match[0].first);
-            const char *const last  = &(*match[0].second);
+            const char *const first = std::to_address(match.begin()->first);
+            const char *const last  = std::to_address(match.begin()->second);
             int value{};
 
             if (std::from_chars(first, last, value).ec == std::errc{})
@@ -322,8 +328,8 @@ TEST_F(HW10, CombinedConnectionTest)
         for (std::sregex_iterator i = words_begin_stdout; i != words_end_stdout; i++)
         {
             const std::smatch& match = *i;
-            const char *const first = &(*match[0].first);
-            const char *const last  = &(*match[0].second);
+            const char *const first = std::to_address(match.begin()->first);
+            const char *const last  = std::to_address(match.begin()->second);
             int value{};
 
             if (std::from_chars(first, last, value).ec == std::errc{})

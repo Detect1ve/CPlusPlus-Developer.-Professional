@@ -11,8 +11,7 @@ public:
     MyList() = default;
     ~MyList()
     {
-        using NodeAllocator =
-            typename std::allocator_traits<Alloc>::template rebind_alloc<Node>;
+        using NodeAllocator = std::allocator_traits<Alloc>::template rebind_alloc<Node>;
         NodeAllocator nodeAllocator;
 
         Node* current_ = head_;
@@ -64,7 +63,7 @@ public:
         return iterator(head_);
     }
 
-    iterator end()
+    static iterator end()
     {
         return iterator(nullptr);
     }
@@ -81,8 +80,7 @@ public:
 
     void push_back(const T& val)
     {
-        using NodeAllocator =
-            typename std::allocator_traits<Alloc>::template rebind_alloc<Node>;
+        using NodeAllocator = std::allocator_traits<Alloc>::template rebind_alloc<Node>;
         NodeAllocator nodeAllocator;
 
         // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)

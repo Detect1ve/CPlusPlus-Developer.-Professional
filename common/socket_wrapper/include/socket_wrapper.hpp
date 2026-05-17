@@ -2,12 +2,10 @@
 #define SOCKET_WRAPPER_HPP
 
 #ifdef _WIN32
-#include <ws2tcpip.h>
+#include <WS2tcpip.h>
 #else
 #include <netdb.h>
 #endif
-
-#include <absl/strings/match.h>
 
 namespace test_util
 {
@@ -137,7 +135,7 @@ namespace test_util
 
                 if (  result.length() >= 4
                    && result.starts_with("ERR")
-                   && absl::StrContains(result, '\n'))
+                   && result.contains('\n'))
                 {
                     break;
                 }
